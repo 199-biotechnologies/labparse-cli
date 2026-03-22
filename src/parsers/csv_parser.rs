@@ -1,0 +1,149 @@
+use crate::errors::LabParseError;
+use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
+use crate::parsers::ParseResult;
+
+/// Common header names for the test/biomarker name column
+const NAME_HEADERS: &[&str] = &[
+    "test name",
+    "test",
+    "analyte",
+    "component",
+    "biomarker",
+    "marker",
+    "name",
+    "assay",
+    "description",
+    "test description",
+    "lab test",
+    "observation",
+];
+
+/// Common header names for the result/value column
+const VALUE_HEADERS: &[&str] = &[
+    "result",
+    "value",
+    "result value",
+    "observed value",
+    "test result",
+    "numeric result",
+    "reported value",
+    "level",
+];
+
+/// Common header names for the unit column
+const UNIT_HEADERS: &[&str] = &[
+    "unit",
+    "units",
+    "uom",
+    "unit of measure",
+    "reference unit",
+    "result unit",
+];
+
+fn find_column(headers: &csv::StringRecord, candidates: &[&str]) -> Option<usize> {
+    for (i, h) in headers.iter().enumerate() {
+        let lower = h.to_lowercase().trim().to_string();
+        if candidates.contains(&lower.as_str()) {
+            return Some(i);
+        }
+    }
+    None
+}
+
+fn parse_number(s: &str) -> Option<f64> {
+    let cleaned = s
+        .trim()
+        .trim_start_matches('<')
+        .trim_start_matches('>')
+        .replace(',', "");
+    cleaned.parse::<f64>().ok()
+}
+
+pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError> {
+    let mut rdr = csv::ReaderBuilder::new()
+        .has_headers(true)
+        .flexible(true)
+        .trim(csv::Trim::All)
+        .from_reader(content.as_bytes());
+
+    let headers = rdr.headers()?.clone();
+    let name_col = find_column(&headers, NAME_HEADERS);
+    let value_col = find_column(&headers, VALUE_HEADERS);
+    let unit_col = find_column(&headers, UNIT_HEADERS);
+
+    let name_col = name_col.ok_or_else(|| {
+        LabParseError::ParseFailure(
+            "Could not find a test name column. Expected headers like: Test Name, Analyte, Component".to_string(),
+        )
+    })?;
+
+    let value_col = value_col.ok_or_else(|| {
+        LabParseError::ParseFailure(
+            "Could not find a result/value column. Expected headers like: Result, Value".to_string(),
+        )
+    })?;
+
+    let mut biomarkers = Vec::new();
+    let mut warnings = Vec::new();
+    let mut seen_names = std::collections::HashSet::new();
+
+    for record in rdr.records() {
+        let record = record?;
+        let raw_name = record.get(name_col).unwrap_or("").trim();
+        let raw_value = record.get(value_col).unwrap_or("").trim();
+        let raw_unit = unit_col
+            .and_then(|i| record.get(i))
+            .unwrap_or("")
+            .trim();
+
+        if raw_name.is_empty() || raw_value.is_empty() {
+            continue;
+        }
+
+        let value = match parse_number(raw_value) {
+            Some(v) => v,
+            None => {
+                warnings.push(format!(
+                    "Skipped '{}': non-numeric value '{}'",
+                    raw_name, raw_value
+                ));
+                continue;
+            }
+        };
+
+        match normalize_name(raw_name) {
+            Some((std_name, display_name, category)) => {
+                if !seen_names.insert(std_name.to_string()) {
+                    warnings.push(format!("Duplicate result for {} skipped: '{}'", std_name, raw_name));
+                    continue;
+                }
+
+                let unit = if raw_unit.is_empty() {
+                    crate::biomarkers::get_definition(std_name)
+                        .map(|d| d.standard_unit.clone())
+                        .unwrap_or_default()
+                } else {
+                    normalize_unit(raw_unit)
+                };
+
+                biomarkers.push(ParsedBiomarker {
+                    name: raw_name.to_string(),
+                    standardized_name: std_name.to_string(),
+                    display_name,
+                    value,
+                    unit,
+                    category,
+                });
+            }
+            None => {
+                warnings.push(format!("Unknown biomarker: '{}'", raw_name));
+            }
+        }
+    }
+
+    Ok(ParseResult {
+        biomarkers,
+        warnings,
+        parser_name: "csv".to_string(),
+    })
+}
