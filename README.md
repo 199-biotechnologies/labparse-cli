@@ -6,13 +6,29 @@ Part of the [Longevity CLI Suite](https://github.com/199-biotechnologies).
 
 ## Install
 
-### From source (requires Rust)
+### Homebrew (macOS)
+
+```bash
+brew tap 199-biotechnologies/tap
+brew install labparse
+```
+
+### Direct from GitHub (requires Rust + repo access)
 
 ```bash
 # Install Rust if you don't have it
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
-# Clone and install
+# Install directly from GitHub (no clone needed)
+cargo install --git https://github.com/199-biotechnologies/labparse.git
+
+# Verify
+labparse --version
+```
+
+### From source
+
+```bash
 git clone https://github.com/199-biotechnologies/labparse.git
 cd labparse
 cargo install --path .

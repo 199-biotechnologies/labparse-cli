@@ -3,7 +3,10 @@ name = "labparse"
 version = "0.1.0"
 edition = "2021"
 description = "Parse lab results into structured biomarker JSON"
-license = "MIT"
+authors = ["Boris Djordjevic <boris@199biotechnologies.com>"]
+repository = "https://github.com/199-biotechnologies/labparse"
+homepage = "https://github.com/199-biotechnologies/labparse"
+license = "Proprietary"
 
 [[bin]]
 name = "labparse"
