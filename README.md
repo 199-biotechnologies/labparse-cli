@@ -4,6 +4,52 @@ Lab result parser — PDF/CSV/text to structured biomarker JSON.
 
 Part of the [Longevity CLI Suite](https://github.com/199-biotechnologies).
 
+## Install
+
+### From source (requires Rust)
+
+```bash
+# Install Rust if you don't have it
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+# Clone and install
+git clone https://github.com/199-biotechnologies/labparse.git
+cd labparse
+cargo install --path .
+```
+
+### Vision Pipeline (PDF/image extraction)
+
+The vision pipeline uses a local AI model to extract biomarkers from PDF images, photos, and screenshots.
+
+```bash
+# 1. Install the local vision model (6.6 GB, one-time download)
+brew install ollama              # or: https://ollama.com/download
+ollama pull qwen3.5:9b
+
+# 2. (Optional) Install Rapid-MLX for faster inference (~30% faster)
+curl -fsSL https://raw.githubusercontent.com/raullenchai/Rapid-MLX/main/install.sh | bash
+~/.rapid-mlx/bin/pip install --no-user 'rapid-mlx[vision]'
+
+# 3. Install Python dependencies for vision pipeline
+pip install pymupdf sentence-transformers numpy pillow
+
+# 4. Run on a lab PDF
+python3 labparse_vision.py /path/to/bloodwork.pdf
+```
+
+### Fuzzy Biomarker Matching (embedding-based)
+
+For matching messy OCR names to canonical biomarkers (e.g., "Glycosylated Hemoglobin A1C" → "hba1c"):
+
+```bash
+pip install sentence-transformers numpy
+python3 fuzzy_match.py "Glycosylated Hemoglobin A1C"
+# → hba1c (sim=0.841)
+```
+
+Pre-computed embeddings for 483 name variants are included in `data/embeddings/`.
+
 ## Usage
 
 ```bash
@@ -52,22 +98,30 @@ labparse agent-info
 
 ## Pipeline
 
-Compose with `biorange` for scoring:
+Compose with [`biorange`](https://github.com/199-biotechnologies/biorange) for scoring:
 
 ```bash
 labparse --text "HbA1c 5.8%, Fasting Glucose 95 mg/dL" --json | biorange --sex male --age 45 --json
 ```
 
-## Install
+Full vision pipeline:
 
 ```bash
-cargo install --path .
+# Extract from PDF image → score against longevity ranges
+python3 labparse_vision.py bloodwork.pdf | biorange --sex male --age 45 --json
 ```
 
 ## Biomarker Coverage
 
-148 biomarkers across 16 categories, normalized from a standardized CSV embedded at compile time. Common aliases mapped to canonical names (e.g., "Hemoglobin A1c" → "hba1c").
+148 biomarkers across 16 categories: metabolic, lipid, inflammation, kidney, liver, thyroid, hormones (male/female), blood count, iron, vitamins, cardiac, cancer markers, and more. All normalized from a standardized CSV embedded at compile time.
 
-## Vision Pipeline (WIP)
+## Benchmarks
 
-For PDF/image extraction using local vision models (Qwen3.5-9B), see `labparse_vision.py` in the [longevity](https://github.com/199-biotechnologies/longevity) repo. Benchmarks: [BENCHMARKS.md](../BENCHMARKS.md).
+See [BENCHMARKS.md](BENCHMARKS.md) for performance data including:
+- Cross-model validation (Qwen3.5-9B vs Gemini 3.1 Pro vs GPT-5.4)
+- Optimization impact (3 min → 45s per page)
+- ANE benchmarks on Apple Silicon
+
+## License
+
+Private — 199 Biotechnologies
