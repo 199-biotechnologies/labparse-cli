@@ -24,8 +24,8 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
         [\s:=]+
         # Optional < or >
         [<>]?
-        # Numeric value (with optional decimal)
-        (?P<value>\d+(?:\.\d+)?)
+        # Numeric value (with optional decimal point or comma)
+        (?P<value>\d+(?:[.,]\d+)?)
         # Optional whitespace
         \s*
         # Unit (optional, various patterns)
@@ -47,7 +47,7 @@ static COLON_PATTERN: Lazy<Regex> = Lazy::new(|| {
         (?P<name>[A-Za-z0-9\-\(\)/\s]{2,40})
         \s*:\s*
         [<>]?
-        (?P<value>\d+(?:\.\d+)?)
+        (?P<value>\d+(?:[.,]\d+)?)
         \s*
         (?P<unit>[a-zA-Zµ°/%²³]+(?:/[a-zA-Zµ°²³\d.]+)*)?
         "
@@ -106,7 +106,8 @@ fn try_extract(
     let raw_value = cap.name("value")?.as_str();
     let raw_unit = cap.name("unit").map(|m| m.as_str()).unwrap_or("");
 
-    let value: f64 = raw_value.parse().ok()?;
+    // Replace decimal comma with period for parsing
+    let value: f64 = raw_value.replace(',', ".").parse().ok()?;
 
     let (std_name, display_name, category) = normalize_name(raw_name)?;
 

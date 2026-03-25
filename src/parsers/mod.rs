@@ -14,20 +14,37 @@ pub struct ParseResult {
 
 /// Detect whether content looks like CSV (structured tabular data)
 pub fn looks_like_csv(content: &str) -> bool {
+    // Strip BOM for detection
+    let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
     let lines: Vec<&str> = content.lines().take(5).collect();
     if lines.len() < 2 {
         // Need at least header + 1 data row
         return false;
     }
     let first = lines[0];
+
+    // Check multiple delimiters: comma, tab, semicolon
     let comma_count = first.matches(',').count();
-    if comma_count < 2 {
+    let tab_count = first.matches('\t').count();
+    let semi_count = first.matches(';').count();
+
+    // Pick the best delimiter
+    let (delim_count, delim_char) = if tab_count >= 2 && tab_count >= comma_count && tab_count >= semi_count {
+        (tab_count, '\t')
+    } else if semi_count >= 2 && semi_count >= comma_count {
+        (semi_count, ';')
+    } else {
+        (comma_count, ',')
+    };
+
+    if delim_count < 2 {
         return false;
     }
-    // Check that multiple lines have a consistent number of commas (tabular structure)
-    let second_commas = lines[1].matches(',').count();
+
+    // Check that multiple lines have a consistent delimiter count (tabular structure)
+    let second_count = lines[1].matches(delim_char).count();
     // Also check that the first line looks like headers (no digits in most fields)
-    let fields: Vec<&str> = first.split(',').collect();
+    let fields: Vec<&str> = first.split(delim_char).collect();
     let alpha_fields = fields
         .iter()
         .filter(|f| {
@@ -36,7 +53,7 @@ pub fn looks_like_csv(content: &str) -> bool {
         })
         .count();
     // At least half the fields should be alpha-only (headers) and row counts should be similar
-    comma_count >= 2 && alpha_fields >= fields.len() / 2 && (second_commas as i32 - comma_count as i32).abs() <= 1
+    delim_count >= 2 && alpha_fields >= fields.len() / 2 && (second_count as i32 - delim_count as i32).abs() <= 1
 }
 
 /// Auto-detect and parse content

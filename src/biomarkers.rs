@@ -1,6 +1,6 @@
 use once_cell::sync::Lazy;
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 const BIOMARKER_CSV: &str = include_str!("../data/biomarker_definitions.csv");
 
@@ -22,7 +22,7 @@ pub struct BiomarkerDef {
 pub static DEFINITIONS: Lazy<HashMap<String, BiomarkerDef>> = Lazy::new(load_definitions);
 
 /// Lookup map: lowercase alias → standardized_name
-pub static ALIAS_MAP: Lazy<HashMap<String, String>> = Lazy::new(build_alias_map);
+pub static ALIAS_MAP: Lazy<BTreeMap<String, String>> = Lazy::new(build_alias_map);
 
 fn parse_opt_f64(s: &str) -> Option<f64> {
     let s = s.trim();
@@ -112,10 +112,15 @@ fn load_definitions() -> HashMap<String, BiomarkerDef> {
     map
 }
 
-fn build_alias_map() -> HashMap<String, String> {
-    let mut aliases: HashMap<String, String> = HashMap::new();
+fn build_alias_map() -> BTreeMap<String, String> {
+    let mut aliases: BTreeMap<String, String> = BTreeMap::new();
 
-    for (std_name, def) in DEFINITIONS.iter() {
+    // Sort keys for deterministic iteration order
+    let mut sorted_keys: Vec<&String> = DEFINITIONS.keys().collect();
+    sorted_keys.sort();
+
+    for std_name in sorted_keys {
+        let def = &DEFINITIONS[std_name];
         // Add all the direct names
         let candidates = [
             &def.marker_name,
@@ -252,6 +257,13 @@ fn build_alias_map() -> HashMap<String, String> {
         ("tnf alpha", "tnf_alpha"),
         ("homocysteine", "homocysteine"),
         ("hcy", "homocysteine"),
+        // Thyroglobulin antibodies
+        ("thyroglobulin antibodies", "anti_tg"),
+        ("thyroglobulin antibodies (tg abs)", "anti_tg"),
+        ("tg antibodies", "anti_tg"),
+        ("tg abs", "anti_tg"),
+        ("anti-thyroglobulin", "anti_tg"),
+        ("atg", "anti_tg"),
     ];
 
     for (alias, std) in extras {

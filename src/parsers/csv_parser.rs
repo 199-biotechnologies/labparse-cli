@@ -59,11 +59,34 @@ fn parse_number(s: &str) -> Option<f64> {
     cleaned.parse::<f64>().ok()
 }
 
+/// Detect delimiter from the first line: tab, semicolon, or comma (default)
+fn detect_delimiter(content: &str) -> u8 {
+    let first_line = content.lines().next().unwrap_or("");
+    let tabs = first_line.matches('\t').count();
+    let semis = first_line.matches(';').count();
+    let commas = first_line.matches(',').count();
+
+    if tabs >= 2 && tabs >= semis && tabs >= commas {
+        b'\t'
+    } else if semis >= 2 && semis >= commas {
+        b';'
+    } else {
+        b','
+    }
+}
+
 pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError> {
+    // Strip UTF-8 BOM if present
+    let content = content.strip_prefix('\u{FEFF}').unwrap_or(content);
+
+    // Auto-detect delimiter from first line
+    let delimiter = detect_delimiter(content);
+
     let mut rdr = csv::ReaderBuilder::new()
         .has_headers(true)
         .flexible(true)
         .trim(csv::Trim::All)
+        .delimiter(delimiter)
         .from_reader(content.as_bytes());
 
     let headers = rdr.headers()?.clone();

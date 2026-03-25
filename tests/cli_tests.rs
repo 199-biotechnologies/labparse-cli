@@ -158,6 +158,134 @@ fn test_multiple_text_markers() {
 }
 
 #[test]
+fn test_decimal_comma_text() {
+    let output = labparse()
+        .args(["--text", "HbA1c 5,8%", "--json"])
+        .output()
+        .expect("failed to run labparse");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
+
+    let bms = json["data"]["biomarkers"].as_array().unwrap();
+    assert_eq!(bms.len(), 1);
+    assert_eq!(bms[0]["standardized_name"], "hba1c");
+    assert!((bms[0]["value"].as_f64().unwrap() - 5.8).abs() < 0.001);
+}
+
+#[test]
+fn test_bom_csv() {
+    let csv_content = "\u{FEFF}Test Name,Result,Units\nHbA1c,5.8,%\nLDL Cholesterol,130,mg/dL\n";
+    let tmp = std::env::temp_dir().join("labparse_test_bom.csv");
+    std::fs::write(&tmp, csv_content).unwrap();
+
+    let output = labparse()
+        .args([tmp.to_str().unwrap(), "--json"])
+        .output()
+        .expect("failed to run labparse");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
+
+    assert_eq!(json["metadata"]["parser"], "csv");
+    let bms = json["data"]["biomarkers"].as_array().unwrap();
+    assert!(bms.len() >= 2, "Expected at least 2 biomarkers from BOM CSV, got {}", bms.len());
+
+    std::fs::remove_file(&tmp).ok();
+}
+
+#[test]
+fn test_thyroglobulin_alias() {
+    let output = labparse()
+        .args(["--text", "Thyroglobulin Antibodies (TG Abs) 45 IU/mL", "--json"])
+        .output()
+        .expect("failed to run labparse");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
+
+    let bms = json["data"]["biomarkers"].as_array().unwrap();
+    assert_eq!(bms.len(), 1, "Expected 1 biomarker, got {}", bms.len());
+    assert_eq!(bms[0]["standardized_name"], "anti_tg");
+}
+
+#[test]
+fn test_alias_determinism() {
+    // Call resolve_name many times and verify consistent output
+    let output = labparse()
+        .args(["--text", "HbA1c 5.8%, LDL 130 mg/dL, ApoB 95 mg/dL", "--json"])
+        .output()
+        .expect("failed to run labparse");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let first: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
+
+    // Run the same parse 10 more times and verify identical output
+    for _ in 0..10 {
+        let output2 = labparse()
+            .args(["--text", "HbA1c 5.8%, LDL 130 mg/dL, ApoB 95 mg/dL", "--json"])
+            .output()
+            .expect("failed to run labparse");
+
+        let stdout2 = String::from_utf8_lossy(&output2.stdout);
+        let second: serde_json::Value = serde_json::from_str(&stdout2).expect("invalid JSON");
+
+        assert_eq!(
+            first["data"]["biomarkers"], second["data"]["biomarkers"],
+            "Alias resolution was non-deterministic"
+        );
+    }
+}
+
+#[test]
+fn test_semicolon_delimited_csv() {
+    let csv_content = "Test Name;Result;Units\nHbA1c;5.8;%\nLDL Cholesterol;130;mg/dL\n";
+    let tmp = std::env::temp_dir().join("labparse_test_semi.csv");
+    std::fs::write(&tmp, csv_content).unwrap();
+
+    let output = labparse()
+        .args([tmp.to_str().unwrap(), "--json"])
+        .output()
+        .expect("failed to run labparse");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
+
+    assert_eq!(json["metadata"]["parser"], "csv");
+    let bms = json["data"]["biomarkers"].as_array().unwrap();
+    assert!(bms.len() >= 2, "Expected at least 2 biomarkers from semicolon CSV, got {}", bms.len());
+
+    std::fs::remove_file(&tmp).ok();
+}
+
+#[test]
+fn test_tab_delimited_csv() {
+    let csv_content = "Test Name\tResult\tUnits\nHbA1c\t5.8\t%\nLDL Cholesterol\t130\tmg/dL\n";
+    let tmp = std::env::temp_dir().join("labparse_test_tab.csv");
+    std::fs::write(&tmp, csv_content).unwrap();
+
+    let output = labparse()
+        .args([tmp.to_str().unwrap(), "--json"])
+        .output()
+        .expect("failed to run labparse");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let json: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
+
+    assert_eq!(json["metadata"]["parser"], "csv");
+    let bms = json["data"]["biomarkers"].as_array().unwrap();
+    assert!(bms.len() >= 2, "Expected at least 2 biomarkers from tab CSV, got {}", bms.len());
+
+    std::fs::remove_file(&tmp).ok();
+}
+
+#[test]
 fn test_space_separated_markers() {
     let output = labparse()
         .args([
