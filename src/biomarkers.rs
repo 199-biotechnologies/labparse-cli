@@ -266,10 +266,11 @@ fn build_alias_map() -> BTreeMap<String, String> {
         ("atg", "anti_tg"),
     ];
 
+    // Extras OVERRIDE CSV-derived aliases — these are hand-curated corrections
+    // for cases where the CSV abbreviation creates a wrong mapping (e.g., "wbc"
+    // from urine_wbc's abbreviation should really map to wbc_count)
     for (alias, std) in extras {
-        aliases
-            .entry(alias.to_lowercase())
-            .or_insert_with(|| std.to_string());
+        aliases.insert(alias.to_lowercase(), std.to_string());
     }
 
     aliases
