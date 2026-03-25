@@ -50,7 +50,8 @@ pub fn normalize_unit(raw: &str) -> String {
         "ug/dl" | "µg/dl" | "mcg/dl" => "µg/dL".into(),
         // µg/L and ng/mL are equivalent (1 µg/L = 1 ng/mL) — canonicalize to ng/mL
         "ug/l" | "µg/l" | "mcg/l" | "ng/ml" => "ng/mL".into(),
-        "ng/l" => "ng/L".into(),
+        // ng/L = pg/mL (equivalent: 1 ng/L = 1 pg/mL) — canonicalize to pg/mL
+        "ng/l" => "pg/mL".into(),
         "mg/l" => "mg/L".into(),
         "g/l" | "gm/l" => "g/L".into(),
         "g/dl" | "gm/dl" => "g/dL".into(),

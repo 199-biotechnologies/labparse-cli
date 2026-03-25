@@ -34,8 +34,9 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
             | ratio
             | score
             | mmol/mol
+            | m[lL]/min/1\.73m[2²]   # eGFR unit
             | [xX]?10[\^e]?\d+/[a-zA-Z]+
-            | [a-zA-Zµ°/²³]+(?:/[a-zA-Zµ°²³\d.]+)*
+            | [a-zA-Zµ°²³]+(?:/[a-zA-Zµ°²³\d.]+)*
         )?
         "
     )
@@ -51,7 +52,7 @@ static COLON_PATTERN: Lazy<Regex> = Lazy::new(|| {
         [<>]?
         (?P<value>\d+(?:[.,]\d+)?)
         \s*
-        (?P<unit>[a-zA-Zµ°/%²³]+(?:/[a-zA-Zµ°²³\d.]+)*)?
+        (?P<unit>m[lL]/min/1\.73m[2²]|[a-zA-Zµ°/%²³]+(?:/[a-zA-Zµ°²³\d.]+)*)?
         "
     )
     .unwrap()
