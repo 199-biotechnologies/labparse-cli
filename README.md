@@ -20,7 +20,7 @@ brew install labparse
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 
 # Install directly from GitHub (no clone needed)
-cargo install --git https://github.com/199-biotechnologies/labparse.git
+cargo install --git https://github.com/199-biotechnologies/labparse-cli.git
 
 # Verify
 labparse --version
@@ -29,7 +29,7 @@ labparse --version
 ### From source
 
 ```bash
-git clone https://github.com/199-biotechnologies/labparse.git
+git clone https://github.com/199-biotechnologies/labparse-cli.git
 cd labparse
 cargo install --path .
 ```
