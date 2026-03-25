@@ -24,34 +24,81 @@ pub fn normalize_name(raw: &str) -> Option<(&'static str, String, String)> {
     Some((std_name, def.display_name.clone(), def.category.clone()))
 }
 
-/// Normalize a unit string, cleaning up common variations
+/// Normalize a unit string to its canonical form.
+///
+/// This is the critical unit equivalence layer — all downstream tools (labassess, labstore)
+/// rely on labparse outputting canonical unit strings. Every variant of a unit must map to
+/// exactly one canonical form so that range matching and trend calculations work correctly.
+///
+/// Design: Many-to-one mapping. Variations like "IU/L", "iu/l", "U/L", "u/l" all map to
+/// a single canonical string. The canonical form uses standard SI/clinical conventions.
 pub fn normalize_unit(raw: &str) -> String {
     let trimmed = raw.trim();
-    match trimmed.to_lowercase().as_str() {
-        "mg/dl" => "mg/dL".to_string(),
-        "ng/ml" => "ng/mL".to_string(),
-        "pg/ml" => "pg/mL".to_string(),
-        "ug/dl" | "µg/dl" | "mcg/dl" => "µg/dL".to_string(),
-        "ug/l" | "µg/l" | "mcg/l" => "µg/L".to_string(),
-        "ng/l" => "ng/L".to_string(),
-        "iu/l" => "IU/L".to_string(),
-        "iu/ml" => "IU/mL".to_string(),
-        "ku/l" => "kU/L".to_string(),
-        "u/l" => "U/L".to_string(),
-        "u/ml" => "U/mL".to_string(),
-        "miu/l" => "mIU/L".to_string(),
-        "g/l" => "g/L".to_string(),
-        "g/dl" => "g/dL".to_string(),
-        "mmol/l" => "mmol/L".to_string(),
-        "umol/l" | "µmol/l" | "mcmol/l" => "µmol/L".to_string(),
-        "nmol/l" => "nmol/L".to_string(),
-        "pmol/l" => "pmol/L".to_string(),
-        "ml/min/1.73m2" | "ml/min/1.73m²" => "mL/min/1.73m²".to_string(),
-        "mm/hr" | "mm/h" => "mm/hr".to_string(),
-        "%" | "percent" => "%".to_string(),
-        "ratio" => "ratio".to_string(),
-        "mcg" | "ug" | "µg" => "µg".to_string(),
-        "mg" => "mg".to_string(),
+    let lower = trimmed.to_lowercase();
+
+    // Strip common prefixes/suffixes that don't change the unit semantics
+    let cleaned = lower
+        .replace("×", "x")
+        .replace("*", "x")
+        .replace("^", "");
+
+    match cleaned.as_str() {
+        // === MASS CONCENTRATIONS ===
+        "mg/dl" | "mg/dl." => "mg/dL".into(),
+        "ng/ml" | "ng/ml." => "ng/mL".into(),
+        "pg/ml" | "pg/ml." => "pg/mL".into(),
+        "ug/dl" | "µg/dl" | "mcg/dl" => "µg/dL".into(),
+        // µg/L and ng/mL are equivalent (1 µg/L = 1 ng/mL) — canonicalize to ng/mL
+        "ug/l" | "µg/l" | "mcg/l" | "ng/ml" => "ng/mL".into(),
+        "ng/l" => "ng/L".into(),
+        "mg/l" => "mg/L".into(),
+        "g/l" | "gm/l" => "g/L".into(),
+        "g/dl" | "gm/dl" => "g/dL".into(),
+
+        // === MOLAR CONCENTRATIONS ===
+        "mmol/l" | "mmol/l." => "mmol/L".into(),
+        "umol/l" | "µmol/l" | "mcmol/l" => "µmol/L".into(),
+        "nmol/l" | "nmol/l." => "nmol/L".into(),
+        "pmol/l" | "pmol/l." => "pmol/L".into(),
+
+        // === HbA1c UNITS ===
+        "mmol/mol" => "mmol/mol".into(),
+        // % handled below
+
+        // === ENZYME ACTIVITY — IU/L and U/L are equivalent ===
+        "iu/l" | "u/l" | "iu/l." => "U/L".into(),
+        "iu/ml" | "u/ml" => "U/mL".into(),
+        "ku/l" | "kiu/l" => "kU/L".into(),
+        "miu/l" | "miu/ml" | "uiu/ml" | "µiu/ml" => "mIU/L".into(),
+
+        // === CELL COUNTS ===
+        // All variants of x10^9/L → canonical "x10^9/L"
+        "x109/l" | "10^9/l" | "109/l" | "x10e9/l" | "/ul"
+        | "x 109/l" | "x10^9/l" | "10^9/l." | "thou/ul" | "k/ul"
+        | "x109/l." => "x10^9/L".into(),
+        // All variants of x10^12/L → canonical "x10^12/L"
+        "x1012/l" | "10^12/l" | "1012/l" | "x10e12/l"
+        | "x 1012/l" | "x10^12/l" | "m/ul" | "mil/ul" => "x10^12/L".into(),
+
+        // === RENAL ===
+        "ml/min/1.73m2" | "ml/min/1.73m²" | "ml/min/1.73m2." | "ml/min" => "mL/min/1.73m²".into(),
+
+        // === HAEMATOLOGY ===
+        "fl" | "fl." => "fL".into(),
+        "pg" | "pg." => "pg".into(),
+        "l/l" => "L/L".into(),
+        "mm/hr" | "mm/h" | "mm/hr." => "mm/hr".into(),
+
+        // === PERCENTAGES ===
+        "%" | "percent" => "%".into(),
+
+        // === OTHER ===
+        "ratio" => "ratio".into(),
+        "mcg" | "ug" | "µg" => "µg".into(),
+        "mg" => "mg".into(),
+        "ctrl unit" => "ctrl unit".into(),
+
+        // Fallback: return trimmed original (preserve case for unknown units)
         _ => trimmed.to_string(),
     }
 }

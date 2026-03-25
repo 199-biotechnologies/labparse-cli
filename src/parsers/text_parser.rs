@@ -33,6 +33,8 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
             %
             | ratio
             | score
+            | mmol/mol
+            | [xX]?10[\^e]?\d+/[a-zA-Z]+
             | [a-zA-Zµ°/²³]+(?:/[a-zA-Zµ°²³\d.]+)*
         )?
         "
