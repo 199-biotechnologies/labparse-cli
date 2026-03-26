@@ -1,0 +1,2178 @@
+# =============================================================================
+# labparse — Structured Biomarker Catalog
+# =============================================================================
+# Generated: 2026-03-26
+# Design: Approved by Codex (GPT-5.4) + Gemini (3.1 Pro) + Claude review
+#
+# Each marker has:
+#   id            — canonical identifier (matches labassess range names)
+#   component     — full scientific name
+#   specimen      — expected specimen type (serum, plasma, whole blood, etc.)
+#   qualifier     — method/timing qualifier (fasting, high-sensitivity, etc.)
+#   display_name  — human-readable name for reports
+#   aliases       — all known names from partner labs (Clinilabs UK, Randox UK, Cerba IT, FML Dubai)
+#   allowed_units — valid units for this marker (hard filter: reject mismatches)
+#   loinc         — LOINC code (metadata only, not used for matching)
+#   category      — clinical category
+#
+# SAFETY: NO Levenshtein matching. Exact aliases + normalization pipeline only.
+# Dangerous near-collisions: TSH↔FSH, ALT↔AST, LDL↔HDL, T3↔T4, IgA↔IgG
+# =============================================================================
+
+
+# ===== METABOLIC =====
+
+[[marker]]
+id = "fasting_glucose"
+component = "Glucose"
+specimen = "serum"
+qualifier = "fasting"
+display_name = "Fasting Glucose"
+aliases = [
+    "glucose", "blood glucose", "blood sugar", "fg", "fasting blood glucose",
+    "fasting blood sugar", "fbs", "fbg", "serum glucose", "plasma glucose",
+    "glucosio", "glicemia", "glicemia a digiuno", "nuchtern glukose",
+    "glucose (fasting)", "glucose fasting",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "1558-6"
+category = "metabolic"
+
+[[marker]]
+id = "hba1c"
+component = "Hemoglobin A1c"
+specimen = "whole blood"
+qualifier = ""
+display_name = "HbA1c"
+aliases = [
+    "hemoglobin a1c", "hb a1c", "a1c", "glycated hemoglobin", "glycosylated hemoglobin",
+    "glycated haemoglobin", "glycosylated haemoglobin", "hemoglobin a1c (hplc)",
+    "emoglobina glicata", "hba1c (ifcc)", "hba1c (ngsp)", "hb a1c (dcct)",
+]
+allowed_units = ["%", "mmol/mol"]
+loinc = "4548-4"
+category = "metabolic"
+
+[[marker]]
+id = "insulin"
+component = "Insulin"
+specimen = "serum"
+qualifier = "fasting"
+display_name = "Fasting Insulin"
+aliases = [
+    "fasting insulin", "serum insulin", "insulin level", "insulina",
+    "insuline", "insulin (fasting)",
+]
+allowed_units = ["µU/mL", "mIU/L", "pmol/L", "µIU/mL"]
+loinc = "1668-3"
+category = "metabolic"
+
+[[marker]]
+id = "c_peptide"
+component = "C-Peptide"
+specimen = "serum"
+qualifier = ""
+display_name = "C-Peptide"
+aliases = ["c peptide", "c-peptide", "peptide c", "connecting peptide"]
+allowed_units = ["ng/mL", "nmol/L", "µg/L"]
+loinc = "1986-9"
+category = "metabolic"
+
+[[marker]]
+id = "adiponectin"
+component = "Adiponectin"
+specimen = "serum"
+qualifier = ""
+display_name = "Adiponectin"
+aliases = ["adiponectina"]
+allowed_units = ["µg/mL", "mg/L", "ng/mL"]
+loinc = "56726-8"
+category = "metabolic"
+
+[[marker]]
+id = "leptin"
+component = "Leptin"
+specimen = "serum"
+qualifier = ""
+display_name = "Leptin"
+aliases = ["leptina"]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "33685-2"
+category = "metabolic"
+
+[[marker]]
+id = "resistin"
+component = "Resistin"
+specimen = "serum"
+qualifier = ""
+display_name = "Resistin"
+aliases = ["resistina"]
+allowed_units = ["ng/mL"]
+category = "metabolic"
+
+[[marker]]
+id = "homa_ir"
+component = "HOMA-IR"
+specimen = ""
+qualifier = "calculated"
+display_name = "HOMA-IR"
+aliases = ["homa ir", "homa-ir", "homeostatic model assessment", "insulin resistance index"]
+allowed_units = ["ratio", ""]
+category = "metabolic"
+
+
+# ===== LIPID =====
+
+[[marker]]
+id = "total_cholesterol"
+component = "Total Cholesterol"
+specimen = "serum"
+qualifier = ""
+display_name = "Total Cholesterol"
+aliases = [
+    "cholesterol", "tc", "total chol", "chol", "serum cholesterol",
+    "colesterolo totale", "cholesterin", "cholesterol total",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "2093-3"
+category = "lipid"
+
+[[marker]]
+id = "ldl_cholesterol"
+component = "LDL Cholesterol"
+specimen = "serum"
+qualifier = ""
+display_name = "LDL Cholesterol"
+aliases = [
+    "ldl", "ldl-c", "ldl cholesterol", "low density lipoprotein",
+    "ldl cholesterol (calculated)", "ldl cholesterol (direct)",
+    "ldl-cholesterol", "colesterolo ldl", "ldl calc", "ldl direct",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "13457-7"
+category = "lipid"
+
+[[marker]]
+id = "hdl_cholesterol"
+component = "HDL Cholesterol"
+specimen = "serum"
+qualifier = ""
+display_name = "HDL Cholesterol"
+aliases = [
+    "hdl", "hdl-c", "hdl cholesterol", "high density lipoprotein",
+    "hdl-cholesterol", "colesterolo hdl",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "2085-9"
+category = "lipid"
+
+[[marker]]
+id = "triglycerides"
+component = "Triglycerides"
+specimen = "serum"
+qualifier = ""
+display_name = "Triglycerides"
+aliases = [
+    "trig", "trigs", "tg", "serum triglycerides",
+    "trigliceridi", "triglyzeride",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "2571-8"
+category = "lipid"
+
+[[marker]]
+id = "apolipoprotein_b"
+component = "Apolipoprotein B"
+specimen = "serum"
+qualifier = ""
+display_name = "ApoB"
+aliases = [
+    "apob", "apo b", "apolipoprotein b", "apo-b", "apolipoproteina b",
+]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "1884-6"
+category = "lipid"
+
+[[marker]]
+id = "apolipoprotein_a1"
+component = "Apolipoprotein A-I"
+specimen = "serum"
+qualifier = ""
+display_name = "ApoA1"
+aliases = [
+    "apoa1", "apo a1", "apoa-i", "apo a-i", "apolipoprotein a1",
+    "apolipoprotein a-i", "apolipoprotein a-1", "apolipoproteina a1",
+]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "1869-7"
+category = "lipid"
+
+[[marker]]
+id = "lipoprotein_a"
+component = "Lipoprotein(a)"
+specimen = "serum"
+qualifier = ""
+display_name = "Lp(a)"
+aliases = [
+    "lp(a)", "lpa", "lipoprotein a", "lipoprotein (a)", "lp-a",
+    "lipoproteina a",
+]
+allowed_units = ["nmol/L", "mg/dL", "mg/L"]
+loinc = "10835-7"
+category = "lipid"
+
+[[marker]]
+id = "small_dense_ldl_c"
+component = "Small Dense LDL"
+specimen = "serum"
+qualifier = ""
+display_name = "Small Dense LDL-C"
+aliases = ["sdldl", "small dense ldl", "sd-ldl", "small dense ldl cholesterol"]
+allowed_units = ["mg/dL", "mmol/L"]
+category = "lipid"
+
+[[marker]]
+id = "vldl_cholesterol"
+component = "VLDL Cholesterol"
+specimen = "serum"
+qualifier = ""
+display_name = "VLDL Cholesterol"
+aliases = ["vldl", "vldl-c", "vldl cholesterol", "very low density lipoprotein"]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "13458-5"
+category = "lipid"
+
+[[marker]]
+id = "non_hdl_cholesterol"
+component = "Non-HDL Cholesterol"
+specimen = "serum"
+qualifier = "calculated"
+display_name = "Non-HDL Cholesterol"
+aliases = ["non-hdl", "non hdl cholesterol", "non-hdl-c", "non hdl-c"]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "43396-1"
+category = "lipid"
+
+[[marker]]
+id = "apob_apoa1_ratio"
+component = "ApoB/ApoA1 Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "ApoB/ApoA1 Ratio"
+aliases = ["apob/apoa1", "apob/apoa-i", "apo b/apo a1 ratio", "apob apoa1 ratio"]
+allowed_units = ["ratio", ""]
+category = "lipid"
+
+[[marker]]
+id = "tc_hdl_ratio"
+component = "Total Cholesterol/HDL Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "TC/HDL Ratio"
+aliases = ["cholesterol/hdl ratio", "tc/hdl", "chol/hdl ratio", "total cholesterol/hdl"]
+allowed_units = ["ratio", ""]
+category = "lipid"
+
+[[marker]]
+id = "ldl_hdl_ratio"
+component = "LDL/HDL Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "LDL/HDL Ratio"
+aliases = ["ldl/hdl", "ldl hdl ratio"]
+allowed_units = ["ratio", ""]
+category = "lipid"
+
+[[marker]]
+id = "tg_hdl_ratio"
+component = "Triglycerides/HDL Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "TG/HDL Ratio"
+aliases = ["tg/hdl", "triglycerides/hdl ratio", "tg hdl ratio"]
+allowed_units = ["ratio", ""]
+category = "lipid"
+
+
+# ===== INFLAMMATION =====
+
+[[marker]]
+id = "hscrp"
+component = "C-Reactive Protein"
+specimen = "serum"
+qualifier = "high-sensitivity"
+display_name = "hsCRP"
+aliases = [
+    "hs-crp", "high sensitivity crp", "c-reactive protein (high sensitivity)",
+    "high-sensitivity c-reactive protein", "us-crp", "ultra-sensitive crp",
+    "proteina c reattiva ad alta sensibilita",
+]
+allowed_units = ["mg/L", "mg/dL", "nmol/L"]
+loinc = "30522-7"
+category = "inflammation"
+
+[[marker]]
+id = "standard_crp"
+component = "C-Reactive Protein"
+specimen = "serum"
+qualifier = "standard"
+display_name = "CRP (Standard)"
+aliases = [
+    "c-reactive protein (standard)", "standard crp",
+    "proteina c reattiva",
+]
+allowed_units = ["mg/L", "mg/dL"]
+loinc = "1988-5"
+category = "inflammation"
+
+[[marker]]
+id = "esr"
+component = "Erythrocyte Sedimentation Rate"
+specimen = "whole blood"
+qualifier = ""
+display_name = "ESR"
+aliases = [
+    "sed rate", "sedimentation rate", "erythrocyte sedimentation rate",
+    "ves", "velocita di eritrosedimentazione",
+]
+allowed_units = ["mm/hr", "mm/h"]
+loinc = "4537-7"
+category = "inflammation"
+
+[[marker]]
+id = "ferritin"
+component = "Ferritin"
+specimen = "serum"
+qualifier = ""
+display_name = "Ferritin"
+aliases = ["serum ferritin", "ferritina"]
+allowed_units = ["ng/mL", "µg/L", "pmol/L"]
+loinc = "2276-4"
+category = "inflammation"
+
+[[marker]]
+id = "fibrinogen"
+component = "Fibrinogen"
+specimen = "plasma"
+qualifier = ""
+display_name = "Fibrinogen"
+aliases = ["plasma fibrinogen", "fibrinogeno"]
+allowed_units = ["mg/dL", "g/L", "µmol/L"]
+loinc = "3255-7"
+category = "inflammation"
+
+[[marker]]
+id = "homocysteine"
+component = "Homocysteine"
+specimen = "plasma"
+qualifier = ""
+display_name = "Homocysteine"
+aliases = ["hcy", "plasma homocysteine", "total homocysteine", "omocisteina"]
+allowed_units = ["µmol/L", "mg/L"]
+loinc = "13965-9"
+category = "inflammation"
+
+[[marker]]
+id = "il_6"
+component = "Interleukin-6"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-6"
+aliases = ["interleukin 6", "il-6", "il6", "interleuchina 6"]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "26881-3"
+category = "inflammation"
+
+[[marker]]
+id = "tnf_alpha"
+component = "Tumor Necrosis Factor Alpha"
+specimen = "serum"
+qualifier = ""
+display_name = "TNF-α"
+aliases = ["tnf-alpha", "tnf alpha", "tnf-a", "tnfa", "tumor necrosis factor"]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "3167-4"
+category = "inflammation"
+
+
+# ===== HEMATOLOGY =====
+
+[[marker]]
+id = "hemoglobin"
+component = "Hemoglobin"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Hemoglobin"
+aliases = [
+    "hgb", "hb", "haemoglobin", "emoglobina",
+]
+allowed_units = ["g/dL", "g/L", "mmol/L"]
+loinc = "718-7"
+category = "hematology"
+
+[[marker]]
+id = "hematocrit"
+component = "Hematocrit"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Hematocrit"
+aliases = [
+    "hct", "haematocrit", "packed cell volume", "pcv", "ematocrito",
+]
+allowed_units = ["%", "L/L", "ratio"]
+loinc = "4544-3"
+category = "hematology"
+
+[[marker]]
+id = "rbc_count"
+component = "Red Blood Cell Count"
+specimen = "whole blood"
+qualifier = ""
+display_name = "RBC"
+aliases = [
+    "rbc", "red blood cells", "red blood cell count", "erythrocytes",
+    "red cell count", "eritrociti",
+]
+allowed_units = ["x10^12/L", "M/µL", "10^6/µL"]
+loinc = "789-8"
+category = "hematology"
+
+[[marker]]
+id = "wbc_count"
+component = "White Blood Cell Count"
+specimen = "whole blood"
+qualifier = ""
+display_name = "WBC"
+aliases = [
+    "wbc", "white blood cells", "white blood cell count", "leukocytes",
+    "leucocytes", "white cell count", "leucociti",
+]
+allowed_units = ["x10^9/L", "K/µL", "10^3/µL"]
+loinc = "6690-2"
+category = "hematology"
+
+[[marker]]
+id = "platelets"
+component = "Platelet Count"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Platelets"
+aliases = [
+    "plt", "platelet count", "thrombocytes", "piastrine",
+]
+allowed_units = ["x10^9/L", "K/µL", "10^3/µL"]
+loinc = "777-3"
+category = "hematology"
+
+[[marker]]
+id = "mcv"
+component = "Mean Corpuscular Volume"
+specimen = "whole blood"
+qualifier = ""
+display_name = "MCV"
+aliases = ["mean corpuscular volume", "mean cell volume"]
+allowed_units = ["fL"]
+loinc = "787-2"
+category = "hematology"
+
+[[marker]]
+id = "mch"
+component = "Mean Corpuscular Hemoglobin"
+specimen = "whole blood"
+qualifier = ""
+display_name = "MCH"
+aliases = ["mean corpuscular hemoglobin", "mean corpuscular haemoglobin", "mean cell hemoglobin"]
+allowed_units = ["pg"]
+loinc = "785-6"
+category = "hematology"
+
+[[marker]]
+id = "mchc"
+component = "Mean Corpuscular Hemoglobin Concentration"
+specimen = "whole blood"
+qualifier = ""
+display_name = "MCHC"
+aliases = ["mean corpuscular hemoglobin concentration", "mean corpuscular haemoglobin concentration"]
+allowed_units = ["g/dL", "g/L"]
+loinc = "786-4"
+category = "hematology"
+
+[[marker]]
+id = "rdw"
+component = "Red Cell Distribution Width"
+specimen = "whole blood"
+qualifier = ""
+display_name = "RDW"
+aliases = ["red cell distribution width", "rdw-cv", "rdw cv"]
+allowed_units = ["%", "fL"]
+loinc = "788-0"
+category = "hematology"
+
+[[marker]]
+id = "mpv"
+component = "Mean Platelet Volume"
+specimen = "whole blood"
+qualifier = ""
+display_name = "MPV"
+aliases = ["mean platelet volume"]
+allowed_units = ["fL"]
+loinc = "32623-1"
+category = "hematology"
+
+[[marker]]
+id = "neutrophils"
+component = "Neutrophils"
+specimen = "whole blood"
+qualifier = "absolute"
+display_name = "Neutrophils"
+aliases = [
+    "neutrophil count", "absolute neutrophil count", "anc",
+    "neutrophils (absolute)", "neutrofili",
+]
+allowed_units = ["x10^9/L", "K/µL", "%"]
+loinc = "751-8"
+category = "hematology"
+
+[[marker]]
+id = "lymphocytes"
+component = "Lymphocytes"
+specimen = "whole blood"
+qualifier = "absolute"
+display_name = "Lymphocytes"
+aliases = [
+    "lymphocyte count", "absolute lymphocyte count", "alc",
+    "lymphocytes (absolute)", "linfociti",
+]
+allowed_units = ["x10^9/L", "K/µL", "%"]
+loinc = "731-0"
+category = "hematology"
+
+[[marker]]
+id = "monocytes"
+component = "Monocytes"
+specimen = "whole blood"
+qualifier = "absolute"
+display_name = "Monocytes"
+aliases = [
+    "monocyte count", "absolute monocyte count",
+    "monocytes (absolute)", "monociti",
+]
+allowed_units = ["x10^9/L", "K/µL", "%"]
+loinc = "742-7"
+category = "hematology"
+
+[[marker]]
+id = "eosinophils"
+component = "Eosinophils"
+specimen = "whole blood"
+qualifier = "absolute"
+display_name = "Eosinophils"
+aliases = [
+    "eosinophil count", "absolute eosinophil count",
+    "eosinophils (absolute)", "eosinofili",
+]
+allowed_units = ["x10^9/L", "K/µL", "%"]
+loinc = "711-2"
+category = "hematology"
+
+[[marker]]
+id = "basophils"
+component = "Basophils"
+specimen = "whole blood"
+qualifier = "absolute"
+display_name = "Basophils"
+aliases = [
+    "basophil count", "absolute basophil count",
+    "basophils (absolute)", "basofili",
+]
+allowed_units = ["x10^9/L", "K/µL", "%"]
+loinc = "704-7"
+category = "hematology"
+
+[[marker]]
+id = "reticulocytes"
+component = "Reticulocyte Count"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Reticulocytes"
+aliases = ["reticulocyte count", "retic count", "retic", "reticolociti"]
+allowed_units = ["%", "x10^9/L"]
+loinc = "17849-1"
+category = "hematology"
+
+[[marker]]
+id = "nlr_ratio"
+component = "Neutrophil-to-Lymphocyte Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "NLR"
+aliases = ["nlr", "neutrophil lymphocyte ratio", "n/l ratio"]
+allowed_units = ["ratio", ""]
+category = "hematology"
+
+
+# ===== IRON PANEL =====
+
+[[marker]]
+id = "iron"
+component = "Iron"
+specimen = "serum"
+qualifier = ""
+display_name = "Iron"
+aliases = [
+    "serum iron", "fe", "ferro", "sideremia",
+]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2498-4"
+category = "iron"
+
+[[marker]]
+id = "tibc"
+component = "Total Iron Binding Capacity"
+specimen = "serum"
+qualifier = ""
+display_name = "TIBC"
+aliases = [
+    "total iron binding capacity", "iron binding capacity",
+    "capacita totale di legame del ferro",
+]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2500-7"
+category = "iron"
+
+[[marker]]
+id = "transferrin"
+component = "Transferrin"
+specimen = "serum"
+qualifier = ""
+display_name = "Transferrin"
+aliases = ["serum transferrin", "transferrina"]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "3034-6"
+category = "iron"
+
+[[marker]]
+id = "transferrin_saturation"
+component = "Transferrin Saturation"
+specimen = "serum"
+qualifier = "calculated"
+display_name = "Transferrin Saturation"
+aliases = [
+    "tsat", "iron saturation", "transferrin sat", "fe saturation",
+    "saturazione della transferrina",
+]
+allowed_units = ["%"]
+loinc = "2502-3"
+category = "iron"
+
+[[marker]]
+id = "uibc"
+component = "Unsaturated Iron Binding Capacity"
+specimen = "serum"
+qualifier = ""
+display_name = "UIBC"
+aliases = ["unsaturated iron binding capacity", "latent iron binding capacity"]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2501-5"
+category = "iron"
+
+[[marker]]
+id = "soluble_transferrin_receptor"
+component = "Soluble Transferrin Receptor"
+specimen = "serum"
+qualifier = ""
+display_name = "sTfR"
+aliases = ["stfr", "soluble transferrin receptor", "recettore solubile della transferrina"]
+allowed_units = ["mg/L", "nmol/L"]
+loinc = "30248-9"
+category = "iron"
+
+
+# ===== KIDNEY =====
+
+[[marker]]
+id = "creatinine"
+component = "Creatinine"
+specimen = "serum"
+qualifier = ""
+display_name = "Creatinine"
+aliases = [
+    "serum creatinine", "creat", "creatinina",
+]
+allowed_units = ["mg/dL", "µmol/L"]
+loinc = "2160-0"
+category = "kidney"
+
+[[marker]]
+id = "egfr"
+component = "Estimated GFR"
+specimen = ""
+qualifier = "CKD-EPI"
+display_name = "eGFR"
+aliases = [
+    "estimated gfr", "glomerular filtration rate", "egfr (ckd-epi)",
+    "egfr (ckd-epi 2021)", "gfr", "egfr (mdrd)",
+]
+allowed_units = ["mL/min/1.73m²"]
+loinc = "98979-8"
+category = "kidney"
+
+[[marker]]
+id = "urea"
+component = "Urea"
+specimen = "serum"
+qualifier = ""
+display_name = "Urea"
+aliases = [
+    "bun", "blood urea nitrogen", "serum urea", "azotemia",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "3094-0"
+category = "kidney"
+
+[[marker]]
+id = "uric_acid"
+component = "Uric Acid"
+specimen = "serum"
+qualifier = ""
+display_name = "Uric Acid"
+aliases = [
+    "ua", "serum uric acid", "acido urico",
+]
+allowed_units = ["mg/dL", "µmol/L"]
+loinc = "3084-1"
+category = "kidney"
+
+[[marker]]
+id = "cystatin_c"
+component = "Cystatin C"
+specimen = "serum"
+qualifier = ""
+display_name = "Cystatin C"
+aliases = ["cystatin-c", "cystatin", "cistatina c"]
+allowed_units = ["mg/L", "nmol/L"]
+loinc = "33863-5"
+category = "kidney"
+
+[[marker]]
+id = "microalbumin"
+component = "Microalbumin"
+specimen = "urine"
+qualifier = ""
+display_name = "Microalbumin"
+aliases = ["urine microalbumin", "urine albumin", "albumin urine", "microalbuminuria"]
+allowed_units = ["mg/L", "mg/dL", "µg/min"]
+loinc = "14957-5"
+category = "kidney"
+
+[[marker]]
+id = "acr"
+component = "Albumin/Creatinine Ratio"
+specimen = "urine"
+qualifier = ""
+display_name = "ACR"
+aliases = [
+    "albumin creatinine ratio", "urine acr", "uacr",
+    "albumin/creatinine ratio",
+]
+allowed_units = ["mg/g", "mg/mmol"]
+loinc = "9318-7"
+category = "kidney"
+
+
+# ===== LIVER =====
+
+[[marker]]
+id = "alt"
+component = "Alanine Aminotransferase"
+specimen = "serum"
+qualifier = ""
+display_name = "ALT"
+aliases = [
+    "alanine aminotransferase", "sgpt", "gpt",
+    "alanine transaminase", "transaminasi gpt",
+]
+allowed_units = ["U/L"]
+loinc = "1742-6"
+category = "liver"
+
+[[marker]]
+id = "ast"
+component = "Aspartate Aminotransferase"
+specimen = "serum"
+qualifier = ""
+display_name = "AST"
+aliases = [
+    "aspartate aminotransferase", "sgot", "got",
+    "aspartate transaminase", "transaminasi got",
+]
+allowed_units = ["U/L"]
+loinc = "1920-8"
+category = "liver"
+
+[[marker]]
+id = "ggt"
+component = "Gamma-Glutamyltransferase"
+specimen = "serum"
+qualifier = ""
+display_name = "GGT"
+aliases = [
+    "gamma-glutamyltransferase", "gamma gt", "gamma-gt", "γ-gt",
+    "gamma glutamyl transferase", "gamma glutamyl transpeptidase",
+    "γ-glutamyltransferase",
+]
+allowed_units = ["U/L"]
+loinc = "2324-2"
+category = "liver"
+
+[[marker]]
+id = "alp"
+component = "Alkaline Phosphatase"
+specimen = "serum"
+qualifier = ""
+display_name = "ALP"
+aliases = [
+    "alkaline phosphatase", "alk phos", "fosfatasi alcalina",
+]
+allowed_units = ["U/L"]
+loinc = "6768-6"
+category = "liver"
+
+[[marker]]
+id = "total_bilirubin"
+component = "Total Bilirubin"
+specimen = "serum"
+qualifier = ""
+display_name = "Total Bilirubin"
+aliases = [
+    "bilirubin", "bilirubin total", "bilirubina totale", "tbil",
+    "total bili",
+]
+allowed_units = ["mg/dL", "µmol/L"]
+loinc = "1975-2"
+category = "liver"
+
+[[marker]]
+id = "direct_bilirubin"
+component = "Direct Bilirubin"
+specimen = "serum"
+qualifier = ""
+display_name = "Direct Bilirubin"
+aliases = [
+    "conjugated bilirubin", "bilirubin direct", "bilirubina diretta",
+    "dbil", "direct bili",
+]
+allowed_units = ["mg/dL", "µmol/L"]
+loinc = "1968-7"
+category = "liver"
+
+[[marker]]
+id = "indirect_bilirubin"
+component = "Indirect Bilirubin"
+specimen = "serum"
+qualifier = "calculated"
+display_name = "Indirect Bilirubin"
+aliases = [
+    "unconjugated bilirubin", "bilirubin indirect", "bilirubina indiretta",
+    "ibil", "indirect bili",
+]
+allowed_units = ["mg/dL", "µmol/L"]
+category = "liver"
+
+[[marker]]
+id = "albumin"
+component = "Albumin"
+specimen = "serum"
+qualifier = ""
+display_name = "Albumin"
+aliases = [
+    "serum albumin", "alb", "albumina",
+]
+allowed_units = ["g/L", "g/dL"]
+loinc = "1751-7"
+category = "liver"
+
+[[marker]]
+id = "total_protein"
+component = "Total Protein"
+specimen = "serum"
+qualifier = ""
+display_name = "Total Protein"
+aliases = [
+    "protein total", "serum protein", "tp", "proteine totali",
+]
+allowed_units = ["g/L", "g/dL"]
+loinc = "2885-2"
+category = "liver"
+
+[[marker]]
+id = "globulin"
+component = "Globulin"
+specimen = "serum"
+qualifier = "calculated"
+display_name = "Globulin"
+aliases = ["serum globulin", "total globulin"]
+allowed_units = ["g/L", "g/dL"]
+category = "liver"
+
+[[marker]]
+id = "ag_ratio"
+component = "Albumin/Globulin Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "A/G Ratio"
+aliases = ["albumin globulin ratio", "a/g ratio", "ag ratio", "a:g ratio"]
+allowed_units = ["ratio", ""]
+loinc = "1759-0"
+category = "liver"
+
+[[marker]]
+id = "ldh"
+component = "Lactate Dehydrogenase"
+specimen = "serum"
+qualifier = ""
+display_name = "LDH"
+aliases = ["lactate dehydrogenase", "lactic dehydrogenase", "lattico deidrogenasi"]
+allowed_units = ["U/L"]
+loinc = "2532-0"
+category = "liver"
+
+[[marker]]
+id = "ck"
+component = "Creatine Kinase"
+specimen = "serum"
+qualifier = ""
+display_name = "CK"
+aliases = ["creatine kinase", "creatine phosphokinase", "cpk", "ck total"]
+allowed_units = ["U/L"]
+loinc = "2157-6"
+category = "liver"
+
+
+# ===== ELECTROLYTES =====
+
+[[marker]]
+id = "sodium"
+component = "Sodium"
+specimen = "serum"
+qualifier = ""
+display_name = "Sodium"
+aliases = ["na", "na+", "serum sodium", "sodio"]
+allowed_units = ["mmol/L", "mEq/L"]
+loinc = "2951-2"
+category = "electrolytes"
+
+[[marker]]
+id = "potassium"
+component = "Potassium"
+specimen = "serum"
+qualifier = ""
+display_name = "Potassium"
+aliases = ["k", "k+", "serum potassium", "potassio"]
+allowed_units = ["mmol/L", "mEq/L"]
+loinc = "2823-3"
+category = "electrolytes"
+
+[[marker]]
+id = "chloride"
+component = "Chloride"
+specimen = "serum"
+qualifier = ""
+display_name = "Chloride"
+aliases = ["cl", "cl-", "serum chloride", "cloro"]
+allowed_units = ["mmol/L", "mEq/L"]
+loinc = "2075-0"
+category = "electrolytes"
+
+[[marker]]
+id = "calcium"
+component = "Calcium"
+specimen = "serum"
+qualifier = "total"
+display_name = "Calcium"
+aliases = [
+    "serum calcium", "ca", "calcio", "total calcium",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "17861-6"
+category = "electrolytes"
+
+[[marker]]
+id = "calcium_ionized"
+component = "Ionized Calcium"
+specimen = "serum"
+qualifier = ""
+display_name = "Ionized Calcium"
+aliases = [
+    "ionized calcium", "ionic calcium", "free calcium", "ca++", "ca2+",
+    "calcio ionizzato",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "1994-3"
+category = "electrolytes"
+
+[[marker]]
+id = "calcium_adjusted"
+component = "Corrected Calcium"
+specimen = "serum"
+qualifier = "albumin-corrected"
+display_name = "Corrected Calcium"
+aliases = [
+    "corrected calcium", "adjusted calcium", "calcium corrected",
+    "calcio corretto",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+category = "electrolytes"
+
+[[marker]]
+id = "magnesium"
+component = "Magnesium"
+specimen = "serum"
+qualifier = ""
+display_name = "Magnesium"
+aliases = [
+    "mg", "serum magnesium", "magnesio",
+]
+allowed_units = ["mg/dL", "mmol/L", "mEq/L"]
+loinc = "19123-9"
+category = "electrolytes"
+
+[[marker]]
+id = "phosphate"
+component = "Phosphate"
+specimen = "serum"
+qualifier = ""
+display_name = "Phosphate"
+aliases = [
+    "phosphorus", "inorganic phosphate", "serum phosphate", "fosforo",
+    "po4",
+]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "2777-1"
+category = "electrolytes"
+
+[[marker]]
+id = "bicarbonate"
+component = "Bicarbonate"
+specimen = "serum"
+qualifier = ""
+display_name = "Bicarbonate"
+aliases = ["hco3", "hco3-", "co2", "total co2", "carbon dioxide"]
+allowed_units = ["mmol/L", "mEq/L"]
+loinc = "1963-8"
+category = "electrolytes"
+
+[[marker]]
+id = "anion_gap"
+component = "Anion Gap"
+specimen = ""
+qualifier = "calculated"
+display_name = "Anion Gap"
+aliases = ["ag"]
+allowed_units = ["mmol/L", "mEq/L"]
+loinc = "33037-3"
+category = "electrolytes"
+
+
+# ===== THYROID =====
+
+[[marker]]
+id = "tsh"
+component = "Thyroid Stimulating Hormone"
+specimen = "serum"
+qualifier = ""
+display_name = "TSH"
+aliases = [
+    "thyroid stimulating hormone", "thyrotropin", "tireotropina",
+]
+allowed_units = ["mIU/L", "µIU/mL", "mU/L"]
+loinc = "3016-3"
+category = "thyroid"
+
+[[marker]]
+id = "free_t4"
+component = "Free Thyroxine"
+specimen = "serum"
+qualifier = ""
+display_name = "Free T4"
+aliases = [
+    "ft4", "free thyroxine", "tiroxina libera", "free t4",
+]
+allowed_units = ["ng/dL", "pmol/L"]
+loinc = "3024-7"
+category = "thyroid"
+
+[[marker]]
+id = "free_t3"
+component = "Free Triiodothyronine"
+specimen = "serum"
+qualifier = ""
+display_name = "Free T3"
+aliases = [
+    "ft3", "free triiodothyronine", "triiodotironina libera", "free t3",
+]
+allowed_units = ["pg/mL", "pmol/L"]
+loinc = "3051-0"
+category = "thyroid"
+
+[[marker]]
+id = "total_t4"
+component = "Total Thyroxine"
+specimen = "serum"
+qualifier = ""
+display_name = "Total T4"
+aliases = ["t4", "thyroxine", "total thyroxine"]
+allowed_units = ["µg/dL", "nmol/L"]
+loinc = "3026-2"
+category = "thyroid"
+
+[[marker]]
+id = "total_t3"
+component = "Total Triiodothyronine"
+specimen = "serum"
+qualifier = ""
+display_name = "Total T3"
+aliases = ["t3", "triiodothyronine", "total triiodothyronine"]
+allowed_units = ["ng/dL", "nmol/L"]
+loinc = "3053-6"
+category = "thyroid"
+
+[[marker]]
+id = "reverse_t3"
+component = "Reverse T3"
+specimen = "serum"
+qualifier = ""
+display_name = "Reverse T3"
+aliases = ["rt3", "reverse triiodothyronine", "rt3"]
+allowed_units = ["ng/dL", "nmol/L"]
+loinc = "3052-8"
+category = "thyroid"
+
+[[marker]]
+id = "thyroglobulin"
+component = "Thyroglobulin"
+specimen = "serum"
+qualifier = ""
+display_name = "Thyroglobulin"
+aliases = ["tg (thyroid)", "thyroglobulin level"]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "3013-0"
+category = "thyroid"
+
+[[marker]]
+id = "anti_tpo"
+component = "Anti-TPO Antibodies"
+specimen = "serum"
+qualifier = ""
+display_name = "Anti-TPO"
+aliases = [
+    "tpo antibodies", "thyroid peroxidase antibodies", "anti-tpo antibodies",
+    "tpo ab", "anti tpo", "anticorpi anti-tpo",
+]
+allowed_units = ["kU/L", "IU/mL", "U/mL"]
+loinc = "8099-4"
+category = "thyroid"
+
+[[marker]]
+id = "anti_tg"
+component = "Anti-Thyroglobulin Antibodies"
+specimen = "serum"
+qualifier = ""
+display_name = "Anti-Tg"
+aliases = [
+    "thyroglobulin antibodies", "thyroglobulin antibodies (tg abs)",
+    "tg antibodies", "tg abs", "anti-thyroglobulin", "atg",
+    "anti tg", "anticorpi anti-tireoglobulina",
+]
+allowed_units = ["IU/mL", "kU/L", "U/mL"]
+loinc = "8098-6"
+category = "thyroid"
+
+[[marker]]
+id = "trab"
+component = "TSH Receptor Antibodies"
+specimen = "serum"
+qualifier = ""
+display_name = "TRAb"
+aliases = [
+    "tsh receptor antibodies", "tsi", "thyroid stimulating immunoglobulin",
+]
+allowed_units = ["IU/L", "U/L"]
+category = "thyroid"
+
+
+# ===== HORMONES =====
+
+[[marker]]
+id = "testosterone"
+component = "Testosterone"
+specimen = "serum"
+qualifier = "total"
+display_name = "Testosterone (Total)"
+aliases = [
+    "total testosterone", "testosterone totale",
+]
+allowed_units = ["ng/dL", "nmol/L"]
+loinc = "2986-8"
+category = "hormone"
+
+[[marker]]
+id = "free_testosterone"
+component = "Free Testosterone"
+specimen = "serum"
+qualifier = ""
+display_name = "Free Testosterone"
+aliases = [
+    "free testo", "testosterone free", "testosterone libero",
+]
+allowed_units = ["pg/mL", "pmol/L", "ng/dL"]
+loinc = "2991-8"
+category = "hormone"
+
+[[marker]]
+id = "bioavailable_testosterone"
+component = "Bioavailable Testosterone"
+specimen = "serum"
+qualifier = ""
+display_name = "Bioavailable Testosterone"
+aliases = ["bio-available testosterone", "bat"]
+allowed_units = ["ng/dL", "nmol/L"]
+category = "hormone"
+
+[[marker]]
+id = "estradiol"
+component = "Estradiol"
+specimen = "serum"
+qualifier = ""
+display_name = "Estradiol"
+aliases = [
+    "e2", "estradiol (e2)", "estradiolo", "oestradiol", "17-beta estradiol",
+]
+allowed_units = ["pg/mL", "pmol/L"]
+loinc = "2243-4"
+category = "hormone"
+
+[[marker]]
+id = "progesterone"
+component = "Progesterone"
+specimen = "serum"
+qualifier = ""
+display_name = "Progesterone"
+aliases = ["p4", "serum progesterone", "progesterone"]
+allowed_units = ["ng/mL", "nmol/L"]
+loinc = "2839-9"
+category = "hormone"
+
+[[marker]]
+id = "dhea_s"
+component = "DHEA-Sulfate"
+specimen = "serum"
+qualifier = ""
+display_name = "DHEA-S"
+aliases = [
+    "dhea-s", "dhea sulfate", "dehydroepiandrosterone sulfate",
+    "dheas", "dhea-so4",
+]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2191-5"
+category = "hormone"
+
+[[marker]]
+id = "shbg"
+component = "Sex Hormone Binding Globulin"
+specimen = "serum"
+qualifier = ""
+display_name = "SHBG"
+aliases = [
+    "sex hormone binding globulin", "sex hormone-binding globulin",
+]
+allowed_units = ["nmol/L"]
+loinc = "13967-5"
+category = "hormone"
+
+[[marker]]
+id = "fsh"
+component = "Follicle Stimulating Hormone"
+specimen = "serum"
+qualifier = ""
+display_name = "FSH"
+aliases = [
+    "follicle stimulating hormone", "follitropine",
+]
+allowed_units = ["mIU/mL", "mIU/L", "IU/L"]
+loinc = "15067-2"
+category = "hormone"
+
+[[marker]]
+id = "lh"
+component = "Luteinizing Hormone"
+specimen = "serum"
+qualifier = ""
+display_name = "LH"
+aliases = [
+    "luteinizing hormone", "luteinising hormone",
+]
+allowed_units = ["mIU/mL", "mIU/L", "IU/L"]
+loinc = "10501-5"
+category = "hormone"
+
+[[marker]]
+id = "prolactin"
+component = "Prolactin"
+specimen = "serum"
+qualifier = ""
+display_name = "Prolactin"
+aliases = ["prl", "prolattina"]
+allowed_units = ["ng/mL", "mIU/L", "µg/L"]
+loinc = "2842-3"
+category = "hormone"
+
+[[marker]]
+id = "cortisol_am"
+component = "Cortisol"
+specimen = "serum"
+qualifier = "morning"
+display_name = "Cortisol (AM)"
+aliases = [
+    "cortisol", "am cortisol", "morning cortisol", "serum cortisol",
+    "cortisolo", "cortisol (morning)",
+]
+allowed_units = ["µg/dL", "nmol/L"]
+loinc = "2143-6"
+category = "hormone"
+
+[[marker]]
+id = "acth"
+component = "Adrenocorticotropic Hormone"
+specimen = "plasma"
+qualifier = ""
+display_name = "ACTH"
+aliases = ["adrenocorticotropic hormone", "corticotropin"]
+allowed_units = ["pg/mL", "pmol/L"]
+loinc = "2141-0"
+category = "hormone"
+
+[[marker]]
+id = "pth"
+component = "Parathyroid Hormone"
+specimen = "serum"
+qualifier = "intact"
+display_name = "PTH"
+aliases = [
+    "parathyroid hormone", "intact pth", "parathormone", "pth intact",
+    "paratormone",
+]
+allowed_units = ["pg/mL", "pmol/L"]
+loinc = "2731-8"
+category = "hormone"
+
+[[marker]]
+id = "igf_1"
+component = "Insulin-like Growth Factor 1"
+specimen = "serum"
+qualifier = ""
+display_name = "IGF-1"
+aliases = [
+    "igf-1", "igf1", "insulin-like growth factor 1",
+    "insulin like growth factor 1", "somatomedin c",
+]
+allowed_units = ["ng/mL", "nmol/L"]
+loinc = "2484-4"
+category = "hormone"
+
+[[marker]]
+id = "growth_hormone"
+component = "Growth Hormone"
+specimen = "serum"
+qualifier = ""
+display_name = "Growth Hormone"
+aliases = ["gh", "hgh", "human growth hormone", "somatotropin"]
+allowed_units = ["ng/mL", "µg/L", "mIU/L"]
+loinc = "2963-7"
+category = "hormone"
+
+[[marker]]
+id = "fai"
+component = "Free Androgen Index"
+specimen = ""
+qualifier = "calculated"
+display_name = "FAI"
+aliases = ["free androgen index"]
+allowed_units = ["%", "ratio"]
+category = "hormone"
+
+[[marker]]
+id = "beta_hcg"
+component = "Beta-HCG"
+specimen = "serum"
+qualifier = ""
+display_name = "β-HCG"
+aliases = ["bhcg", "beta hcg", "b-hcg", "human chorionic gonadotropin"]
+allowed_units = ["mIU/mL", "IU/L"]
+loinc = "21198-7"
+category = "hormone"
+
+[[marker]]
+id = "anti_mullerian_hormone"
+component = "Anti-Müllerian Hormone"
+specimen = "serum"
+qualifier = ""
+display_name = "AMH"
+aliases = ["amh", "anti-mullerian hormone", "anti mullerian hormone", "mullerian inhibiting substance"]
+allowed_units = ["ng/mL", "pmol/L"]
+loinc = "83104-0"
+category = "hormone"
+
+
+# ===== VITAMINS & NUTRITIONAL =====
+
+[[marker]]
+id = "vitamin_d"
+component = "25-Hydroxyvitamin D"
+specimen = "serum"
+qualifier = ""
+display_name = "Vitamin D"
+aliases = [
+    "vitamin d", "25-oh vitamin d", "25(oh)d", "25-hydroxyvitamin d",
+    "vit d", "vitamina d", "cholecalciferol",
+    "25-hydroxy vitamin d", "calcifediol",
+]
+allowed_units = ["ng/mL", "nmol/L"]
+loinc = "1989-3"
+category = "nutritional"
+
+[[marker]]
+id = "vitamin_b12"
+component = "Vitamin B12"
+specimen = "serum"
+qualifier = ""
+display_name = "Vitamin B12"
+aliases = [
+    "b12", "cobalamin", "cyanocobalamin", "vitamina b12",
+]
+allowed_units = ["pg/mL", "pmol/L"]
+loinc = "2132-9"
+category = "nutritional"
+
+[[marker]]
+id = "active_b12"
+component = "Active Vitamin B12"
+specimen = "serum"
+qualifier = ""
+display_name = "Active B12"
+aliases = ["holotranscobalamin", "holo-tc", "active vitamin b12", "holotc"]
+allowed_units = ["pmol/L", "pg/mL"]
+loinc = "41927-5"
+category = "nutritional"
+
+[[marker]]
+id = "folic_acid"
+component = "Folate"
+specimen = "serum"
+qualifier = ""
+display_name = "Folate"
+aliases = [
+    "folate", "folic acid", "serum folate", "vitamin b9", "acido folico",
+]
+allowed_units = ["ng/mL", "nmol/L"]
+loinc = "2284-8"
+category = "nutritional"
+
+[[marker]]
+id = "rbc_folate"
+component = "Red Cell Folate"
+specimen = "whole blood"
+qualifier = ""
+display_name = "RBC Folate"
+aliases = ["red cell folate", "erythrocyte folate", "rbc folate"]
+allowed_units = ["ng/mL", "nmol/L"]
+loinc = "2283-0"
+category = "nutritional"
+
+[[marker]]
+id = "vitamin_a"
+component = "Vitamin A"
+specimen = "serum"
+qualifier = ""
+display_name = "Vitamin A"
+aliases = ["retinol", "serum retinol", "vitamina a"]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2923-1"
+category = "nutritional"
+
+[[marker]]
+id = "vitamin_e"
+component = "Vitamin E"
+specimen = "serum"
+qualifier = ""
+display_name = "Vitamin E"
+aliases = ["alpha tocopherol", "tocopherol", "vitamina e"]
+allowed_units = ["mg/L", "µmol/L"]
+loinc = "2926-4"
+category = "nutritional"
+
+[[marker]]
+id = "vitamin_b1"
+component = "Vitamin B1"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Vitamin B1"
+aliases = ["thiamine", "thiamin", "vitamina b1"]
+allowed_units = ["nmol/L", "µg/dL"]
+category = "nutritional"
+
+[[marker]]
+id = "vitamin_b6"
+component = "Vitamin B6"
+specimen = "plasma"
+qualifier = ""
+display_name = "Vitamin B6"
+aliases = ["pyridoxine", "pyridoxal phosphate", "plp", "vitamina b6"]
+allowed_units = ["nmol/L", "µg/L"]
+loinc = "2838-1"
+category = "nutritional"
+
+[[marker]]
+id = "zinc"
+component = "Zinc"
+specimen = "serum"
+qualifier = ""
+display_name = "Zinc"
+aliases = ["serum zinc", "zn", "zinco"]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2601-3"
+category = "nutritional"
+
+[[marker]]
+id = "copper"
+component = "Copper"
+specimen = "serum"
+qualifier = ""
+display_name = "Copper"
+aliases = ["serum copper", "cu", "rame"]
+allowed_units = ["µg/dL", "µmol/L"]
+loinc = "2508-0"
+category = "nutritional"
+
+[[marker]]
+id = "selenium"
+component = "Selenium"
+specimen = "serum"
+qualifier = ""
+display_name = "Selenium"
+aliases = ["serum selenium", "se", "selenio"]
+allowed_units = ["µg/L", "µmol/L", "ng/mL"]
+loinc = "2822-5"
+category = "nutritional"
+
+[[marker]]
+id = "omega_3_index"
+component = "Omega-3 Index"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Omega-3 Index"
+aliases = ["omega 3 index", "o3 index", "epa+dha index"]
+allowed_units = ["%"]
+category = "nutritional"
+
+[[marker]]
+id = "magnesium_rbc"
+component = "RBC Magnesium"
+specimen = "whole blood"
+qualifier = ""
+display_name = "RBC Magnesium"
+aliases = ["rbc magnesium", "red cell magnesium", "erythrocyte magnesium"]
+allowed_units = ["mg/dL", "mmol/L"]
+category = "nutritional"
+
+
+# ===== CARDIAC =====
+
+[[marker]]
+id = "troponin_i"
+component = "Troponin I"
+specimen = "serum"
+qualifier = "high-sensitivity"
+display_name = "Troponin I (hs)"
+aliases = [
+    "hs-troponin i", "high-sensitivity troponin i", "hstni",
+    "troponin i", "cardiac troponin i",
+]
+allowed_units = ["ng/L", "pg/mL", "ng/mL"]
+loinc = "89579-7"
+category = "cardiac"
+
+[[marker]]
+id = "troponin_t"
+component = "Troponin T"
+specimen = "serum"
+qualifier = "high-sensitivity"
+display_name = "Troponin T (hs)"
+aliases = [
+    "hs-troponin t", "high-sensitivity troponin t", "hstnt",
+    "troponin t", "cardiac troponin t",
+]
+allowed_units = ["ng/L", "pg/mL"]
+loinc = "67151-1"
+category = "cardiac"
+
+[[marker]]
+id = "bnp"
+component = "B-type Natriuretic Peptide"
+specimen = "plasma"
+qualifier = ""
+display_name = "BNP"
+aliases = ["b-type natriuretic peptide", "brain natriuretic peptide"]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "30934-4"
+category = "cardiac"
+
+[[marker]]
+id = "nt_probnp"
+component = "NT-proBNP"
+specimen = "serum"
+qualifier = ""
+display_name = "NT-proBNP"
+aliases = ["nt-probnp", "n-terminal pro-bnp", "n terminal pro bnp", "pro-bnp"]
+allowed_units = ["pg/mL", "ng/L", "pmol/L"]
+loinc = "33762-6"
+category = "cardiac"
+
+
+# ===== CANCER MARKERS =====
+
+[[marker]]
+id = "total_psa"
+component = "Prostate Specific Antigen"
+specimen = "serum"
+qualifier = "total"
+display_name = "PSA (Total)"
+aliases = [
+    "psa", "prostate specific antigen", "total psa",
+    "antigene prostatico specifico",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "2857-1"
+category = "cancer_marker"
+
+[[marker]]
+id = "free_psa"
+component = "Free PSA"
+specimen = "serum"
+qualifier = ""
+display_name = "Free PSA"
+aliases = ["free psa", "psa free"]
+allowed_units = ["ng/mL", "%"]
+loinc = "10886-0"
+category = "cancer_marker"
+
+[[marker]]
+id = "cea"
+component = "Carcinoembryonic Antigen"
+specimen = "serum"
+qualifier = ""
+display_name = "CEA"
+aliases = ["carcinoembryonic antigen"]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "2039-6"
+category = "cancer_marker"
+
+[[marker]]
+id = "ca_125"
+component = "CA-125"
+specimen = "serum"
+qualifier = ""
+display_name = "CA 125"
+aliases = ["ca-125", "cancer antigen 125"]
+allowed_units = ["U/mL", "kU/L"]
+loinc = "10334-1"
+category = "cancer_marker"
+
+[[marker]]
+id = "ca_15_3"
+component = "CA 15-3"
+specimen = "serum"
+qualifier = ""
+display_name = "CA 15-3"
+aliases = ["ca-15-3", "cancer antigen 15-3", "ca 15.3"]
+allowed_units = ["U/mL", "kU/L"]
+loinc = "6875-9"
+category = "cancer_marker"
+
+[[marker]]
+id = "ca_19_9"
+component = "CA 19-9"
+specimen = "serum"
+qualifier = ""
+display_name = "CA 19-9"
+aliases = ["ca-19-9", "cancer antigen 19-9", "ca 19.9"]
+allowed_units = ["U/mL", "kU/L"]
+loinc = "24108-3"
+category = "cancer_marker"
+
+[[marker]]
+id = "afp"
+component = "Alpha-Fetoprotein"
+specimen = "serum"
+qualifier = ""
+display_name = "AFP"
+aliases = ["alpha-fetoprotein", "alpha fetoprotein", "alfa-fetoproteina"]
+allowed_units = ["ng/mL", "IU/mL", "kU/L"]
+loinc = "1834-1"
+category = "cancer_marker"
+
+
+# ===== IMMUNOLOGY =====
+
+[[marker]]
+id = "iga"
+component = "Immunoglobulin A"
+specimen = "serum"
+qualifier = ""
+display_name = "IgA"
+aliases = ["immunoglobulin a", "immunoglobulina a"]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "2458-8"
+category = "immunology"
+
+[[marker]]
+id = "igg"
+component = "Immunoglobulin G"
+specimen = "serum"
+qualifier = ""
+display_name = "IgG"
+aliases = ["immunoglobulin g", "immunoglobulina g"]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "2465-3"
+category = "immunology"
+
+[[marker]]
+id = "igm"
+component = "Immunoglobulin M"
+specimen = "serum"
+qualifier = ""
+display_name = "IgM"
+aliases = ["immunoglobulin m", "immunoglobulina m"]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "2472-9"
+category = "immunology"
+
+[[marker]]
+id = "ige"
+component = "Immunoglobulin E"
+specimen = "serum"
+qualifier = ""
+display_name = "IgE"
+aliases = ["immunoglobulin e", "total ige", "immunoglobulina e"]
+allowed_units = ["IU/mL", "kU/L"]
+loinc = "2458-8"
+category = "immunology"
+
+[[marker]]
+id = "complement_c3"
+component = "Complement C3"
+specimen = "serum"
+qualifier = ""
+display_name = "Complement C3"
+aliases = ["c3", "c3 complement"]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "4485-9"
+category = "immunology"
+
+[[marker]]
+id = "complement_c4"
+component = "Complement C4"
+specimen = "serum"
+qualifier = ""
+display_name = "Complement C4"
+aliases = ["c4", "c4 complement"]
+allowed_units = ["mg/dL", "g/L"]
+loinc = "4498-2"
+category = "immunology"
+
+[[marker]]
+id = "anti_ccp"
+component = "Anti-CCP Antibodies"
+specimen = "serum"
+qualifier = ""
+display_name = "Anti-CCP"
+aliases = ["anti-ccp", "cyclic citrullinated peptide antibodies", "ccp antibodies"]
+allowed_units = ["U/mL", "kU/L"]
+loinc = "53027-4"
+category = "immunology"
+
+[[marker]]
+id = "rf"
+component = "Rheumatoid Factor"
+specimen = "serum"
+qualifier = ""
+display_name = "RF"
+aliases = ["rheumatoid factor", "fattore reumatoide"]
+allowed_units = ["IU/mL", "U/mL"]
+loinc = "11572-5"
+category = "immunology"
+
+[[marker]]
+id = "aso"
+component = "Antistreptolysin O"
+specimen = "serum"
+qualifier = ""
+display_name = "ASO"
+aliases = ["antistreptolysin o", "aso titer", "tas"]
+allowed_units = ["IU/mL"]
+loinc = "1930-7"
+category = "immunology"
+
+[[marker]]
+id = "ana"
+component = "Antinuclear Antibodies"
+specimen = "serum"
+qualifier = ""
+display_name = "ANA"
+aliases = ["antinuclear antibody", "antinuclear antibodies", "anticorpi anti-nucleo"]
+allowed_units = ["titer", "ratio"]
+loinc = "8061-4"
+category = "immunology"
+
+
+# ===== CARDIOVASCULAR =====
+
+[[marker]]
+id = "galectin_3"
+component = "Galectin-3"
+specimen = "serum"
+qualifier = ""
+display_name = "Galectin-3"
+aliases = ["galectin 3"]
+allowed_units = ["ng/mL"]
+loinc = "56693-0"
+category = "cardiovascular"
+
+[[marker]]
+id = "tmao"
+component = "TMAO"
+specimen = "plasma"
+qualifier = ""
+display_name = "TMAO"
+aliases = ["trimethylamine n-oxide", "trimethylamine-n-oxide"]
+allowed_units = ["µmol/L", "µM"]
+category = "cardiovascular"
+
+[[marker]]
+id = "lp_pla2"
+component = "Lp-PLA2"
+specimen = "serum"
+qualifier = ""
+display_name = "Lp-PLA2"
+aliases = ["lp-pla2", "lipoprotein-associated phospholipase a2", "plac test"]
+allowed_units = ["ng/mL", "nmol/min/mL"]
+loinc = "47060-0"
+category = "cardiovascular"
+
+[[marker]]
+id = "myeloperoxidase"
+component = "Myeloperoxidase"
+specimen = "plasma"
+qualifier = ""
+display_name = "MPO"
+aliases = ["mpo", "myeloperoxidase"]
+allowed_units = ["pmol/L", "ng/mL"]
+loinc = "53386-4"
+category = "cardiovascular"
+
+[[marker]]
+id = "oxidized_ldl"
+component = "Oxidized LDL"
+specimen = "serum"
+qualifier = ""
+display_name = "Oxidized LDL"
+aliases = ["ox-ldl", "oxldl", "oxidized ldl cholesterol"]
+allowed_units = ["U/L", "mU/L"]
+category = "cardiovascular"
+
+
+# ===== NEUROLOGICAL =====
+
+[[marker]]
+id = "nfl"
+component = "Neurofilament Light Chain"
+specimen = "serum"
+qualifier = ""
+display_name = "NfL"
+aliases = ["neurofilament light", "nfl", "neurofilament light chain"]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "77020-7"
+category = "neurological"
+
+[[marker]]
+id = "gfap"
+component = "Glial Fibrillary Acidic Protein"
+specimen = "serum"
+qualifier = ""
+display_name = "GFAP"
+aliases = ["glial fibrillary acidic protein"]
+allowed_units = ["pg/mL", "ng/L"]
+category = "neurological"
+
+[[marker]]
+id = "p_tau_181"
+component = "Phosphorylated Tau 181"
+specimen = "plasma"
+qualifier = ""
+display_name = "p-Tau 181"
+aliases = ["p-tau 181", "p-tau181", "ptau181", "phospho-tau 181"]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "96975-8"
+category = "neurological"
+
+[[marker]]
+id = "amyloid_beta_ratio"
+component = "Amyloid Beta 42/40 Ratio"
+specimen = "plasma"
+qualifier = ""
+display_name = "Aβ42/40 Ratio"
+aliases = [
+    "amyloid beta 42/40 ratio", "ab42/40", "amyloid beta ratio",
+    "a-beta 42/40",
+]
+allowed_units = ["ratio", ""]
+category = "neurological"
+
+[[marker]]
+id = "bd_tau"
+component = "Brain-Derived Tau"
+specimen = "plasma"
+qualifier = ""
+display_name = "BD-tau"
+aliases = ["brain-derived tau", "brain derived tau"]
+allowed_units = ["pg/mL", "ng/L"]
+category = "neurological"
+
+
+# ===== COAGULATION =====
+
+[[marker]]
+id = "pt"
+component = "Prothrombin Time"
+specimen = "plasma"
+qualifier = ""
+display_name = "PT"
+aliases = ["prothrombin time"]
+allowed_units = ["seconds", "s"]
+loinc = "5902-2"
+category = "coagulation"
+
+[[marker]]
+id = "inr"
+component = "International Normalized Ratio"
+specimen = "plasma"
+qualifier = ""
+display_name = "INR"
+aliases = ["international normalised ratio", "international normalized ratio"]
+allowed_units = ["ratio", ""]
+loinc = "6301-6"
+category = "coagulation"
+
+[[marker]]
+id = "aptt"
+component = "Activated Partial Thromboplastin Time"
+specimen = "plasma"
+qualifier = ""
+display_name = "APTT"
+aliases = ["ptt", "partial thromboplastin time", "activated partial thromboplastin time"]
+allowed_units = ["seconds", "s"]
+loinc = "3173-2"
+category = "coagulation"
+
+[[marker]]
+id = "d_dimer"
+component = "D-Dimer"
+specimen = "plasma"
+qualifier = ""
+display_name = "D-Dimer"
+aliases = ["d-dimer", "d dimer", "ddimer"]
+allowed_units = ["ng/mL", "µg/L", "mg/L", "µg FEU/mL"]
+loinc = "48066-5"
+category = "coagulation"
+
+
+# ===== URINALYSIS =====
+
+[[marker]]
+id = "urine_ph"
+component = "Urine pH"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine pH"
+aliases = ["urine ph", "urinary ph"]
+allowed_units = ["pH", ""]
+loinc = "2756-5"
+category = "urinalysis"
+
+[[marker]]
+id = "urine_specific_gravity"
+component = "Urine Specific Gravity"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine Specific Gravity"
+aliases = ["specific gravity", "urine sg", "sg"]
+allowed_units = ["ratio", ""]
+loinc = "2965-2"
+category = "urinalysis"
+
+[[marker]]
+id = "urine_protein"
+component = "Urine Protein"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine Protein"
+aliases = ["protein (urine)", "proteinuria"]
+allowed_units = ["mg/dL", "mg/L", "g/L"]
+loinc = "2888-6"
+category = "urinalysis"
+
+[[marker]]
+id = "urine_glucose"
+component = "Urine Glucose"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine Glucose"
+aliases = ["glucose (urine)", "glucosuria"]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "2350-7"
+category = "urinalysis"
+
+[[marker]]
+id = "urine_ketones"
+component = "Urine Ketones"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine Ketones"
+aliases = ["ketones (urine)", "ketonuria"]
+allowed_units = ["mg/dL", "mmol/L"]
+loinc = "2514-8"
+category = "urinalysis"
+
+[[marker]]
+id = "urine_bilirubin"
+component = "Urine Bilirubin"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine Bilirubin"
+aliases = ["bilirubin (urine)"]
+allowed_units = ["mg/dL"]
+category = "urinalysis"
+
+[[marker]]
+id = "urine_urobilinogen"
+component = "Urine Urobilinogen"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine Urobilinogen"
+aliases = ["urobilinogen", "urobilinogen (urine)"]
+allowed_units = ["mg/dL", "µmol/L"]
+category = "urinalysis"
+
+[[marker]]
+id = "urine_rbc"
+component = "Urine Red Blood Cells"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine RBC"
+aliases = ["rbc (urine)", "erythrocytes (urine)", "urine red blood cells"]
+allowed_units = ["/HPF", "cells/µL"]
+category = "urinalysis"
+
+[[marker]]
+id = "urine_wbc"
+component = "Urine White Blood Cells"
+specimen = "urine"
+qualifier = ""
+display_name = "Urine WBC"
+aliases = ["wbc (urine)", "leukocytes (urine)", "urine white blood cells"]
+allowed_units = ["/HPF", "cells/µL"]
+category = "urinalysis"
+
+
+# =============================================================================
+# DISAMBIGUATION TABLE
+# =============================================================================
+# These resolve ambiguous names that could map to multiple markers.
+# The resolver checks value + unit to pick the right candidate.
+#
+# CRITICAL SAFETY: CRP/hsCRP disambiguation prevents false emergencies.
+# Standard CRP 45 mg/L scored against hsCRP <0.5 = wrong!
+# =============================================================================
+
+[[disambiguation]]
+ambiguous_name = "crp"
+default_id = "hscrp"
+candidates = [
+    # hsCRP: values < 10 mg/L (typical range 0.1-3.0)
+    { id = "hscrp", when_value_below = 10.0, when_unit_in = ["mg/L", "mg/dL"] },
+    # Standard CRP: values >= 10 mg/L (acute inflammation)
+    { id = "standard_crp", when_value_above = 10.0, when_unit_in = ["mg/L", "mg/dL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "c-reactive protein"
+default_id = "hscrp"
+candidates = [
+    { id = "hscrp", when_value_below = 10.0, when_unit_in = ["mg/L", "mg/dL"] },
+    { id = "standard_crp", when_value_above = 10.0, when_unit_in = ["mg/L", "mg/dL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "c reactive protein"
+default_id = "hscrp"
+candidates = [
+    { id = "hscrp", when_value_below = 10.0, when_unit_in = ["mg/L", "mg/dL"] },
+    { id = "standard_crp", when_value_above = 10.0, when_unit_in = ["mg/L", "mg/dL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "testosterone"
+default_id = "testosterone"
+candidates = [
+    # Total testosterone: ng/dL or nmol/L
+    { id = "testosterone", when_unit_in = ["ng/dL", "nmol/L"] },
+    # Free testosterone: pg/mL or pmol/L
+    { id = "free_testosterone", when_unit_in = ["pg/mL", "pmol/L"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "bilirubin"
+default_id = "total_bilirubin"
+candidates = [
+    { id = "total_bilirubin" },
+]
+
+[[disambiguation]]
+ambiguous_name = "calcium"
+default_id = "calcium"
+candidates = [
+    { id = "calcium", when_unit_in = ["mg/dL", "mmol/L"] },
+    { id = "calcium_ionized", when_value_below = 6.0, when_unit_in = ["mg/dL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "glucose"
+default_id = "fasting_glucose"
+candidates = [
+    { id = "fasting_glucose" },
+]
+
+[[disambiguation]]
+ambiguous_name = "protein"
+default_id = "total_protein"
+candidates = [
+    { id = "total_protein", when_unit_in = ["g/L", "g/dL"] },
+    { id = "urine_protein", when_unit_in = ["mg/dL", "mg/L"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "iron"
+default_id = "iron"
+candidates = [
+    { id = "iron" },
+]

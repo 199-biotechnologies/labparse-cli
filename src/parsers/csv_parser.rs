@@ -1,6 +1,7 @@
+use crate::catalog;
 use crate::errors::LabParseError;
 use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
-use crate::parsers::ParseResult;
+use crate::parsers::{ParseResult, UnresolvedMarker};
 
 /// Common header names for the test/biomarker name column
 const NAME_HEADERS: &[&str] = &[
@@ -107,6 +108,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     })?;
 
     let mut biomarkers = Vec::new();
+    let mut unresolved = Vec::new();
     let mut warnings = Vec::new();
     let mut seen_names = std::collections::HashSet::new();
 
@@ -134,38 +136,55 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
             }
         };
 
-        match normalize_name(raw_name) {
-            Some((std_name, display_name, category)) => {
-                if !seen_names.insert(std_name.to_string()) {
+        let norm_unit = if raw_unit.is_empty() {
+            String::new()
+        } else {
+            normalize_unit(raw_unit)
+        };
+
+        match normalize_name(raw_name, Some(value), Some(&norm_unit)) {
+            Some((std_name, display_name, category, confidence, resolution_method)) => {
+                if !seen_names.insert(std_name.clone()) {
                     warnings.push(format!("Duplicate result for {} skipped: '{}'", std_name, raw_name));
                     continue;
                 }
 
-                let unit = if raw_unit.is_empty() {
-                    crate::biomarkers::get_definition(std_name)
-                        .map(|d| d.standard_unit.clone())
+                let unit = if norm_unit.is_empty() {
+                    // Try to get default unit from catalog
+                    catalog::get_marker(&std_name)
+                        .and_then(|m| m.allowed_units.first().cloned())
                         .unwrap_or_default()
                 } else {
-                    normalize_unit(raw_unit)
+                    norm_unit
                 };
 
                 biomarkers.push(ParsedBiomarker {
                     name: raw_name.to_string(),
-                    standardized_name: std_name.to_string(),
+                    standardized_name: std_name,
                     display_name,
                     value,
                     unit,
                     category,
+                    resolved: true,
+                    confidence,
+                    resolution_method,
                 });
             }
             None => {
-                warnings.push(format!("Unknown biomarker: '{}'", raw_name));
+                // Structured passthrough — NOT raw text in standardized_name
+                unresolved.push(UnresolvedMarker {
+                    raw_name: raw_name.to_string(),
+                    value,
+                    unit: norm_unit,
+                });
+                warnings.push(format!("Unresolved biomarker: '{}'", raw_name));
             }
         }
     }
 
     Ok(ParseResult {
         biomarkers,
+        unresolved,
         warnings,
         parser_name: "csv".to_string(),
     })

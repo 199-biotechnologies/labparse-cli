@@ -1,4 +1,4 @@
-use crate::biomarkers;
+use crate::catalog;
 
 /// A parsed biomarker extracted from input
 #[derive(Debug, Clone, serde::Serialize)]
@@ -15,13 +15,29 @@ pub struct ParsedBiomarker {
     pub unit: String,
     /// Category inferred from definitions
     pub category: String,
+    /// Whether the marker was successfully resolved
+    pub resolved: bool,
+    /// Confidence level: exact, normalized, inferred_from_unit, ambiguous
+    pub confidence: String,
+    /// How the resolution was achieved
+    pub resolution_method: String,
 }
 
-/// Attempt to normalize a raw biomarker name, returning (standardized_name, display_name, category)
-pub fn normalize_name(raw: &str) -> Option<(&'static str, String, String)> {
-    let std_name = biomarkers::resolve_name(raw)?;
-    let def = biomarkers::get_definition(std_name)?;
-    Some((std_name, def.display_name.clone(), def.category.clone()))
+/// Attempt to normalize a raw biomarker name using the structured catalog.
+/// Returns (standardized_name, display_name, category, confidence, resolution_method)
+pub fn normalize_name(
+    raw: &str,
+    value: Option<f64>,
+    unit: Option<&str>,
+) -> Option<(String, String, String, String, String)> {
+    let resolved = catalog::resolve(raw, value, unit)?;
+    Some((
+        resolved.canonical_id,
+        resolved.display_name,
+        resolved.category,
+        resolved.confidence.as_str().to_string(),
+        resolved.resolution_method.as_str().to_string(),
+    ))
 }
 
 /// Normalize a unit string to its canonical form.
@@ -49,7 +65,7 @@ pub fn normalize_unit(raw: &str) -> String {
         "pg/ml" | "pg/ml." => "pg/mL".into(),
         "ug/dl" | "µg/dl" | "mcg/dl" => "µg/dL".into(),
         // µg/L and ng/mL are equivalent (1 µg/L = 1 ng/mL) — canonicalize to ng/mL
-        "ug/l" | "µg/l" | "mcg/l" | "ng/ml" => "ng/mL".into(),
+        "ug/l" | "µg/l" | "mcg/l" => "ng/mL".into(),
         // ng/L = pg/mL (equivalent: 1 ng/L = 1 pg/mL) — canonicalize to pg/mL
         "ng/l" => "pg/mL".into(),
         "mg/l" => "mg/L".into(),
@@ -90,6 +106,12 @@ pub fn normalize_unit(raw: &str) -> String {
         "l/l" => "L/L".into(),
         "mm/hr" | "mm/h" | "mm/hr." => "mm/hr".into(),
 
+        // === ELECTROLYTES ===
+        "meq/l" => "mEq/L".into(),
+
+        // === COAGULATION ===
+        "seconds" | "sec" | "secs" => "s".into(),
+
         // === PERCENTAGES ===
         "%" | "percent" => "%".into(),
 
@@ -98,6 +120,10 @@ pub fn normalize_unit(raw: &str) -> String {
         "mcg" | "ug" | "µg" => "µg".into(),
         "mg" => "mg".into(),
         "ctrl unit" => "ctrl unit".into(),
+        "titer" => "titer".into(),
+        "/hpf" => "/HPF".into(),
+        "cells/ul" | "cells/µl" => "cells/µL".into(),
+        "ph" => "pH".into(),
 
         // Fallback: return trimmed original (preserve case for unknown units)
         _ => trimmed.to_string(),

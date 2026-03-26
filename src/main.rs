@@ -1,4 +1,4 @@
-mod biomarkers;
+mod catalog;
 mod cli;
 mod errors;
 mod normalize;
@@ -108,12 +108,16 @@ fn print_agent_info() {
             "text_parsing",
             "stdin_input",
             "biomarker_normalization",
-            "148_biomarker_definitions"
+            "structured_catalog",
+            "disambiguation_table",
+            "unit_compatibility_filter",
+            "confidence_scoring",
         ],
         "input_formats": ["csv", "text", "stdin"],
         "output_formats": ["json", "table"],
-        "biomarker_count": biomarkers::DEFINITIONS.len(),
-        "categories": biomarkers::categories(),
+        "biomarker_count": catalog::marker_count(),
+        "alias_count": catalog::alias_count(),
+        "categories": catalog::categories(),
         "usage": {
             "file": "labparse bloodwork.csv",
             "text": "labparse --text 'HbA1c 5.8%, ApoB 95 mg/dL'",
@@ -125,18 +129,21 @@ fn print_agent_info() {
 }
 
 fn print_biomarkers(category: Option<&str>, json: bool) {
-    let defs = biomarkers::list_all(category);
+    let defs = catalog::list_all(category);
 
     if json {
         let items: Vec<_> = defs
             .iter()
             .map(|d| {
                 serde_json::json!({
-                    "standardized_name": d.standardized_name,
+                    "id": d.id,
                     "display_name": d.display_name,
-                    "abbreviation": d.abbreviation,
-                    "unit": d.standard_unit,
+                    "component": d.component,
+                    "specimen": d.specimen,
+                    "allowed_units": d.allowed_units,
                     "category": d.category,
+                    "loinc": d.loinc,
+                    "alias_count": d.aliases.len(),
                 })
             })
             .collect();
@@ -149,20 +156,25 @@ fn print_biomarkers(category: Option<&str>, json: bool) {
     table
         .load_preset(presets::UTF8_FULL_CONDENSED)
         .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(vec!["Name", "Standard Name", "Unit", "Category"]);
+        .set_header(vec!["Name", "ID", "Units", "Category"]);
 
     for d in &defs {
+        let units = if d.allowed_units.is_empty() {
+            "-".to_string()
+        } else {
+            d.allowed_units.join(", ")
+        };
         table.add_row(vec![
             Cell::new(&d.display_name),
-            Cell::new(&d.standardized_name),
-            Cell::new(&d.standard_unit),
+            Cell::new(&d.id),
+            Cell::new(&units),
             Cell::new(&d.category),
         ]);
     }
 
     println!("{table}");
-    println!("\n  {} biomarkers", defs.len());
+    println!("\n  {} markers ({} aliases)", defs.len(), catalog::alias_count());
     if category.is_none() {
-        println!("  Categories: {}", biomarkers::categories().join(", "));
+        println!("  Categories: {}", catalog::categories().join(", "));
     }
 }

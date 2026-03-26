@@ -4,10 +4,19 @@ pub mod text_parser;
 use crate::errors::LabParseError;
 use crate::normalize::ParsedBiomarker;
 
+/// An unresolved marker — structured passthrough
+#[derive(Debug, Clone)]
+pub struct UnresolvedMarker {
+    pub raw_name: String,
+    pub value: f64,
+    pub unit: String,
+}
+
 /// Result of parsing a lab document
 #[derive(Debug)]
 pub struct ParseResult {
     pub biomarkers: Vec<ParsedBiomarker>,
+    pub unresolved: Vec<UnresolvedMarker>,
     pub warnings: Vec<String>,
     pub parser_name: String,
 }

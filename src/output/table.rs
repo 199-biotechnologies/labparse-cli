@@ -9,11 +9,17 @@ pub fn render(result: &ParseResult, source: &str, elapsed_ms: u128) {
         return;
     }
 
+    let unresolved_count = result.unresolved.len();
     println!(
-        "\n {} {} biomarkers from {}\n",
+        "\n {} {} biomarkers from {}{}",
         "✓".green().bold(),
         result.biomarkers.len(),
-        source.bold()
+        source.bold(),
+        if unresolved_count > 0 {
+            format!(" ({} unresolved)\n", unresolved_count)
+        } else {
+            "\n".to_string()
+        }
     );
 
     let mut table = Table::new();
