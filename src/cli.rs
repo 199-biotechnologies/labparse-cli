@@ -31,10 +31,6 @@ pub struct Cli {
     #[arg(long, default_value = "150")]
     pub dpi: u32,
 
-    /// Vision backend: rapid (Rapid-MLX) or ollama
-    #[arg(long, default_value = "rapid")]
-    pub backend: String,
-
     /// Cross-verify PDF extraction with a second model (gemini or codex)
     #[arg(long)]
     pub verify: Option<String>,

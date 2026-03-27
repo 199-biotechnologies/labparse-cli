@@ -1,15 +1,13 @@
-//! PDF lab report extraction via local vision model (Qwen3.5-9B).
+//! PDF lab report extraction via Qwen3.5-9B on Apple Silicon (MLX).
 //!
-//! Pipeline: PDF → pdftoppm (150 DPI PNG) → Rapid-MLX/Ollama vision → JSON → catalog resolver
+//! Pipeline: PDF → pdftoppm (150 DPI PNG) → mlx_vlm vision → JSON → catalog resolver
 //!
-//! Three optimizations (benchmarked at 8x speedup on 7-page reports):
+//! Optimizations:
 //! 1. 150 DPI rendering (4x fewer vision tokens, lab text still readable)
-//! 2. Rapid-MLX prefix caching (prompt cached across pages)
-//! 3. /no_think mode (2x fewer generated tokens)
+//! 2. enable_thinking=False (no reasoning chain, 2x fewer tokens)
 //!
-//! Dual-model verification: optional --verify flag cross-checks with Gemini/Codex API.
+//! Requires: pdftoppm (brew install poppler), mlx-vlm (pip install mlx-vlm)
 
-use base64::Engine;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::path::Path;
@@ -31,71 +29,41 @@ Rules:
 - Do NOT skip any biomarker row
 Output ONLY the JSON array, nothing else.";
 
+const MLX_MODEL: &str = "mlx-community/Qwen3.5-9B-4bit";
+
 /// Raw biomarker from vision model output
 #[derive(Debug, Deserialize)]
 struct VisionBiomarker {
     name: String,
-    value: serde_json::Value, // Can be number or string
+    value: serde_json::Value,
     #[serde(default)]
     unit: String,
+    #[allow(dead_code)]
     #[serde(default)]
     reference_range: Option<String>,
+    #[allow(dead_code)]
     #[serde(default)]
     flagged: Option<bool>,
 }
 
-/// OpenAI-compatible chat completion response
-#[derive(Debug, Deserialize)]
-struct ChatCompletion {
-    choices: Vec<Choice>,
-    #[serde(default)]
-    usage: Option<Usage>,
-}
+/// Parse a PDF file using MLX vision model extraction.
+pub fn parse(pdf_path: &Path, dpi: u32, _backend: &str) -> Result<ParseResult, LabParseError> {
+    // Verify mlx_vlm is available
+    check_mlx_vlm()?;
 
-#[derive(Debug, Deserialize)]
-struct Choice {
-    message: Message,
-}
-
-#[derive(Debug, Deserialize)]
-struct Message {
-    content: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Usage {
-    #[serde(default)]
-    prompt_tokens: u64,
-    #[serde(default)]
-    completion_tokens: u64,
-}
-
-/// Parse a PDF file using vision model extraction.
-pub fn parse(pdf_path: &Path, dpi: u32, backend: &str) -> Result<ParseResult, LabParseError> {
     // Step 1: Convert PDF to PNG images
     let images = pdf_to_images(pdf_path, dpi)?;
     eprintln!("info: {} pages at {} DPI", images.len(), dpi);
 
-    // Step 2: Check which backend is available
-    let actual_backend = select_backend(backend);
-    eprintln!("info: using {} backend", actual_backend);
-
-    // Step 3: Extract biomarkers from each page
+    // Step 2: Extract biomarkers from each page via MLX
     let mut all_raw: Vec<VisionBiomarker> = Vec::new();
     let mut warnings = Vec::new();
-    let mut total_prompt_tokens = 0u64;
-    let mut total_completion_tokens = 0u64;
 
     for (i, img_path) in images.iter().enumerate() {
         let start = std::time::Instant::now();
 
-        let result = match actual_backend.as_str() {
-            "ollama" => extract_via_ollama(img_path),
-            _ => extract_via_rapid_mlx(img_path),
-        };
-
-        match result {
-            Ok((markers, usage)) => {
+        match extract_via_mlx(img_path) {
+            Ok(markers) => {
                 let elapsed = start.elapsed().as_secs_f32();
                 eprintln!(
                     "info: page {} — {} markers in {:.1}s",
@@ -103,10 +71,6 @@ pub fn parse(pdf_path: &Path, dpi: u32, backend: &str) -> Result<ParseResult, La
                     markers.len(),
                     elapsed
                 );
-                if let Some(u) = usage {
-                    total_prompt_tokens += u.prompt_tokens;
-                    total_completion_tokens += u.completion_tokens;
-                }
                 all_raw.extend(markers);
             }
             Err(e) => {
@@ -120,14 +84,7 @@ pub fn parse(pdf_path: &Path, dpi: u32, backend: &str) -> Result<ParseResult, La
         let _ = std::fs::remove_file(img);
     }
 
-    if total_prompt_tokens > 0 {
-        eprintln!(
-            "info: tokens — prompt: {}, completion: {}",
-            total_prompt_tokens, total_completion_tokens
-        );
-    }
-
-    // Step 4: Deduplicate and resolve through catalog
+    // Step 3: Deduplicate and resolve through catalog
     let mut biomarkers = Vec::new();
     let mut unresolved = Vec::new();
     let mut seen_names = HashSet::new();
@@ -136,7 +93,6 @@ pub fn parse(pdf_path: &Path, dpi: u32, backend: &str) -> Result<ParseResult, La
         let value = match &raw.value {
             serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
             serde_json::Value::String(s) => {
-                // Handle "<0.3" or ">1000" — strip comparator
                 let cleaned = s.trim().trim_start_matches('<').trim_start_matches('>');
                 match cleaned.parse::<f64>() {
                     Ok(v) => v,
@@ -160,7 +116,6 @@ pub fn parse(pdf_path: &Path, dpi: u32, backend: &str) -> Result<ParseResult, La
         match normalize_name(&raw.name, Some(value), Some(&norm_unit)) {
             Some((std_name, display_name, category, confidence, resolution_method)) => {
                 if !seen_names.insert(std_name.clone()) {
-                    // Duplicate — skip silently (multi-page PDFs often repeat headers)
                     continue;
                 }
 
@@ -205,14 +160,27 @@ pub fn parse(pdf_path: &Path, dpi: u32, backend: &str) -> Result<ParseResult, La
     })
 }
 
+// ── Dependency check ──
+
+fn check_mlx_vlm() -> Result<(), LabParseError> {
+    let check = Command::new("python3")
+        .args(["-c", "from mlx_vlm import load, generate"])
+        .output()
+        .map_err(|e| LabParseError::VisionError(format!("python3 not found: {}", e)))?;
+
+    if !check.status.success() {
+        return Err(LabParseError::VisionError(
+            "mlx_vlm not installed. Run: pip install mlx-vlm".to_string(),
+        ));
+    }
+    Ok(())
+}
+
 // ── PDF → Images ──
 
 fn pdf_to_images(pdf_path: &Path, dpi: u32) -> Result<Vec<String>, LabParseError> {
     let tmp_dir = std::env::temp_dir();
-    let prefix = format!(
-        "labparse_{}",
-        std::process::id()
-    );
+    let prefix = format!("labparse_{}", std::process::id());
     let output_prefix = tmp_dir.join(&prefix);
 
     let output = Command::new("pdftoppm")
@@ -226,7 +194,7 @@ fn pdf_to_images(pdf_path: &Path, dpi: u32) -> Result<Vec<String>, LabParseError
         .output()
         .map_err(|e| {
             LabParseError::PdfConversionError(format!(
-                "pdftoppm not found. Install poppler: brew install poppler. Error: {}",
+                "pdftoppm not found. Install: brew install poppler. Error: {}",
                 e
             ))
         })?;
@@ -239,7 +207,6 @@ fn pdf_to_images(pdf_path: &Path, dpi: u32) -> Result<Vec<String>, LabParseError
         )));
     }
 
-    // Collect output images (pdftoppm creates prefix-1.png, prefix-2.png, etc.)
     let mut images: Vec<String> = Vec::new();
     let parent = tmp_dir.to_str().unwrap_or("/tmp");
 
@@ -251,7 +218,7 @@ fn pdf_to_images(pdf_path: &Path, dpi: u32) -> Result<Vec<String>, LabParseError
         }
     }
 
-    images.sort(); // Ensure page order
+    images.sort();
 
     if images.is_empty() {
         return Err(LabParseError::PdfConversionError(
@@ -262,86 +229,37 @@ fn pdf_to_images(pdf_path: &Path, dpi: u32) -> Result<Vec<String>, LabParseError
     Ok(images)
 }
 
-// ── Backend selection ──
+// ── MLX Vision extraction (Qwen3.5-9B via mlx_vlm) ──
 
-fn select_backend(preferred: &str) -> String {
-    if preferred == "ollama" {
-        if ureq::get("http://localhost:11434/api/tags")
-            .timeout(std::time::Duration::from_secs(2))
-            .call()
-            .is_ok()
-        {
-            return "ollama".to_string();
-        }
-        eprintln!("error: Ollama not running at localhost:11434");
-        return "ollama".to_string();
-    }
-
-    // Default "rapid" = mlx_vlm direct (via Python subprocess)
-    // Check if mlx_vlm is importable
-    let check = Command::new("python3")
-        .args(["-c", "from mlx_vlm import load; print('ok')"])
-        .output();
-
-    if let Ok(out) = check {
-        if out.status.success() {
-            return "rapid".to_string();
-        }
-    }
-
-    // Fallback to Ollama HTTP
-    if ureq::get("http://localhost:11434/api/tags")
-        .timeout(std::time::Duration::from_secs(2))
-        .call()
-        .is_ok()
-    {
-        eprintln!("info: mlx_vlm not available, falling back to Ollama");
-        return "ollama".to_string();
-    }
-
-    eprintln!("error: No vision backend available");
-    eprintln!("  Option 1: pip install mlx-vlm (MLX direct, fastest)");
-    eprintln!("  Option 2: ollama serve && ollama pull qwen3.5:9b");
-    "ollama".to_string()
-}
-
-// ── MLX Vision extraction (direct mlx_vlm via Python subprocess) ──
-//
-// Uses mlx_vlm library directly — bypasses Rapid-MLX server layer which has
-// a known vision bug (mlx-vlm 0.4.1 + transformers 5.x: "Only returning
-// PyTorch tensors" error in prepare_inputs).
-
-fn extract_via_rapid_mlx(
-    image_path: &str,
-) -> Result<(Vec<VisionBiomarker>, Option<Usage>), LabParseError> {
-    // Python one-liner that loads mlx_vlm, runs vision extraction, outputs JSON
+fn extract_via_mlx(image_path: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
     let python_script = format!(
         r#"
-import json, sys
+import json
 from mlx_vlm import load, generate
 
-model, processor = load('mlx-community/Qwen3.5-9B-4bit')
+model, processor = load('{model}')
 prompt = processor.apply_chat_template(
     [{{'role': 'user', 'content': [
         {{'type': 'image'}},
-        {{'type': 'text', 'text': '''{extraction_prompt}'''}}
+        {{'type': 'text', 'text': '''{prompt}'''}}
     ]}}],
     add_generation_prompt=True,
     enable_thinking=False,
     tokenize=False
 )
-output = generate(model, processor, prompt, image='{image_path}', max_tokens=4096, temperature=0.0, verbose=False)
+output = generate(model, processor, prompt, image='{image}', max_tokens=4096, temperature=0.0, verbose=False)
 text = output.text if hasattr(output, 'text') else str(output)
 print(text)
 "#,
-        extraction_prompt = EXTRACTION_PROMPT.replace('\'', "\\'"),
-        image_path = image_path.replace('\'', "\\'"),
+        model = MLX_MODEL,
+        prompt = EXTRACTION_PROMPT.replace('\'', "\\'"),
+        image = image_path.replace('\'', "\\'"),
     );
 
     let output = Command::new("python3")
         .args(["-c", &python_script])
         .output()
-        .map_err(|e| LabParseError::VisionError(format!("Python/mlx_vlm not available: {}", e)))?;
+        .map_err(|e| LabParseError::VisionError(format!("mlx_vlm failed to start: {}", e)))?;
 
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr);
@@ -352,65 +270,24 @@ print(text)
     }
 
     let content = String::from_utf8_lossy(&output.stdout);
-    let markers = parse_vision_json(&content);
-    Ok((markers, None))
-}
-
-// ── Ollama extraction (HTTP API at localhost:11434) ──
-
-fn extract_via_ollama(
-    image_path: &str,
-) -> Result<(Vec<VisionBiomarker>, Option<Usage>), LabParseError> {
-    let img_bytes = std::fs::read(image_path).map_err(|e| {
-        LabParseError::VisionError(format!("Failed to read image {}: {}", image_path, e))
-    })?;
-
-    let b64 = base64::engine::general_purpose::STANDARD.encode(&img_bytes);
-
-    // Ollama /api/chat with images array (base64, no data: prefix)
-    let payload = serde_json::json!({
-        "model": "qwen3.5:9b",
-        "messages": [{
-            "role": "user",
-            "content": EXTRACTION_PROMPT,
-            "images": [b64]
-        }],
-        "stream": false,
-        "options": {
-            "temperature": 0.0,
-            "num_predict": 4096
-        }
-    });
-
-    let response = ureq::post("http://localhost:11434/api/chat")
-        .timeout(std::time::Duration::from_secs(300))
-        .send_json(&payload)
-        .map_err(|e| LabParseError::VisionError(format!("Ollama API request failed: {}", e)))?;
-
-    let body: serde_json::Value = response
-        .into_json()
-        .map_err(|e| LabParseError::VisionError(format!("Failed to parse Ollama response: {}", e)))?;
-
-    let content = body["message"]["content"].as_str().unwrap_or("[]");
-    let markers = parse_vision_json(content);
-    Ok((markers, None))
+    Ok(parse_vision_json(&content))
 }
 
 // ── JSON response parsing ──
 
 fn parse_vision_json(content: &str) -> Vec<VisionBiomarker> {
-    let mut trimmed = content.trim().to_string();
+    let mut text = content.trim().to_string();
 
-    // Strip <think>...</think> blocks (Qwen thinking mode)
-    if let Some(think_end) = trimmed.find("</think>") {
-        trimmed = trimmed[think_end + 8..].trim().to_string();
+    // Strip <think>...</think> blocks if model ignored enable_thinking=False
+    if let Some(think_end) = text.find("</think>") {
+        text = text[think_end + 8..].trim().to_string();
     }
 
-    // Strip markdown code fences if present
-    let json_str = if trimmed.starts_with("```") {
-        let inner = trimmed
+    // Strip markdown code fences
+    let json_str = if text.starts_with("```") {
+        let inner = text
             .split('\n')
-            .skip(1) // Skip ```json line
+            .skip(1)
             .collect::<Vec<_>>()
             .join("\n");
         inner
@@ -419,15 +296,17 @@ fn parse_vision_json(content: &str) -> Vec<VisionBiomarker> {
             .unwrap_or(inner.trim())
             .to_string()
     } else {
-        trimmed.to_string()
+        text
     };
 
-    // Try parsing as JSON array
     match serde_json::from_str::<Vec<VisionBiomarker>>(&json_str) {
         Ok(markers) => markers,
         Err(e) => {
             eprintln!("warn: failed to parse vision JSON: {}", e);
-            eprintln!("warn: raw content (first 200 chars): {}", &json_str[..json_str.len().min(200)]);
+            eprintln!(
+                "warn: raw content (first 200 chars): {}",
+                &json_str[..json_str.len().min(200)]
+            );
             Vec::new()
         }
     }

@@ -68,7 +68,7 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
             return Err(LabParseError::FileNotFound(path.display().to_string()));
         }
         if is_pdf(path) {
-            let result = parsers::pdf_parser::parse(path, cli.dpi, &cli.backend)?;
+            let result = parsers::pdf_parser::parse(path, cli.dpi, "")?;
             let elapsed = start.elapsed().as_millis();
             let source = format!("pdf:{}", path.display());
             return Ok((result, source, elapsed));
