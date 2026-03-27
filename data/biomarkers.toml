@@ -2094,6 +2094,367 @@ allowed_units = ["/HPF", "cells/µL"]
 category = "urinalysis"
 
 
+# ===== BODY COMPOSITION (DEXA) =====
+
+[[marker]]
+id = "body_fat_percent"
+component = "Total Body Fat Percentage"
+specimen = ""
+qualifier = "DEXA"
+display_name = "Body Fat %"
+aliases = ["total body % fat", "body fat percentage", "total body fat", "body fat", "% fat", "bf%"]
+allowed_units = ["%"]
+category = "body_composition"
+
+[[marker]]
+id = "fat_mass_index"
+component = "Fat Mass Index"
+specimen = ""
+qualifier = "DEXA"
+display_name = "Fat Mass/Height²"
+aliases = ["fat mass/height2", "fat mass index", "fmi", "fat mass/height²"]
+allowed_units = ["kg/m²", "kg/m2"]
+category = "body_composition"
+
+[[marker]]
+id = "lean_mass_index"
+component = "Lean Mass Index"
+specimen = ""
+qualifier = "DEXA"
+display_name = "Lean/Height²"
+aliases = ["lean/height2", "lean mass index", "lmi", "lean/height²", "ffmi"]
+allowed_units = ["kg/m²", "kg/m2"]
+category = "body_composition"
+
+[[marker]]
+id = "android_gynoid_ratio"
+component = "Android/Gynoid Ratio"
+specimen = ""
+qualifier = "DEXA"
+display_name = "Android/Gynoid Ratio"
+aliases = ["a/g ratio (dexa)", "android gynoid ratio"]
+allowed_units = ["ratio", ""]
+category = "body_composition"
+
+[[marker]]
+id = "vat_mass"
+component = "Visceral Adipose Tissue Mass"
+specimen = ""
+qualifier = "DEXA"
+display_name = "VAT Mass"
+aliases = ["est. vat mass", "visceral fat mass", "visceral adipose tissue"]
+allowed_units = ["g"]
+category = "body_composition"
+
+[[marker]]
+id = "vat_volume"
+component = "Visceral Adipose Tissue Volume"
+specimen = ""
+qualifier = "DEXA"
+display_name = "VAT Volume"
+aliases = ["est. vat volume", "visceral fat volume"]
+allowed_units = ["cm³", "cm3"]
+category = "body_composition"
+
+[[marker]]
+id = "vat_area"
+component = "Visceral Adipose Tissue Area"
+specimen = ""
+qualifier = "DEXA"
+display_name = "VAT Area"
+aliases = ["est. vat area", "visceral fat area"]
+allowed_units = ["cm²", "cm2"]
+category = "body_composition"
+
+[[marker]]
+id = "trunk_limb_fat_ratio"
+component = "Trunk/Limb Fat Mass Ratio"
+specimen = ""
+qualifier = "DEXA"
+display_name = "Trunk/Limb Fat Ratio"
+aliases = ["trunk/limb fat mass ratio"]
+allowed_units = ["ratio", ""]
+category = "body_composition"
+
+[[marker]]
+id = "bmd_lumbar"
+component = "Bone Mineral Density Lumbar Spine"
+specimen = ""
+qualifier = "DEXA L1-L4"
+display_name = "BMD Lumbar"
+aliases = ["bmd lumbar spine", "bmd l1-l4", "lumbar bmd", "bone mineral density lumbar"]
+allowed_units = ["g/cm²", "g/cm2"]
+category = "body_composition"
+
+[[marker]]
+id = "bmd_hip"
+component = "Bone Mineral Density Hip"
+specimen = ""
+qualifier = "DEXA femoral neck"
+display_name = "BMD Hip"
+aliases = ["bmd left hip", "bmd femoral neck", "hip bmd", "bone mineral density hip"]
+allowed_units = ["g/cm²", "g/cm2"]
+category = "body_composition"
+
+[[marker]]
+id = "bmd_t_score_lumbar"
+component = "T-Score Lumbar Spine"
+specimen = ""
+qualifier = "DEXA"
+display_name = "T-Score Lumbar"
+aliases = ["t score lumbar", "t-score lumbar spine", "t-score l1-l4"]
+allowed_units = ["score", ""]
+category = "body_composition"
+
+[[marker]]
+id = "bmd_t_score_hip"
+component = "T-Score Hip"
+specimen = ""
+qualifier = "DEXA"
+display_name = "T-Score Hip"
+aliases = ["t score hip", "t-score femoral neck", "t-score left hip"]
+allowed_units = ["score", ""]
+category = "body_composition"
+
+[[marker]]
+id = "bmi"
+component = "Body Mass Index"
+specimen = ""
+qualifier = "calculated"
+display_name = "BMI"
+aliases = ["body mass index"]
+allowed_units = ["kg/m²", "kg/m2", ""]
+category = "body_composition"
+
+
+# ===== CARDIOPULMONARY / FITNESS =====
+
+[[marker]]
+id = "vo2_max"
+component = "VO2 Max"
+specimen = ""
+qualifier = "CPET"
+display_name = "VO2 Max"
+aliases = [
+    "vo2max", "vo2 peak", "vo2peak", "peak vo2", "maximum oxygen uptake",
+    "maximal oxygen consumption", "vo2max absolute",
+]
+allowed_units = ["mL/min/kg", "L/min", "ml/min/kg"]
+category = "functional"
+
+[[marker]]
+id = "vo2_max_relative"
+component = "VO2 Max Relative"
+specimen = ""
+qualifier = "CPET"
+display_name = "VO2 Max (per kg)"
+aliases = ["vo2/kg", "vo2 max relative", "relative vo2max"]
+allowed_units = ["mL/min/kg", "ml/min/kg"]
+category = "functional"
+
+[[marker]]
+id = "rmr"
+component = "Resting Metabolic Rate"
+specimen = ""
+qualifier = ""
+display_name = "RMR"
+aliases = ["resting metabolic rate", "basal metabolic rate", "bmr", "ree", "resting energy expenditure"]
+allowed_units = ["kcal/d", "kcal/day"]
+category = "functional"
+
+[[marker]]
+id = "respiratory_quotient"
+component = "Respiratory Quotient"
+specimen = ""
+qualifier = ""
+display_name = "RQ"
+aliases = ["respiratory quotient", "rer", "respiratory exchange ratio"]
+allowed_units = ["ratio", ""]
+category = "functional"
+
+[[marker]]
+id = "hr_max"
+component = "Maximum Heart Rate"
+specimen = ""
+qualifier = "CPET"
+display_name = "HR Max"
+aliases = ["max heart rate", "maximum heart rate", "peak heart rate", "hr peak"]
+allowed_units = ["/min", "bpm"]
+category = "functional"
+
+[[marker]]
+id = "max_work_rate"
+component = "Maximum Work Rate"
+specimen = ""
+qualifier = "CPET"
+display_name = "Max Work Rate"
+aliases = ["peak work rate", "max power", "peak power output"]
+allowed_units = ["W", "watts"]
+category = "functional"
+
+
+# ===== SLEEP (POLYSOMNOGRAPHY) =====
+
+[[marker]]
+id = "ahi"
+component = "Apnea-Hypopnea Index"
+specimen = ""
+qualifier = "PSG"
+display_name = "AHI"
+aliases = ["apnea-hypopnea index", "apnea hypopnea index", "apnoea-hypopnoea index"]
+allowed_units = ["events/hr", "/hr", ""]
+category = "sleep"
+
+[[marker]]
+id = "odi"
+component = "Oxygen Desaturation Index"
+specimen = ""
+qualifier = "PSG"
+display_name = "ODI"
+aliases = ["oxygen desaturation index"]
+allowed_units = ["events/hr", "/hr", ""]
+category = "sleep"
+
+[[marker]]
+id = "sleep_efficiency"
+component = "Sleep Efficiency"
+specimen = ""
+qualifier = "PSG"
+display_name = "Sleep Efficiency"
+aliases = ["sleep efficiency (tst/trt)"]
+allowed_units = ["%"]
+category = "sleep"
+
+[[marker]]
+id = "total_sleep_time"
+component = "Total Sleep Time"
+specimen = ""
+qualifier = "PSG"
+display_name = "Total Sleep Time"
+aliases = ["tst"]
+allowed_units = ["min", "minutes", "hours"]
+category = "sleep"
+
+[[marker]]
+id = "rem_percent"
+component = "REM Sleep Percentage"
+specimen = ""
+qualifier = "PSG"
+display_name = "REM %"
+aliases = ["rem sleep", "rem percentage", "% rem"]
+allowed_units = ["%"]
+category = "sleep"
+
+[[marker]]
+id = "deep_sleep_percent"
+component = "Deep Sleep Percentage"
+specimen = ""
+qualifier = "PSG N3"
+display_name = "Deep Sleep %"
+aliases = ["n3 sleep", "n3 percentage", "% n3", "slow wave sleep", "deep sleep"]
+allowed_units = ["%"]
+category = "sleep"
+
+[[marker]]
+id = "sleep_latency"
+component = "Sleep Latency"
+specimen = ""
+qualifier = "PSG"
+display_name = "Sleep Latency"
+aliases = ["sleep onset latency", "sol"]
+allowed_units = ["min", "minutes"]
+category = "sleep"
+
+[[marker]]
+id = "plms_index"
+component = "Periodic Limb Movement Index"
+specimen = ""
+qualifier = "PSG"
+display_name = "PLMS Index"
+aliases = ["plm index", "periodic limb movements", "plms"]
+allowed_units = ["events/hr", "/hr", ""]
+category = "sleep"
+
+
+# ===== CARDIOVASCULAR IMAGING =====
+
+[[marker]]
+id = "cac_score"
+component = "Coronary Artery Calcium Score"
+specimen = ""
+qualifier = "CT Agatston"
+display_name = "CAC Score"
+aliases = [
+    "coronary artery calcium score", "agatston score", "calcium score",
+    "coronary calcium score", "cac", "cacs",
+]
+allowed_units = ["AU", ""]
+category = "cardiovascular_imaging"
+
+[[marker]]
+id = "cimt"
+component = "Carotid Intima-Media Thickness"
+specimen = ""
+qualifier = "ultrasound"
+display_name = "CIMT"
+aliases = ["carotid intima-media thickness", "carotid imt", "intima media thickness"]
+allowed_units = ["mm"]
+category = "cardiovascular_imaging"
+
+[[marker]]
+id = "lvef"
+component = "Left Ventricular Ejection Fraction"
+specimen = ""
+qualifier = "echo"
+display_name = "LVEF"
+aliases = ["ejection fraction", "ef", "left ventricular ejection fraction", "lv ejection fraction"]
+allowed_units = ["%"]
+category = "cardiovascular_imaging"
+
+
+# ===== PULMONARY FUNCTION =====
+
+[[marker]]
+id = "fev1"
+component = "Forced Expiratory Volume 1s"
+specimen = ""
+qualifier = "spirometry"
+display_name = "FEV1"
+aliases = ["forced expiratory volume", "fev1"]
+allowed_units = ["L", "% predicted"]
+category = "pulmonary"
+
+[[marker]]
+id = "fvc"
+component = "Forced Vital Capacity"
+specimen = ""
+qualifier = "spirometry"
+display_name = "FVC"
+aliases = ["forced vital capacity"]
+allowed_units = ["L", "% predicted"]
+category = "pulmonary"
+
+[[marker]]
+id = "fev1_fvc_ratio"
+component = "FEV1/FVC Ratio"
+specimen = ""
+qualifier = "spirometry"
+display_name = "FEV1/FVC"
+aliases = ["fev1/fvc ratio", "fev1 fvc ratio"]
+allowed_units = ["%", "ratio"]
+category = "pulmonary"
+
+[[marker]]
+id = "feno"
+component = "Fractional Exhaled Nitric Oxide"
+specimen = ""
+qualifier = ""
+display_name = "FeNO"
+aliases = ["exhaled nitric oxide", "feno", "fractional exhaled nitric oxide", "eno"]
+allowed_units = ["ppb"]
+category = "pulmonary"
+
+
 # =============================================================================
 # DISAMBIGUATION TABLE
 # =============================================================================
