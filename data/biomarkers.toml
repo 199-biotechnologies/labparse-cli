@@ -492,7 +492,7 @@ component = "Mean Corpuscular Hemoglobin Concentration"
 specimen = "whole blood"
 qualifier = ""
 display_name = "MCHC"
-aliases = ["mean corpuscular hemoglobin concentration", "mean corpuscular haemoglobin concentration"]
+aliases = ["mean corpuscular hemoglobin concentration", "mean corpuscular haemoglobin concentration", "mean cell haemoglobin concentration", "mean cell hemoglobin concentration"]
 allowed_units = ["g/dL", "g/L"]
 loinc = "786-4"
 category = "hematology"
@@ -503,7 +503,7 @@ component = "Red Cell Distribution Width"
 specimen = "whole blood"
 qualifier = ""
 display_name = "RDW"
-aliases = ["red cell distribution width", "rdw-cv", "rdw cv"]
+aliases = ["red cell distribution width", "red blood cell distribution width", "rdw-cv", "rdw cv"]
 allowed_units = ["%", "fL"]
 loinc = "788-0"
 category = "hematology"
@@ -1019,7 +1019,7 @@ qualifier = "albumin-corrected"
 display_name = "Corrected Calcium"
 aliases = [
     "corrected calcium", "adjusted calcium", "calcium corrected",
-    "calcio corretto",
+    "calcium (adjusted)", "calcium adjusted", "calcio corretto",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 category = "electrolytes"
@@ -1182,7 +1182,7 @@ display_name = "Anti-Tg"
 aliases = [
     "thyroglobulin antibodies", "thyroglobulin antibodies (tg abs)",
     "tg antibodies", "tg abs", "anti-thyroglobulin", "atg",
-    "anti tg", "anticorpi anti-tireoglobulina",
+    "anti tg", "anti-thyroglobulin antibody", "anticorpi anti-tireoglobulina",
 ]
 allowed_units = ["IU/mL", "kU/L", "U/mL"]
 loinc = "8098-6"
