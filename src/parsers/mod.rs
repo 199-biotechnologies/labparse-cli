@@ -1,4 +1,5 @@
 pub mod csv_parser;
+pub mod pdf_parser;
 pub mod text_parser;
 
 use crate::errors::LabParseError;

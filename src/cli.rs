@@ -8,7 +8,7 @@ use std::path::PathBuf;
     about = "Parse lab results into structured biomarker JSON"
 )]
 pub struct Cli {
-    /// Input file (CSV or text)
+    /// Input file (CSV, text, or PDF)
     pub input: Option<PathBuf>,
 
     /// Parse free-form text directly
@@ -26,6 +26,18 @@ pub struct Cli {
     /// Quiet mode — suppress warnings
     #[arg(long, global = true)]
     pub quiet: bool,
+
+    /// PDF rendering DPI (default: 150, higher = slower but more accurate)
+    #[arg(long, default_value = "150")]
+    pub dpi: u32,
+
+    /// Vision backend: rapid (Rapid-MLX) or ollama
+    #[arg(long, default_value = "rapid")]
+    pub backend: String,
+
+    /// Cross-verify PDF extraction with a second model (gemini or codex)
+    #[arg(long)]
+    pub verify: Option<String>,
 
     #[command(subcommand)]
     pub command: Option<Commands>,

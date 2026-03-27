@@ -22,6 +22,12 @@ pub enum LabParseError {
 
     #[error("No biomarkers found in input")]
     NoBiomarkersFound,
+
+    #[error("Vision extraction failed: {0}")]
+    VisionError(String),
+
+    #[error("PDF conversion failed: {0}")]
+    PdfConversionError(String),
 }
 
 impl LabParseError {
@@ -29,6 +35,7 @@ impl LabParseError {
         match self {
             Self::NoInput | Self::FileNotFound(_) => 2,
             Self::ParseFailure(_) | Self::NoBiomarkersFound => 3,
+            Self::VisionError(_) | Self::PdfConversionError(_) => 4,
             _ => 1,
         }
     }

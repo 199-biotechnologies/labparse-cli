@@ -259,7 +259,7 @@ component = "ApoB/ApoA1 Ratio"
 specimen = ""
 qualifier = "calculated"
 display_name = "ApoB/ApoA1 Ratio"
-aliases = ["apob/apoa1", "apob/apoa-i", "apo b/apo a1 ratio", "apob apoa1 ratio"]
+aliases = ["apob/apoa1", "apob/apoa-i", "apo b/apo a1 ratio", "apob apoa1 ratio", "ratio apob/apoa", "ratio apob/apoa1"]
 allowed_units = ["ratio", ""]
 category = "lipid"
 
@@ -305,6 +305,7 @@ display_name = "hsCRP"
 aliases = [
     "hs-crp", "high sensitivity crp", "c-reactive protein (high sensitivity)",
     "high-sensitivity c-reactive protein", "us-crp", "ultra-sensitive crp",
+    "crp - high sensitivity", "crp (high sensitivity)", "crp high sensitivity",
     "proteina c reattiva ad alta sensibilita",
 ]
 allowed_units = ["mg/L", "mg/dL", "nmol/L"]
@@ -634,6 +635,7 @@ qualifier = ""
 display_name = "TIBC"
 aliases = [
     "total iron binding capacity", "iron binding capacity",
+    "t.i.b.c", "t.i.b.c.", "tibc",
     "capacita totale di legame del ferro",
 ]
 allowed_units = ["µg/dL", "µmol/L"]

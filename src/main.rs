@@ -62,11 +62,37 @@ fn main() {
 fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError> {
     let start = Instant::now();
 
+    // Check if input is a PDF — route to vision pipeline
+    if let Some(path) = &cli.input {
+        if !path.exists() {
+            return Err(LabParseError::FileNotFound(path.display().to_string()));
+        }
+        if is_pdf(path) {
+            let result = parsers::pdf_parser::parse(path, cli.dpi, &cli.backend)?;
+            let elapsed = start.elapsed().as_millis();
+            let source = format!("pdf:{}", path.display());
+            return Ok((result, source, elapsed));
+        }
+    }
+
+    // Non-PDF path: text/CSV/stdin
     let (content, source) = get_input(cli)?;
     let result = parsers::auto_parse(&content, &source)?;
     let elapsed = start.elapsed().as_millis();
 
     Ok((result, source, elapsed))
+}
+
+/// Detect PDF by extension or magic bytes
+fn is_pdf(path: &std::path::Path) -> bool {
+    if let Some(ext) = path.extension() {
+        return ext.to_ascii_lowercase() == "pdf";
+    }
+    // Check magic bytes (%PDF-)
+    if let Ok(bytes) = std::fs::read(path) {
+        return bytes.starts_with(b"%PDF-");
+    }
+    false
 }
 
 fn get_input(cli: &Cli) -> Result<(String, String), LabParseError> {
@@ -102,8 +128,9 @@ fn print_agent_info() {
     let info = serde_json::json!({
         "name": "labparse",
         "version": env!("CARGO_PKG_VERSION"),
-        "description": "Parse lab results (CSV, free text) into structured biomarker JSON",
+        "description": "Parse lab results (PDF, CSV, text) into structured biomarker JSON",
         "capabilities": [
+            "pdf_vision_extraction",
             "csv_parsing",
             "text_parsing",
             "stdin_input",
@@ -112,17 +139,20 @@ fn print_agent_info() {
             "disambiguation_table",
             "unit_compatibility_filter",
             "confidence_scoring",
+            "dual_model_verification",
         ],
-        "input_formats": ["csv", "text", "stdin"],
+        "input_formats": ["pdf", "csv", "text", "stdin"],
         "output_formats": ["json", "table"],
         "biomarker_count": catalog::marker_count(),
         "alias_count": catalog::alias_count(),
         "categories": catalog::categories(),
         "usage": {
+            "pdf": "labparse bloodwork.pdf",
             "file": "labparse bloodwork.csv",
             "text": "labparse --text 'HbA1c 5.8%, ApoB 95 mg/dL'",
             "stdin": "cat notes.txt | labparse --stdin",
-            "json": "labparse results.csv --json"
+            "json": "labparse results.csv --json",
+            "verify": "labparse report.pdf --verify gemini"
         }
     });
     println!("{}", serde_json::to_string_pretty(&info).unwrap());
