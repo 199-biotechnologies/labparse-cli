@@ -130,7 +130,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Total Cholesterol"
 aliases = [
-    "cholesterol", "tc", "total chol", "chol", "serum cholesterol",
+    "cholesterol", "tc", "total chol", "chol", "serum cholesterol", "fasting cholesterol",
     "colesterolo totale", "cholesterin", "cholesterol total",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
@@ -173,7 +173,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Triglycerides"
 aliases = [
-    "trig", "trigs", "tg", "serum triglycerides",
+    "trig", "trigs", "tg", "serum triglycerides", "fasting triglycerides",
     "trigliceridi", "triglyzeride",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
@@ -791,7 +791,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "ALT"
 aliases = [
-    "alanine aminotransferase", "sgpt", "gpt",
+    "alanine aminotransferase", "alanine transferase", "sgpt", "gpt",
     "alanine transaminase", "transaminasi gpt",
 ]
 allowed_units = ["U/L"]
@@ -805,7 +805,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "AST"
 aliases = [
-    "aspartate aminotransferase", "sgot", "got",
+    "aspartate aminotransferase", "aspartate transferase", "sgot", "got",
     "aspartate transaminase", "transaminasi got",
 ]
 allowed_units = ["U/L"]
