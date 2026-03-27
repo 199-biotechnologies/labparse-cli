@@ -348,6 +348,18 @@ pub fn normalize_pipeline(raw: &str) -> String {
         }
     }
 
+    // Step 2b: Strip trailing parenthetical abbreviations like "(ALT)", "(TSH)", "(eGFR)"
+    // Common in Randox UK reports: "Alanine Aminotransferase (ALT)"
+    if let Some(paren_start) = s.rfind('(') {
+        if s.ends_with(')') {
+            let inside = &s[paren_start + 1..s.len() - 1];
+            // Only strip if the parenthetical is short (abbreviation, not method)
+            if inside.len() <= 10 && !inside.contains(' ') {
+                s = s[..paren_start].trim().to_string();
+            }
+        }
+    }
+
     // Step 3: British → American spelling
     for (british, american) in BRITISH_AMERICAN {
         if s.contains(british) {

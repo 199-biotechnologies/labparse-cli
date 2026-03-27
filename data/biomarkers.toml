@@ -1111,7 +1111,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Free T3"
 aliases = [
-    "ft3", "free triiodothyronine", "triiodotironina libera", "free t3",
+    "ft3", "free triiodothyronine", "free tri-iodothyronine", "triiodotironina libera", "free t3",
 ]
 allowed_units = ["pg/mL", "pmol/L"]
 loinc = "3051-0"
@@ -1168,7 +1168,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Anti-TPO"
 aliases = [
-    "tpo antibodies", "thyroid peroxidase antibodies", "anti-tpo antibodies",
+    "tpo antibodies", "thyroid peroxidase antibodies", "anti-thyroid peroxidase antibody", "anti-tpo antibodies",
     "tpo ab", "anti tpo", "anticorpi anti-tpo",
 ]
 allowed_units = ["kU/L", "IU/mL", "U/mL"]
