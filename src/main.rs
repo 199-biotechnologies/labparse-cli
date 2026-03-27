@@ -62,7 +62,7 @@ fn main() {
 fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError> {
     let start = Instant::now();
 
-    // Check if input is a PDF — route to vision pipeline
+    // Check if input is a PDF or image — route to vision pipeline
     if let Some(path) = &cli.input {
         if !path.exists() {
             return Err(LabParseError::FileNotFound(path.display().to_string()));
@@ -71,6 +71,12 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
             let result = parsers::pdf_parser::parse(path, cli.dpi, "")?;
             let elapsed = start.elapsed().as_millis();
             let source = format!("pdf:{}", path.display());
+            return Ok((result, source, elapsed));
+        }
+        if is_image(path) {
+            let result = parsers::pdf_parser::parse_image(path)?;
+            let elapsed = start.elapsed().as_millis();
+            let source = format!("image:{}", path.display());
             return Ok((result, source, elapsed));
         }
     }
@@ -88,9 +94,17 @@ fn is_pdf(path: &std::path::Path) -> bool {
     if let Some(ext) = path.extension() {
         return ext.to_ascii_lowercase() == "pdf";
     }
-    // Check magic bytes (%PDF-)
     if let Ok(bytes) = std::fs::read(path) {
         return bytes.starts_with(b"%PDF-");
+    }
+    false
+}
+
+/// Detect image by extension
+fn is_image(path: &std::path::Path) -> bool {
+    if let Some(ext) = path.extension() {
+        let ext = ext.to_ascii_lowercase();
+        return matches!(ext.to_str(), Some("jpg" | "jpeg" | "png" | "webp" | "heic" | "tiff" | "bmp"));
     }
     false
 }

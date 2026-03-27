@@ -1435,7 +1435,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Vitamin D"
 aliases = [
-    "vitamin d", "25-oh vitamin d", "25(oh)d", "25-hydroxyvitamin d",
+    "vitamin d", "25-oh vitamin d", "25(oh)d", "25-hydroxyvitamin d", "vitamin d 25(oh)", "vitamin d 25-oh",
     "vit d", "vitamina d", "cholecalciferol",
     "25-hydroxy vitamin d", "calcifediol",
 ]

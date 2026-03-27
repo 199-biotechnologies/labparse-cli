@@ -58,6 +58,19 @@ struct PageResult {
     error: Option<String>,
 }
 
+/// Parse image file(s) directly (JPG, PNG, etc.) — no PDF conversion needed.
+pub fn parse_image(image_path: &Path) -> Result<ParseResult, LabParseError> {
+    check_mlx_vlm()?;
+    let img = image_path.to_string_lossy().to_string();
+    eprintln!("info: 1 image");
+    let images = vec![img];
+    let page_results = extract_all_pages(&images)?;
+
+    // Cleanup not needed (user's file, not temp)
+    // Reuse the same resolution pipeline as PDF
+    resolve_page_results(page_results)
+}
+
 /// Parse a PDF file using MLX vision model extraction.
 pub fn parse(pdf_path: &Path, dpi: u32, _backend: &str) -> Result<ParseResult, LabParseError> {
     check_mlx_vlm()?;
@@ -74,7 +87,12 @@ pub fn parse(pdf_path: &Path, dpi: u32, _backend: &str) -> Result<ParseResult, L
         let _ = std::fs::remove_file(img);
     }
 
-    // Step 3: Collect raw markers from all pages
+    resolve_page_results(page_results)
+}
+
+// ── Resolve page results into ParseResult ──
+
+fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, LabParseError> {
     let mut all_raw: Vec<VisionBiomarker> = Vec::new();
     let mut warnings = Vec::new();
 
@@ -89,10 +107,8 @@ pub fn parse(pdf_path: &Path, dpi: u32, _backend: &str) -> Result<ParseResult, L
             pr.markers.len(),
             pr.elapsed_s
         );
-        // Can't move out of &pr, so we clone
     }
 
-    // Flatten (need owned values)
     for pr in page_results {
         if pr.error.is_some() {
             continue;
@@ -100,7 +116,6 @@ pub fn parse(pdf_path: &Path, dpi: u32, _backend: &str) -> Result<ParseResult, L
         all_raw.extend(pr.markers);
     }
 
-    // Step 4: Deduplicate and resolve through catalog
     let mut biomarkers = Vec::new();
     let mut unresolved = Vec::new();
     let mut seen_names = HashSet::new();
