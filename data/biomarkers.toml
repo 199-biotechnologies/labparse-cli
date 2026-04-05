@@ -84,7 +84,7 @@ component = "Adiponectin"
 specimen = "serum"
 qualifier = ""
 display_name = "Adiponectin"
-aliases = ["adiponectina"]
+aliases = ["adiponectina", "adiponectin level", "serum adiponectin", "total adiponectin"]
 allowed_units = ["µg/mL", "mg/L", "ng/mL"]
 loinc = "56726-8"
 category = "metabolic"
@@ -227,7 +227,7 @@ component = "Small Dense LDL"
 specimen = "serum"
 qualifier = ""
 display_name = "Small Dense LDL-C"
-aliases = ["sdldl", "small dense ldl", "sd-ldl", "small dense ldl cholesterol"]
+aliases = ["sdldl", "small dense ldl", "sd-ldl", "small dense ldl cholesterol", "small ldl cholesterol", "small ldl"]
 allowed_units = ["mg/dL", "mmol/L"]
 category = "lipid"
 
@@ -775,7 +775,8 @@ qualifier = ""
 display_name = "ACR"
 aliases = [
     "albumin creatinine ratio", "urine acr", "uacr",
-    "albumin/creatinine ratio",
+    "albumin/creatinine ratio", "microalbumin/creatinine ratio",
+    "microalbumin creatinine ratio", "urine albumin creatinine ratio",
 ]
 allowed_units = ["mg/g", "mg/mmol"]
 loinc = "9318-7"
@@ -1324,7 +1325,7 @@ component = "Prolactin"
 specimen = "serum"
 qualifier = ""
 display_name = "Prolactin"
-aliases = ["prl", "prolattina"]
+aliases = ["prl", "prolattina", "serum prolactin", "prolactin level", "prolactin recovery post-peg", "prolactin post-peg"]
 allowed_units = ["ng/mL", "mIU/L", "µg/L"]
 loinc = "2842-3"
 category = "hormone"
@@ -2455,6 +2456,779 @@ display_name = "FeNO"
 aliases = ["exhaled nitric oxide", "feno", "fractional exhaled nitric oxide", "eno"]
 allowed_units = ["ppb"]
 category = "pulmonary"
+
+
+# ===== TOXICOLOGY =====
+
+[[marker]]
+id = "mercury"
+component = "Mercury"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Mercury"
+aliases = [
+    "blood mercury", "hg", "mercury level", "total mercury",
+    "mercurio", "mercury blood", "whole blood mercury",
+]
+allowed_units = ["µg/L", "nmol/L", "µg/dL", "ng/mL"]
+loinc = "5688-7"
+category = "toxicology"
+
+[[marker]]
+id = "blood_lead"
+component = "Lead"
+specimen = "whole blood"
+qualifier = ""
+display_name = "Blood Lead"
+aliases = [
+    "blood lead", "lead level", "pb", "lead blood",
+    "blood lead level", "bll", "piombo", "lead whole blood",
+]
+allowed_units = ["µg/dL", "µmol/L", "µg/L"]
+loinc = "5671-3"
+category = "toxicology"
+
+
+# ===== VIRAL SEROLOGY =====
+
+[[marker]]
+id = "ebv_vca_igg"
+component = "EBV VCA IgG"
+specimen = "serum"
+qualifier = ""
+display_name = "EBV VCA IgG"
+aliases = [
+    "ebv vca igg", "epstein-barr vca igg", "epstein barr vca igg",
+    "ebv viral capsid antigen igg", "vca igg",
+]
+allowed_units = ["U/mL", "AU/mL", "index"]
+loinc = "7885-7"
+category = "viral_serology"
+
+[[marker]]
+id = "ebv_ebna_igg"
+component = "EBV EBNA IgG"
+specimen = "serum"
+qualifier = ""
+display_name = "EBV EBNA IgG"
+aliases = [
+    "ebv ebna igg", "epstein-barr ebna igg", "ebna igg",
+    "epstein barr nuclear antigen igg", "ebna-1 igg",
+]
+allowed_units = ["U/mL", "AU/mL", "index"]
+loinc = "31371-3"
+category = "viral_serology"
+
+[[marker]]
+id = "ebv_vca_igm"
+component = "EBV VCA IgM"
+specimen = "serum"
+qualifier = ""
+display_name = "EBV VCA IgM"
+aliases = [
+    "ebv vca igm", "epstein-barr vca igm", "epstein barr vca igm",
+    "ebv viral capsid antigen igm", "vca igm",
+]
+allowed_units = ["U/mL", "AU/mL", "index"]
+loinc = "7886-5"
+category = "viral_serology"
+
+
+# ===== HEMATOLOGY (additions) =====
+
+[[marker]]
+id = "haptoglobin"
+component = "Haptoglobin"
+specimen = "serum"
+qualifier = ""
+display_name = "Haptoglobin"
+aliases = [
+    "haptoglobin", "haptoglobina", "hpt", "hp",
+    "serum haptoglobin", "haptoglobin level",
+]
+allowed_units = ["mg/dL", "g/L", "µmol/L"]
+loinc = "4542-7"
+category = "hematology"
+
+
+# ===== AUTOIMMUNE (additions) =====
+
+[[marker]]
+id = "anti_ttg_iga"
+component = "Anti-Tissue Transglutaminase IgA"
+specimen = "serum"
+qualifier = ""
+display_name = "Anti-tTG IgA"
+aliases = [
+    "anti-ttg", "anti ttg", "anti-ttg iga", "anti ttg iga",
+    "tissue transglutaminase iga", "ttg iga", "ttg-iga",
+    "anti-tissue transglutaminase", "celiac antibody",
+    "anti-transglutaminasi", "ttg antibody",
+]
+allowed_units = ["U/mL", "AU/mL", "CU"]
+loinc = "31017-2"
+category = "immunology"
+
+
+# ===== INTERLEUKINS =====
+
+[[marker]]
+id = "il_1a"
+component = "Interleukin-1 Alpha"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-1α"
+aliases = [
+    "il-1a", "il-1α", "il-1 alpha", "interleukin 1 alpha",
+    "interleukin-1a", "il1a", "il1 alpha",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49765-1"
+category = "cytokine"
+
+[[marker]]
+id = "il_1b"
+component = "Interleukin-1 Beta"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-1β"
+aliases = [
+    "il-1b", "il-1β", "il-1 beta", "interleukin 1 beta",
+    "interleukin-1b", "il1b", "il1 beta", "il-1beta",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49766-9"
+category = "cytokine"
+
+[[marker]]
+id = "il_2"
+component = "Interleukin-2"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-2"
+aliases = [
+    "il-2", "interleukin 2", "interleukin-2", "il2",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49767-7"
+category = "cytokine"
+
+[[marker]]
+id = "il_4"
+component = "Interleukin-4"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-4"
+aliases = [
+    "il-4", "interleukin 4", "interleukin-4", "il4",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49768-5"
+category = "cytokine"
+
+[[marker]]
+id = "il_5"
+component = "Interleukin-5"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-5"
+aliases = [
+    "il-5", "interleukin 5", "interleukin-5", "il5",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49769-3"
+category = "cytokine"
+
+[[marker]]
+id = "il_7"
+component = "Interleukin-7"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-7"
+aliases = [
+    "il-7", "interleukin 7", "interleukin-7", "il7",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49770-1"
+category = "cytokine"
+
+[[marker]]
+id = "il_8"
+component = "Interleukin-8"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-8"
+aliases = [
+    "il-8", "interleukin 8", "interleukin-8", "il8",
+    "cxcl8",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49771-9"
+category = "cytokine"
+
+[[marker]]
+id = "il_10"
+component = "Interleukin-10"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-10"
+aliases = [
+    "il-10", "interleukin 10", "interleukin-10", "il10",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49772-7"
+category = "cytokine"
+
+[[marker]]
+id = "il_12p70"
+component = "Interleukin-12p70"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-12p70"
+aliases = [
+    "il-12p70", "interleukin 12p70", "interleukin-12p70",
+    "il-12", "interleukin 12", "il12p70", "il12",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49773-5"
+category = "cytokine"
+
+[[marker]]
+id = "il_13"
+component = "Interleukin-13"
+specimen = "serum"
+qualifier = ""
+display_name = "IL-13"
+aliases = [
+    "il-13", "interleukin 13", "interleukin-13", "il13",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49774-3"
+category = "cytokine"
+
+
+# ===== CYTOKINES / GROWTH FACTORS =====
+
+[[marker]]
+id = "vegf"
+component = "Vascular Endothelial Growth Factor"
+specimen = "serum"
+qualifier = ""
+display_name = "VEGF"
+aliases = [
+    "vegf", "vegf-a", "vascular endothelial growth factor",
+    "vegf level",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49137-3"
+category = "cytokine"
+
+[[marker]]
+id = "mcp_1"
+component = "Monocyte Chemoattractant Protein-1"
+specimen = "serum"
+qualifier = ""
+display_name = "MCP-1"
+aliases = [
+    "mcp-1", "mcp1", "monocyte chemoattractant protein-1",
+    "ccl2", "monocyte chemotactic protein 1",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "56811-8"
+category = "cytokine"
+
+[[marker]]
+id = "gm_csf"
+component = "Granulocyte-Macrophage Colony-Stimulating Factor"
+specimen = "serum"
+qualifier = ""
+display_name = "GM-CSF"
+aliases = [
+    "gm-csf", "gmcsf", "granulocyte-macrophage csf",
+    "csf2", "colony stimulating factor 2",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49780-0"
+category = "cytokine"
+
+[[marker]]
+id = "mip_1a"
+component = "Macrophage Inflammatory Protein-1 Alpha"
+specimen = "serum"
+qualifier = ""
+display_name = "MIP-1α"
+aliases = [
+    "mip-1a", "mip-1α", "mip1a", "ccl3",
+    "macrophage inflammatory protein 1 alpha",
+    "macrophage inflammatory protein-1a",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "56814-2"
+category = "cytokine"
+
+[[marker]]
+id = "egf"
+component = "Epidermal Growth Factor"
+specimen = "serum"
+qualifier = ""
+display_name = "EGF"
+aliases = [
+    "egf", "epidermal growth factor", "egf level",
+]
+allowed_units = ["pg/mL", "ng/L"]
+loinc = "49775-0"
+category = "cytokine"
+
+[[marker]]
+id = "sil_2r"
+component = "Soluble Interleukin-2 Receptor"
+specimen = "serum"
+qualifier = ""
+display_name = "sIL-2R"
+aliases = [
+    "soluble il-2r", "sil-2r", "sil2r", "soluble il-2 receptor",
+    "scd25", "cd25 soluble", "soluble interleukin-2 receptor",
+    "il-2r soluble",
+]
+allowed_units = ["U/mL", "pg/mL", "kU/L"]
+loinc = "49779-2"
+category = "cytokine"
+
+[[marker]]
+id = "sil_4r"
+component = "Soluble Interleukin-4 Receptor"
+specimen = "serum"
+qualifier = ""
+display_name = "sIL-4R"
+aliases = [
+    "soluble il-4r", "sil-4r", "sil4r", "soluble il-4 receptor",
+    "soluble interleukin-4 receptor",
+]
+allowed_units = ["pg/mL", "ng/mL"]
+category = "cytokine"
+
+[[marker]]
+id = "stnfr1"
+component = "Soluble TNF Receptor 1"
+specimen = "serum"
+qualifier = ""
+display_name = "sTNFR1"
+aliases = [
+    "soluble tnfr1", "stnfr1", "soluble tnf receptor 1",
+    "tnfrsf1a soluble", "p55 soluble", "soluble tnfr-1",
+    "soluble tumor necrosis factor receptor 1",
+]
+allowed_units = ["pg/mL", "ng/mL"]
+loinc = "49781-8"
+category = "cytokine"
+
+[[marker]]
+id = "stnfr3"
+component = "Soluble TNF Receptor 3"
+specimen = "serum"
+qualifier = ""
+display_name = "sTNFR3"
+aliases = [
+    "soluble tnfr3", "stnfr3", "soluble tnf receptor 3",
+    "soluble tnfr-3",
+]
+allowed_units = ["pg/mL", "ng/mL"]
+category = "cytokine"
+
+
+# ===== FATTY ACID BINDING PROTEINS =====
+
+[[marker]]
+id = "fabp3"
+component = "Fatty Acid Binding Protein 3"
+specimen = "serum"
+qualifier = ""
+display_name = "FABP3"
+aliases = [
+    "fabp3", "fabp-3", "h-fabp", "heart-type fabp",
+    "heart fatty acid binding protein",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "49800-6"
+category = "metabolic"
+
+[[marker]]
+id = "fabp4"
+component = "Fatty Acid Binding Protein 4"
+specimen = "serum"
+qualifier = ""
+display_name = "FABP4"
+aliases = [
+    "fabp4", "fabp-4", "a-fabp", "adipocyte-type fabp",
+    "adipocyte fatty acid binding protein",
+]
+allowed_units = ["ng/mL", "µg/L"]
+category = "metabolic"
+
+[[marker]]
+id = "fabp5"
+component = "Fatty Acid Binding Protein 5"
+specimen = "serum"
+qualifier = ""
+display_name = "FABP5"
+aliases = [
+    "fabp5", "fabp-5", "e-fabp", "epidermal-type fabp",
+    "epidermal fatty acid binding protein",
+]
+allowed_units = ["ng/mL", "µg/L"]
+category = "metabolic"
+
+[[marker]]
+id = "fabp6"
+component = "Fatty Acid Binding Protein 6"
+specimen = "serum"
+qualifier = ""
+display_name = "FABP6"
+aliases = [
+    "fabp6", "fabp-6", "i-fabp-6", "ileal-type fabp",
+    "ileal fatty acid binding protein", "gastrotropin",
+]
+allowed_units = ["ng/mL", "µg/L"]
+category = "metabolic"
+
+[[marker]]
+id = "fabp7"
+component = "Fatty Acid Binding Protein 7"
+specimen = "serum"
+qualifier = ""
+display_name = "FABP7"
+aliases = [
+    "fabp7", "fabp-7", "b-fabp", "brain-type fabp",
+    "brain fatty acid binding protein",
+]
+allowed_units = ["ng/mL", "µg/L"]
+category = "metabolic"
+
+[[marker]]
+id = "fabp8"
+component = "Fatty Acid Binding Protein 8"
+specimen = "serum"
+qualifier = ""
+display_name = "FABP8"
+aliases = [
+    "fabp8", "fabp-8", "m-fabp", "myelin-type fabp",
+    "myelin fatty acid binding protein", "peripheral myelin protein 2",
+]
+allowed_units = ["ng/mL", "µg/L"]
+category = "metabolic"
+
+
+# ===== METABOLIC (additions) =====
+
+[[marker]]
+id = "fructosamine"
+component = "Fructosamine"
+specimen = "serum"
+qualifier = ""
+display_name = "Fructosamine"
+aliases = [
+    "fructosamine", "glycated albumin fructosamine",
+    "fructosamina", "serum fructosamine",
+]
+allowed_units = ["µmol/L", "mmol/L"]
+loinc = "1784-8"
+category = "metabolic"
+
+[[marker]]
+id = "nefa"
+component = "Non-Esterified Fatty Acids"
+specimen = "serum"
+qualifier = "fasting"
+display_name = "NEFA"
+aliases = [
+    "nefa", "non-esterified fatty acids", "free fatty acids",
+    "ffa", "non esterified fatty acids", "acidi grassi liberi",
+]
+allowed_units = ["mmol/L", "mEq/L", "mg/dL"]
+loinc = "2571-8"
+category = "metabolic"
+
+
+# ===== KIDNEY (additions) =====
+
+[[marker]]
+id = "beta_2_microglobulin"
+component = "Beta-2 Microglobulin"
+specimen = "serum"
+qualifier = ""
+display_name = "β2-Microglobulin"
+aliases = [
+    "beta-2 microglobulin", "b2m", "β2-microglobulin",
+    "beta 2 microglobulin", "b2-microglobulin",
+    "beta2 microglobulin", "β2m",
+]
+allowed_units = ["mg/L", "µg/mL", "nmol/L"]
+loinc = "1952-1"
+category = "kidney"
+
+[[marker]]
+id = "ngal"
+component = "Neutrophil Gelatinase-Associated Lipocalin"
+specimen = "serum"
+qualifier = ""
+display_name = "NGAL"
+aliases = [
+    "ngal", "neutrophil gelatinase-associated lipocalin",
+    "lipocalin-2", "lcn2", "siderocalin",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "63023-1"
+category = "kidney"
+
+
+# ===== DIGESTIVE =====
+
+[[marker]]
+id = "lipase"
+component = "Lipase"
+specimen = "serum"
+qualifier = ""
+display_name = "Lipase"
+aliases = [
+    "lipase", "serum lipase", "lipasi", "pancreatic lipase",
+]
+allowed_units = ["U/L", "IU/L"]
+loinc = "3040-3"
+category = "digestive"
+
+[[marker]]
+id = "aldolase"
+component = "Aldolase"
+specimen = "serum"
+qualifier = ""
+display_name = "Aldolase"
+aliases = [
+    "aldolase", "aldolasi", "serum aldolase", "ald",
+]
+allowed_units = ["U/L", "IU/L"]
+loinc = "1779-8"
+category = "digestive"
+
+[[marker]]
+id = "pepsinogen_1"
+component = "Pepsinogen I"
+specimen = "serum"
+qualifier = ""
+display_name = "Pepsinogen I"
+aliases = [
+    "pepsinogen i", "pepsinogen 1", "pg i", "pg1",
+    "pepsinogeno i", "pepsinogen-i",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "2637-7"
+category = "digestive"
+
+[[marker]]
+id = "pepsinogen_2"
+component = "Pepsinogen II"
+specimen = "serum"
+qualifier = ""
+display_name = "Pepsinogen II"
+aliases = [
+    "pepsinogen ii", "pepsinogen 2", "pg ii", "pg2",
+    "pepsinogeno ii", "pepsinogen-ii",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "2639-3"
+category = "digestive"
+
+[[marker]]
+id = "pepsinogen_ratio"
+component = "Pepsinogen I/II Ratio"
+specimen = ""
+qualifier = "calculated"
+display_name = "PG I/II Ratio"
+aliases = [
+    "pepsinogen i/ii ratio", "pepsinogen ratio", "pg i/ii ratio",
+    "pg ratio", "pgi/pgii ratio", "pepsinogen 1/2 ratio",
+]
+allowed_units = ["ratio"]
+category = "digestive"
+
+[[marker]]
+id = "h_pylori_igg"
+component = "Helicobacter pylori IgG"
+specimen = "serum"
+qualifier = ""
+display_name = "H. pylori IgG"
+aliases = [
+    "h. pylori", "h pylori", "helicobacter pylori",
+    "h. pylori igg", "h pylori igg", "hp igg",
+    "helicobacter pylori igg", "h pylori antibodies",
+]
+allowed_units = ["U/mL", "AU/mL", "index", "EIU"]
+loinc = "5180-5"
+category = "digestive"
+
+[[marker]]
+id = "gastrin"
+component = "Gastrin"
+specimen = "serum"
+qualifier = "fasting"
+display_name = "Gastrin"
+aliases = [
+    "gastrin", "serum gastrin", "fasting gastrin",
+    "gastrina",
+]
+allowed_units = ["pg/mL", "ng/L", "pmol/L"]
+loinc = "2333-3"
+category = "digestive"
+
+[[marker]]
+id = "gastrin_17"
+component = "Gastrin-17"
+specimen = "serum"
+qualifier = ""
+display_name = "Gastrin-17"
+aliases = [
+    "gastrin-17", "gastrin 17", "g-17", "g17",
+    "gastrina-17",
+]
+allowed_units = ["pmol/L", "pg/mL"]
+loinc = "56693-0"
+category = "digestive"
+
+[[marker]]
+id = "bile_acids"
+component = "Total Bile Acids"
+specimen = "serum"
+qualifier = ""
+display_name = "Bile Acids"
+aliases = [
+    "bile acids", "total bile acids", "tba",
+    "acidi biliari", "serum bile acids",
+]
+allowed_units = ["µmol/L", "mg/dL"]
+loinc = "14628-4"
+category = "digestive"
+
+
+# ===== CARDIAC (additions) =====
+
+[[marker]]
+id = "ck_mb"
+component = "Creatine Kinase-MB"
+specimen = "serum"
+qualifier = ""
+display_name = "CK-MB"
+aliases = [
+    "ck-mb", "ckmb", "ck mb", "creatine kinase mb",
+    "creatine kinase-mb", "ck-mb mass",
+]
+allowed_units = ["ng/mL", "U/L", "µg/L"]
+loinc = "13969-1"
+category = "cardiac"
+
+[[marker]]
+id = "myoglobin"
+component = "Myoglobin"
+specimen = "serum"
+qualifier = ""
+display_name = "Myoglobin"
+aliases = [
+    "myoglobin", "serum myoglobin", "mioglobina",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "2639-3"
+category = "cardiac"
+
+
+# ===== LIPID (additions) =====
+
+[[marker]]
+id = "apolipoprotein_c3"
+component = "Apolipoprotein C-III"
+specimen = "serum"
+qualifier = ""
+display_name = "ApoCIII"
+aliases = [
+    "apociii", "apo ciii", "apolipoprotein c-iii",
+    "apolipoprotein c3", "apoc3", "apo c-iii", "apo c3",
+]
+allowed_units = ["mg/dL", "mg/L"]
+loinc = "1871-3"
+category = "lipid"
+
+[[marker]]
+id = "apolipoprotein_e"
+component = "Apolipoprotein E"
+specimen = "serum"
+qualifier = ""
+display_name = "ApoE"
+aliases = [
+    "apoe", "apo e", "apolipoprotein e",
+    "apolipoprotein e level", "apo-e",
+]
+allowed_units = ["mg/L", "mg/dL"]
+loinc = "1884-6"
+category = "lipid"
+
+
+# ===== THYROID (additions) =====
+
+[[marker]]
+id = "tbg"
+component = "Thyroid-Binding Globulin"
+specimen = "serum"
+qualifier = ""
+display_name = "TBG"
+aliases = [
+    "tbg", "thyroid-binding globulin", "thyroid binding globulin",
+    "thyroxine-binding globulin", "thyroxine binding globulin",
+]
+allowed_units = ["µg/mL", "mg/L", "nmol/L"]
+loinc = "3034-6"
+category = "thyroid"
+
+[[marker]]
+id = "calcitonin"
+component = "Calcitonin"
+specimen = "serum"
+qualifier = ""
+display_name = "Calcitonin"
+aliases = [
+    "calcitonin", "calcitonina", "serum calcitonin",
+    "calcitonin level", "ct",
+]
+allowed_units = ["pg/mL", "ng/L", "pmol/L"]
+loinc = "1992-7"
+category = "thyroid"
+
+
+# ===== OTHER (additions) =====
+
+[[marker]]
+id = "mmp_9"
+component = "Matrix Metalloproteinase-9"
+specimen = "serum"
+qualifier = ""
+display_name = "MMP-9"
+aliases = [
+    "mmp-9", "mmp9", "matrix metalloproteinase-9",
+    "matrix metalloproteinase 9", "gelatinase b",
+]
+allowed_units = ["ng/mL", "µg/L"]
+loinc = "49132-4"
+category = "inflammation"
+
+[[marker]]
+id = "total_antioxidant_status"
+component = "Total Antioxidant Status"
+specimen = "serum"
+qualifier = ""
+display_name = "TAS"
+aliases = [
+    "total antioxidant status", "tas", "total antioxidant capacity",
+    "tac", "orac", "antioxidant status",
+]
+allowed_units = ["mmol/L", "µmol/L"]
+loinc = "2524-7"
+category = "metabolic"
 
 
 # =============================================================================
