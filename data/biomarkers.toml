@@ -2931,7 +2931,7 @@ aliases = [
     "fructosamina", "serum fructosamine",
 ]
 allowed_units = ["µmol/L", "mmol/L"]
-loinc = "1784-8"
+loinc = "15069-8"
 category = "metabolic"
 
 [[marker]]
@@ -2943,9 +2943,10 @@ display_name = "NEFA"
 aliases = [
     "nefa", "non-esterified fatty acids", "free fatty acids",
     "ffa", "non esterified fatty acids", "acidi grassi liberi",
+    "fatty acids nonesterified",
 ]
 allowed_units = ["mmol/L", "mEq/L", "mg/dL"]
-loinc = "2571-8"
+loinc = "15066-4"
 category = "metabolic"
 
 
@@ -3006,7 +3007,7 @@ aliases = [
     "aldolase", "aldolasi", "serum aldolase", "ald",
 ]
 allowed_units = ["U/L", "IU/L"]
-loinc = "1779-8"
+loinc = "1761-6"
 category = "digestive"
 
 [[marker]]
@@ -3134,7 +3135,7 @@ aliases = [
     "myoglobin", "serum myoglobin", "mioglobina",
 ]
 allowed_units = ["ng/mL", "µg/L"]
-loinc = "2639-3"
+loinc = "2640-1"
 category = "cardiac"
 
 
