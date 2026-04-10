@@ -18,7 +18,10 @@ use std::process::Command;
 use crate::catalog;
 use crate::errors::LabParseError;
 use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
-use crate::parsers::{DocumentStatus, PageExtractStatus, PageStatus, ParseResult, UnresolvedMarker};
+use crate::parsers::{
+    ConflictCandidate, ConflictMarker, DocumentStatus, PageExtractStatus, PageStatus, ParseResult,
+    UnresolvedMarker,
+};
 
 const EXTRACTION_PROMPT: &str = "Extract ALL biomarkers from this lab report page. Output ONLY a valid JSON array.\n\
 Each object must have exactly these fields: name, value, unit, reference_range.\n\
@@ -34,7 +37,7 @@ Output ONLY the JSON array, nothing else.";
 const MLX_MODEL: &str = "mlx-community/Qwen3.5-9B-4bit";
 
 /// Raw biomarker from vision model output
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 struct VisionBiomarker {
     name: String,
     value: serde_json::Value,
@@ -46,6 +49,9 @@ struct VisionBiomarker {
     #[allow(dead_code)]
     #[serde(default)]
     flagged: Option<bool>,
+    /// Page number this marker came from (injected during resolution)
+    #[serde(skip)]
+    page: Option<usize>,
 }
 
 /// Per-page result from the Python batch extraction
@@ -129,12 +135,27 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
         if pr.error.is_some() {
             continue;
         }
-        all_raw.extend(pr.markers);
+        // Inject page number into each marker
+        for mut marker in pr.markers {
+            marker.page = Some(pr.page);
+            all_raw.push(marker);
+        }
     }
 
-    let mut biomarkers = Vec::new();
-    let mut unresolved = Vec::new();
+    let mut biomarkers: Vec<ParsedBiomarker> = Vec::new();
+    let mut unresolved: Vec<UnresolvedMarker> = Vec::new();
+    let mut conflicts: Vec<ConflictMarker> = Vec::new();
     let mut seen_names = HashSet::new();
+
+    // Track first occurrence of each resolved marker for conflict detection
+    // Key: standardized_name -> (index in biomarkers, raw_name, value, unit, page)
+    let mut first_occurrence: std::collections::HashMap<
+        String,
+        (usize, String, f64, String, Option<usize>),
+    > = std::collections::HashMap::new();
+
+    // Track markers that have been converted to conflicts (their original index is now invalid)
+    let mut conflict_markers: HashSet<String> = HashSet::new();
 
     for raw in &all_raw {
         let value = match &raw.value {
@@ -162,9 +183,74 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
 
         match normalize_name(&raw.name, Some(value), Some(&norm_unit)) {
             Some((std_name, display_name, category, confidence, resolution_method)) => {
-                if !seen_names.insert(std_name.clone()) {
+                if let Some((first_idx, first_raw, first_value, first_unit, first_page)) =
+                    first_occurrence.get(&std_name).cloned()
+                {
+                    // Duplicate found - check if values match
+                    let values_match = (first_value - value).abs() < 0.0001
+                        && first_unit == norm_unit;
+
+                    if values_match {
+                        // Same value - emit warning but keep first
+                        warnings.push(format!(
+                            "Duplicate {} with same value ({} {}) from pages {:?} and {:?} - keeping first",
+                            std_name, value, norm_unit, first_page, raw.page
+                        ));
+                    } else {
+                        // Conflicting values - add to conflicts
+                        if !conflict_markers.contains(&std_name) {
+                            // First time seeing a conflict for this marker
+                            // Create conflict with both candidates
+                            conflict_markers.insert(std_name.clone());
+                            conflicts.push(ConflictMarker {
+                                standardized_name: std_name.clone(),
+                                display_name: display_name.clone(),
+                                category: category.clone(),
+                                candidates: vec![
+                                    ConflictCandidate {
+                                        raw_name: first_raw,
+                                        value: first_value,
+                                        unit: first_unit,
+                                        page: first_page,
+                                    },
+                                    ConflictCandidate {
+                                        raw_name: raw.name.clone(),
+                                        value,
+                                        unit: norm_unit.clone(),
+                                        page: raw.page,
+                                    },
+                                ],
+                            });
+                            // Mark biomarker at first_idx for removal
+                            // (we'll filter these out at the end)
+                            if first_idx < biomarkers.len() {
+                                biomarkers[first_idx].resolved = false; // Mark for removal
+                            }
+                        } else {
+                            // Already have a conflict for this marker - add this candidate
+                            if let Some(conflict) = conflicts
+                                .iter_mut()
+                                .find(|c| c.standardized_name == std_name)
+                            {
+                                conflict.candidates.push(ConflictCandidate {
+                                    raw_name: raw.name.clone(),
+                                    value,
+                                    unit: norm_unit.clone(),
+                                    page: raw.page,
+                                });
+                            }
+                        }
+                    }
                     continue;
                 }
+
+                // First occurrence of this marker
+                let idx = biomarkers.len();
+                first_occurrence.insert(
+                    std_name.clone(),
+                    (idx, raw.name.clone(), value, norm_unit.clone(), raw.page),
+                );
+                seen_names.insert(std_name.clone());
 
                 let unit = if norm_unit.is_empty() {
                     catalog::get_marker(&std_name)
@@ -199,9 +285,14 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
         }
     }
 
-    // Determine document status based on page failures
+    // Remove biomarkers that were converted to conflicts (marked with resolved=false)
+    biomarkers.retain(|b| b.resolved);
+
+    // Determine document status based on page failures and conflicts
     let document_status = if has_failures {
         DocumentStatus::PartialFailure
+    } else if !conflicts.is_empty() {
+        DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete
     };
@@ -211,6 +302,7 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
         page_statuses,
         biomarkers,
         unresolved,
+        conflicts,
         warnings,
         parser_name: "pdf-vision".to_string(),
     })

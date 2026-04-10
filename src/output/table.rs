@@ -44,6 +44,27 @@ pub fn render(result: &ParseResult, source: &str, elapsed_ms: u128) {
 
     println!("{table}");
 
+    if !result.conflicts.is_empty() {
+        println!("\n {} Conflicts requiring review:\n", "⚠".yellow().bold());
+        for conflict in &result.conflicts {
+            println!("  {} ({}):", conflict.display_name.bold(), conflict.standardized_name);
+            for (i, candidate) in conflict.candidates.iter().enumerate() {
+                let page_info = match candidate.page {
+                    Some(p) => format!(" (page {})", p),
+                    None => String::new(),
+                };
+                println!(
+                    "    {}. {} {} [{}]{}",
+                    i + 1,
+                    format_value(candidate.value),
+                    candidate.unit,
+                    candidate.raw_name,
+                    page_info
+                );
+            }
+        }
+    }
+
     if !result.warnings.is_empty() {
         println!();
         for w in &result.warnings {

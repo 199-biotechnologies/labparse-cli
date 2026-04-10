@@ -187,6 +187,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         page_statuses: vec![],
         biomarkers,
         unresolved,
+        conflicts: vec![],
         warnings,
         parser_name: "csv".to_string(),
     })

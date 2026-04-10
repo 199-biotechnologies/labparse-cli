@@ -13,6 +13,24 @@ pub struct UnresolvedMarker {
     pub unit: String,
 }
 
+/// A candidate value when multiple values exist for the same marker
+#[derive(Debug, Clone)]
+pub struct ConflictCandidate {
+    pub raw_name: String,
+    pub value: f64,
+    pub unit: String,
+    pub page: Option<usize>,
+}
+
+/// A conflict where multiple values exist for the same marker
+#[derive(Debug, Clone)]
+pub struct ConflictMarker {
+    pub standardized_name: String,
+    pub display_name: String,
+    pub category: String,
+    pub candidates: Vec<ConflictCandidate>,
+}
+
 /// Document-level extraction status
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DocumentStatus {
@@ -45,6 +63,7 @@ pub struct ParseResult {
     pub page_statuses: Vec<PageStatus>,
     pub biomarkers: Vec<ParsedBiomarker>,
     pub unresolved: Vec<UnresolvedMarker>,
+    pub conflicts: Vec<ConflictMarker>,
     pub warnings: Vec<String>,
     pub parser_name: String,
 }
