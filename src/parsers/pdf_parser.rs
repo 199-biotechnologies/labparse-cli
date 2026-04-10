@@ -89,7 +89,7 @@ pub fn extract_text_from_pdf(pdf_path: &Path) -> Result<Option<String>, LabParse
 }
 
 /// Structure raw lab report text into biomarker JSON using an LLM.
-/// Tries OpenRouter (gpt-4.1-mini) first, falls back to local Qwen.
+/// Tries OpenRouter (gpt-5.4-mini) first, falls back to local Qwen.
 pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
     let prompt = r#"Extract ALL biomarkers from this lab report text. Output ONLY a valid JSON array.
 Each object must have: "name" (string), "value" (number), "unit" (string, empty if none), "reference_range" (string or null), "flagged" (boolean, true if marked abnormal with * or similar).
@@ -122,7 +122,7 @@ Output ONLY the JSON array, nothing else."#;
 
 fn call_openrouter(api_key: &str, prompt: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
     let request_body = serde_json::json!({
-        "model": "openai/gpt-4.1-mini",
+        "model": "openai/gpt-5.4-mini",
         "messages": [
             {"role": "system", "content": "You extract biomarkers from lab reports into JSON arrays. Output ONLY valid JSON."},
             {"role": "user", "content": prompt}
