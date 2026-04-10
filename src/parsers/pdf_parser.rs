@@ -17,7 +17,7 @@ use std::process::Command;
 
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
+use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker};
 use crate::parsers::{
     ConflictCandidate, ConflictMarker, DocumentStatus, PageExtractStatus, PageStatus, ParseResult,
     UnresolvedMarker,
@@ -27,6 +27,7 @@ const EXTRACTION_PROMPT: &str = "Extract ALL biomarkers from this lab report pag
 Each object must have exactly these fields: name, value, unit, reference_range.\n\
 Rules:\n\
 - value must be a number (float or int), not a string\n\
+- If the value has a comparator (<, >, <=, >=), put the comparator in a separate \"comparator\" field (e.g., \"<5\" -> value: 5, comparator: \"<\")\n\
 - unit must be the exact unit shown (e.g., mmol/L, g/L, IU/L, X10^9/L)\n\
 - reference_range must be the range shown (e.g., \"4.3 - 5.4\")\n\
 - If a value is flagged/highlighted as abnormal, add \"flagged\": true\n\
@@ -49,6 +50,9 @@ struct VisionBiomarker {
     #[allow(dead_code)]
     #[serde(default)]
     flagged: Option<bool>,
+    /// Comparator for the value (<, >, <=, >=)
+    #[serde(default)]
+    comparator: Option<String>,
     /// Page number this marker came from (injected during resolution)
     #[serde(skip)]
     page: Option<usize>,
@@ -158,12 +162,38 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
     let mut conflict_markers: HashSet<String> = HashSet::new();
 
     for raw in &all_raw {
-        let value = match &raw.value {
-            serde_json::Value::Number(n) => n.as_f64().unwrap_or(0.0),
+        // Parse comparator from the dedicated field, or extract from string value
+        let (value, comparator) = match &raw.value {
+            serde_json::Value::Number(n) => {
+                let cmp = raw.comparator.as_ref()
+                    .map(|s| Comparator::from_str(s))
+                    .unwrap_or_default();
+                (n.as_f64().unwrap_or(0.0), cmp)
+            }
             serde_json::Value::String(s) => {
-                let cleaned = s.trim().trim_start_matches('<').trim_start_matches('>');
-                match cleaned.parse::<f64>() {
-                    Ok(v) => v,
+                let trimmed = s.trim();
+                // Extract comparator from string prefix if not in dedicated field
+                let (cmp_str, num_str) = if trimmed.starts_with("<=") || trimmed.starts_with("≤") {
+                    ("<=", &trimmed[if trimmed.starts_with("≤") { 1 } else { 2 }..])
+                } else if trimmed.starts_with(">=") || trimmed.starts_with("≥") {
+                    (">=", &trimmed[if trimmed.starts_with("≥") { 1 } else { 2 }..])
+                } else if trimmed.starts_with('<') {
+                    ("<", &trimmed[1..])
+                } else if trimmed.starts_with('>') {
+                    (">", &trimmed[1..])
+                } else {
+                    ("", trimmed)
+                };
+
+                // Prefer explicit comparator field over extracted one
+                let cmp = if let Some(ref explicit) = raw.comparator {
+                    Comparator::from_str(explicit)
+                } else {
+                    Comparator::from_str(cmp_str)
+                };
+
+                match num_str.trim().parse::<f64>() {
+                    Ok(v) => (v, cmp),
                     Err(_) => {
                         warnings.push(format!(
                             "Skipped '{}': non-numeric value '{}'",
@@ -270,6 +300,7 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                     resolved: true,
                     confidence,
                     resolution_method,
+                    comparator,
                 });
             }
             None => {

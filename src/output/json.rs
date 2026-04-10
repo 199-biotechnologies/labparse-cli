@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::normalize::ParsedBiomarker;
+use crate::normalize::{Comparator, ParsedBiomarker};
 use crate::parsers::{ConflictCandidate, ConflictMarker, ParseResult};
 
 #[derive(Serialize)]
@@ -23,6 +23,11 @@ pub struct JsonData {
     pub parse_warnings: Vec<String>,
 }
 
+/// Helper to check if comparator is Eq (for skip_serializing_if)
+fn is_eq_comparator(cmp: &Option<Comparator>) -> bool {
+    cmp.map_or(true, |c| c.is_eq())
+}
+
 #[derive(Serialize)]
 pub struct JsonBiomarker {
     pub name: String,
@@ -34,6 +39,9 @@ pub struct JsonBiomarker {
     pub resolved: bool,
     pub confidence: String,
     pub resolution_method: String,
+    /// Value comparator (<, >, <=, >=) - omitted when Eq (exact value)
+    #[serde(skip_serializing_if = "is_eq_comparator")]
+    pub comparator: Option<Comparator>,
 }
 
 /// Unresolved markers — structured passthrough (not raw text in standardized_name)
@@ -96,6 +104,13 @@ pub struct JsonMetadata {
 
 impl From<&ParsedBiomarker> for JsonBiomarker {
     fn from(bm: &ParsedBiomarker) -> Self {
+        // Only include comparator if it's not Eq
+        let comparator = if bm.comparator.is_eq() {
+            None
+        } else {
+            Some(bm.comparator)
+        };
+
         Self {
             name: bm.name.clone(),
             standardized_name: bm.standardized_name.clone(),
@@ -106,6 +121,7 @@ impl From<&ParsedBiomarker> for JsonBiomarker {
             resolved: bm.resolved,
             confidence: bm.confidence.clone(),
             resolution_method: bm.resolution_method.clone(),
+            comparator,
         }
     }
 }

@@ -1,6 +1,6 @@
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
+use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker};
 use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Common header names for the test/biomarker name column
@@ -51,13 +51,26 @@ fn find_column(headers: &csv::StringRecord, candidates: &[&str]) -> Option<usize
     None
 }
 
-fn parse_number(s: &str) -> Option<f64> {
-    let cleaned = s
-        .trim()
-        .trim_start_matches('<')
-        .trim_start_matches('>')
-        .replace(',', "");
-    cleaned.parse::<f64>().ok()
+/// Parse a value string, extracting both the numeric value and any comparator prefix.
+/// Returns (value, comparator).
+fn parse_number_with_comparator(s: &str) -> Option<(f64, Comparator)> {
+    let trimmed = s.trim();
+
+    // Extract comparator and remaining numeric string
+    let (cmp, num_str) = if trimmed.starts_with("<=") || trimmed.starts_with("≤") {
+        (Comparator::Le, &trimmed[if trimmed.starts_with("≤") { 1 } else { 2 }..])
+    } else if trimmed.starts_with(">=") || trimmed.starts_with("≥") {
+        (Comparator::Ge, &trimmed[if trimmed.starts_with("≥") { 1 } else { 2 }..])
+    } else if trimmed.starts_with('<') {
+        (Comparator::Lt, &trimmed[1..])
+    } else if trimmed.starts_with('>') {
+        (Comparator::Gt, &trimmed[1..])
+    } else {
+        (Comparator::Eq, trimmed)
+    };
+
+    let cleaned = num_str.trim().replace(',', "");
+    cleaned.parse::<f64>().ok().map(|v| (v, cmp))
 }
 
 /// Detect delimiter from the first line: tab, semicolon, or comma (default)
@@ -125,8 +138,8 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
             continue;
         }
 
-        let value = match parse_number(raw_value) {
-            Some(v) => v,
+        let (value, comparator) = match parse_number_with_comparator(raw_value) {
+            Some((v, cmp)) => (v, cmp),
             None => {
                 warnings.push(format!(
                     "Skipped '{}': non-numeric value '{}'",
@@ -168,6 +181,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
                     resolved: true,
                     confidence,
                     resolution_method,
+                    comparator,
                 });
             }
             None => {

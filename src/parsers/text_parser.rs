@@ -3,7 +3,7 @@ use regex::Regex;
 
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
+use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker};
 use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Pattern: <name> <value> <unit>
@@ -23,8 +23,8 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
         (?P<name>[A-Za-zα-ωΑ-Ω0-9\-\(\)/]+(?:\s+[A-Za-zα-ωΑ-Ω\-\(\)/]+){0,4})
         # Separator (colon, equals, or whitespace)
         [\s:=]+
-        # Optional < or >
-        [<>]?
+        # Optional comparator (<, >, <=, >=)
+        (?P<cmp><=|>=|[<>])?
         # Numeric value (with optional decimal point or comma)
         (?P<value>\d+(?:[.,]\d+)?)
         # Optional whitespace
@@ -50,7 +50,7 @@ static COLON_PATTERN: Lazy<Regex> = Lazy::new(|| {
         r"(?xi)
         (?P<name>[A-Za-z0-9\-\(\)/\s]{2,40})
         \s*:\s*
-        [<>]?
+        (?P<cmp><=|>=|[<>])?
         (?P<value>\d+(?:[.,]\d+)?)
         \s*
         (?P<unit>m[lL]/min/1\.73m[2²]|[a-zA-Zµ°/%²³]+(?:/[a-zA-Zµ°²³\d.]+)*)?
@@ -115,9 +115,11 @@ fn try_extract(
     let raw_name = cap.name("name")?.as_str().trim();
     let raw_value = cap.name("value")?.as_str();
     let raw_unit = cap.name("unit").map(|m| m.as_str()).unwrap_or("");
+    let raw_cmp = cap.name("cmp").map(|m| m.as_str()).unwrap_or("");
 
     // Replace decimal comma with period for parsing
     let value: f64 = raw_value.replace(',', ".").parse().ok()?;
+    let comparator = Comparator::from_str(raw_cmp);
 
     let norm_unit = if raw_unit.is_empty() {
         String::new()
@@ -170,5 +172,6 @@ fn try_extract(
         resolved: true,
         confidence,
         resolution_method,
+        comparator,
     })
 }

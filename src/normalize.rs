@@ -1,5 +1,39 @@
 use crate::catalog;
 
+/// Value comparator for lab results (e.g., "<5" means less than 5)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
+pub enum Comparator {
+    #[default]
+    #[serde(rename = "=")]
+    Eq, // = (exact value)
+    #[serde(rename = "<")]
+    Lt, // <
+    #[serde(rename = ">")]
+    Gt, // >
+    #[serde(rename = "<=")]
+    Le, // <=
+    #[serde(rename = ">=")]
+    Ge, // >=
+}
+
+impl Comparator {
+    /// Parse a comparator string into a Comparator enum
+    pub fn from_str(s: &str) -> Comparator {
+        match s.trim() {
+            "<" => Comparator::Lt,
+            ">" => Comparator::Gt,
+            "<=" | "≤" => Comparator::Le,
+            ">=" | "≥" => Comparator::Ge,
+            _ => Comparator::Eq,
+        }
+    }
+
+    /// Returns true if this is the default Eq comparator
+    pub fn is_eq(&self) -> bool {
+        *self == Comparator::Eq
+    }
+}
+
 /// A parsed biomarker extracted from input
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct ParsedBiomarker {
@@ -21,6 +55,9 @@ pub struct ParsedBiomarker {
     pub confidence: String,
     /// How the resolution was achieved
     pub resolution_method: String,
+    /// Value comparator (<, >, <=, >=) - defaults to Eq (exact value)
+    #[serde(skip_serializing_if = "Comparator::is_eq")]
+    pub comparator: Comparator,
 }
 
 /// Attempt to normalize a raw biomarker name using the structured catalog.
