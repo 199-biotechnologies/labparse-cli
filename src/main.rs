@@ -153,7 +153,6 @@ fn print_agent_info() {
             "disambiguation_table",
             "unit_compatibility_filter",
             "confidence_scoring",
-            "dual_model_verification",
         ],
         "input_formats": ["pdf", "csv", "text", "stdin"],
         "output_formats": ["json", "table"],
@@ -165,8 +164,7 @@ fn print_agent_info() {
             "file": "labparse bloodwork.csv",
             "text": "labparse --text 'HbA1c 5.8%, ApoB 95 mg/dL'",
             "stdin": "cat notes.txt | labparse --stdin",
-            "json": "labparse results.csv --json",
-            "verify": "labparse report.pdf --verify gemini"
+            "json": "labparse results.csv --json"
         }
     });
     println!("{}", serde_json::to_string_pretty(&info).unwrap());

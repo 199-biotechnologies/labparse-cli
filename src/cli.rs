@@ -31,10 +31,6 @@ pub struct Cli {
     #[arg(long, default_value = "150")]
     pub dpi: u32,
 
-    /// Cross-verify PDF extraction with a second model (gemini or codex)
-    #[arg(long)]
-    pub verify: Option<String>,
-
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
