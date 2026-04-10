@@ -31,7 +31,7 @@ display_name = "Fasting Glucose"
 aliases = [
     "glucose", "blood glucose", "blood sugar", "fg", "fasting blood glucose",
     "fasting blood sugar", "fbs", "fbg", "serum glucose", "plasma glucose",
-    "glucosio", "glicemia", "glicemia a digiuno", "nuchtern glukose",
+    "glicemia a digiuno", "nuchtern glukose",
     "glucose (fasting)", "glucose fasting",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
