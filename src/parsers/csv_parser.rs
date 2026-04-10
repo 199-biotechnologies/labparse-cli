@@ -1,7 +1,7 @@
 use crate::catalog;
 use crate::errors::LabParseError;
 use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
-use crate::parsers::{ParseResult, UnresolvedMarker};
+use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Common header names for the test/biomarker name column
 const NAME_HEADERS: &[&str] = &[
@@ -183,6 +183,8 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     }
 
     Ok(ParseResult {
+        document_status: DocumentStatus::Complete,
+        page_statuses: vec![],
         biomarkers,
         unresolved,
         warnings,

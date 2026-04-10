@@ -15,7 +15,7 @@ fn test_text_flag_json() {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let json: serde_json::Value = serde_json::from_str(&stdout).expect("invalid JSON");
 
-    assert_eq!(json["version"], "1");
+    assert_eq!(json["version"], "2");
     assert_eq!(json["status"], "success");
     assert!(json["data"]["biomarkers"].as_array().unwrap().len() >= 2);
     assert!(json["metadata"]["markers_found"].as_u64().unwrap() >= 2);

@@ -18,7 +18,7 @@ use std::process::Command;
 use crate::catalog;
 use crate::errors::LabParseError;
 use crate::normalize::{normalize_name, normalize_unit, ParsedBiomarker};
-use crate::parsers::{ParseResult, UnresolvedMarker};
+use crate::parsers::{DocumentStatus, PageExtractStatus, PageStatus, ParseResult, UnresolvedMarker};
 
 const EXTRACTION_PROMPT: &str = "Extract ALL biomarkers from this lab report page. Output ONLY a valid JSON array.\n\
 Each object must have exactly these fields: name, value, unit, reference_range.\n\
@@ -95,18 +95,34 @@ pub fn parse(pdf_path: &Path, dpi: u32, _backend: &str) -> Result<ParseResult, L
 fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, LabParseError> {
     let mut all_raw: Vec<VisionBiomarker> = Vec::new();
     let mut warnings = Vec::new();
+    let mut page_statuses = Vec::new();
+    let mut has_failures = false;
 
+    // Build page statuses and collect markers
     for pr in &page_results {
         if let Some(ref err) = pr.error {
             warnings.push(format!("Page {} extraction failed: {}", pr.page, err));
-            continue;
+            page_statuses.push(PageStatus {
+                page: pr.page,
+                status: PageExtractStatus::Failed,
+                error: Some(err.clone()),
+                marker_count: 0,
+            });
+            has_failures = true;
+        } else {
+            eprintln!(
+                "info: page {} — {} markers in {:.1}s",
+                pr.page,
+                pr.markers.len(),
+                pr.elapsed_s
+            );
+            page_statuses.push(PageStatus {
+                page: pr.page,
+                status: PageExtractStatus::Ok,
+                error: None,
+                marker_count: pr.markers.len(),
+            });
         }
-        eprintln!(
-            "info: page {} — {} markers in {:.1}s",
-            pr.page,
-            pr.markers.len(),
-            pr.elapsed_s
-        );
     }
 
     for pr in page_results {
@@ -183,7 +199,16 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
         }
     }
 
+    // Determine document status based on page failures
+    let document_status = if has_failures {
+        DocumentStatus::PartialFailure
+    } else {
+        DocumentStatus::Complete
+    };
+
     Ok(ParseResult {
+        document_status,
+        page_statuses,
         biomarkers,
         unresolved,
         warnings,

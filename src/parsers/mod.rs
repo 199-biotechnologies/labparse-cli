@@ -13,9 +13,36 @@ pub struct UnresolvedMarker {
     pub unit: String,
 }
 
+/// Document-level extraction status
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum DocumentStatus {
+    Complete,
+    PartialFailure, // Some pages failed
+    NeedsReview,    // Conflicts or ambiguities
+}
+
+/// Per-page extraction status
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PageExtractStatus {
+    Ok,
+    Failed,
+    Partial, // Some markers extracted but issues
+}
+
+/// Per-page extraction result
+#[derive(Debug, Clone)]
+pub struct PageStatus {
+    pub page: usize,
+    pub status: PageExtractStatus,
+    pub error: Option<String>,
+    pub marker_count: usize,
+}
+
 /// Result of parsing a lab document
 #[derive(Debug)]
 pub struct ParseResult {
+    pub document_status: DocumentStatus,
+    pub page_statuses: Vec<PageStatus>,
     pub biomarkers: Vec<ParsedBiomarker>,
     pub unresolved: Vec<UnresolvedMarker>,
     pub warnings: Vec<String>,
