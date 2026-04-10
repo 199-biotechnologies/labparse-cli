@@ -123,19 +123,23 @@ pub fn normalize_unit(raw: &str) -> String {
         "iu/l" | "u/l" | "iu/l." => "U/L".into(),
         "iu/ml" | "u/ml" => "U/mL".into(),
         "ku/l" | "kiu/l" => "kU/L".into(),
-        "miu/l" | "miu/ml" | "uiu/ml" | "µiu/ml" => "mIU/L".into(),
+        "miu/l" | "uiu/l" | "µiu/l" => "mIU/L".into(),
+        "miu/ml" | "uiu/ml" | "µiu/ml" => "mIU/mL".into(), // Keep /mL separate from /L
 
         // === CELL COUNTS ===
         // All variants of x10^9/L → canonical "x10^9/L"
-        "x109/l" | "10^9/l" | "109/l" | "x10e9/l" | "/ul"
+        "x109/l" | "10^9/l" | "109/l" | "x10e9/l"
         | "x 109/l" | "x10^9/l" | "10^9/l." | "thou/ul" | "k/ul"
         | "x109/l." => "x10^9/L".into(),
+        // Bare /µL stays as-is — don't assume cell count context
+        "/ul" | "/µl" => "/µL".into(),
         // All variants of x10^12/L → canonical "x10^12/L"
         "x1012/l" | "10^12/l" | "1012/l" | "x10e12/l"
         | "x 1012/l" | "x10^12/l" | "m/ul" | "mil/ul" => "x10^12/L".into(),
 
         // === RENAL ===
-        "ml/min/1.73m2" | "ml/min/1.73m²" | "ml/min/1.73m2." | "ml/min" => "mL/min/1.73m²".into(),
+        "ml/min/1.73m2" | "ml/min/1.73m²" | "ml/min/1.73m2." => "mL/min/1.73m²".into(),
+        "ml/min" => "mL/min".into(), // Don't add BSA normalization
 
         // === HAEMATOLOGY ===
         "fl" | "fl." => "fL".into(),
