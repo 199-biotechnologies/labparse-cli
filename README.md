@@ -22,7 +22,7 @@
 
 Every lab report uses a different format. Different names for the same marker. Different units. Different layouts entirely. You end up writing one-off scripts or copying values into a spreadsheet by hand.
 
-labparse reads any of them and gives you clean JSON -- standardized names, units, confidence scores. 203 markers across 23 categories, matched through a 7-step fuzzy normalization pipeline. PDF extraction runs a local vision model on your machine. Your medical data never leaves your device.
+labparse reads any of them and gives you clean JSON -- standardized names, units, confidence scores. 256 markers across 27 categories, matched through a 7-step fuzzy normalization pipeline. PDF extraction runs a local vision model on your machine. Your medical data never leaves your device.
 
 [Install](#install) | [How It Works](#how-it-works) | [Quick Start](#quick-start) | [Features](#features) | [Contributing](#contributing)
 
@@ -73,8 +73,8 @@ ollama pull qwen3.5:9b
    Lab PDF  ──────┐      │        labparse           │
                   │      │                            │
    CSV file ──────┼─────▶│  7-step normalization      │──────▶  Biomarker JSON v2
-                  │      │  203 markers, 1160 aliases │        (standardized names,
-   Raw text ──────┘      │  23 categories             │         units, confidence)
+                  │      │  256 markers, 1000+ aliases│        (standardized names,
+   Raw text ──────┘      │  27 categories             │         units, confidence)
                           └──────────────────────────┘
                                      │
                                      ▼
@@ -125,19 +125,18 @@ labparse biomarkers --category lipid
 
 | Feature | Detail |
 |---|---|
-| **203 biomarkers** | 1160 aliases across 23 clinical categories |
+| **256 biomarkers** | 1000+ aliases across 27 clinical categories |
 | **PDF extraction** | Local Qwen3.5-9B vision model, no cloud API calls |
 | **7-step fuzzy matching** | Handles OCR errors, alternate spellings, international naming |
 | **JSON v2 output** | Confidence scores, resolution method, unresolved marker array |
 | **Dual output mode** | Human-readable tables on TTY, JSON when piped |
-| **Cross-verification** | Optional `--verify` flag to validate extraction against a second model |
 | **Fast** | ~2ms text parsing, ~5MB memory footprint |
 | **Agent-friendly** | `agent-info` subcommand for AI tool discovery |
 | **Composable** | Unix-style piping to labassess, labstore, and other tools |
 
 **Supported input formats:** PDF, CSV, TSV, and free-form text (pasted lab results, OCR output, clinical notes).
 
-**Supported categories:** metabolic, lipid, inflammation, hematology, iron, kidney, liver, electrolytes, thyroid, hormone, nutritional, cardiac, cancer markers, immunology, cardiovascular, neurological, coagulation, urinalysis, body composition, functional, sleep, cardiovascular imaging, pulmonary.
+**Supported categories:** metabolic, lipid, inflammation, hematology, iron, kidney, liver, electrolytes, thyroid, hormone, nutritional, cardiac, cancer markers, immunology, cardiovascular, neurological, coagulation, urinalysis, body composition, functional, sleep, cardiovascular imaging, pulmonary, toxicology, viral serology, cytokine, digestive.
 
 ## Part of the Longevity CLI Suite
 
