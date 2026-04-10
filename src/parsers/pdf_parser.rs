@@ -17,7 +17,7 @@ use std::process::Command;
 
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker};
+use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker, UnitStatus};
 use crate::parsers::{
     ConflictCandidate, ConflictMarker, DocumentStatus, PageExtractStatus, PageStatus, ParseResult,
     UnresolvedMarker,
@@ -44,10 +44,8 @@ struct VisionBiomarker {
     value: serde_json::Value,
     #[serde(default)]
     unit: String,
-    #[allow(dead_code)]
     #[serde(default)]
     reference_range: Option<String>,
-    #[allow(dead_code)]
     #[serde(default)]
     flagged: Option<bool>,
     /// Comparator for the value (<, >, <=, >=)
@@ -282,12 +280,13 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                 );
                 seen_names.insert(std_name.clone());
 
-                let unit = if norm_unit.is_empty() {
-                    catalog::get_marker(&std_name)
-                        .and_then(|m| m.allowed_units.first().cloned())
-                        .unwrap_or_default()
+                let (unit, unit_status) = if norm_unit.is_empty() {
+                    match catalog::get_marker(&std_name).and_then(|m| m.allowed_units.first().cloned()) {
+                        Some(inferred) => (inferred, UnitStatus::Inferred),
+                        None => (String::new(), UnitStatus::Missing),
+                    }
                 } else {
-                    norm_unit
+                    (norm_unit, UnitStatus::Observed)
                 };
 
                 biomarkers.push(ParsedBiomarker {
@@ -301,6 +300,9 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                     confidence,
                     resolution_method,
                     comparator,
+                    reference_range: raw.reference_range.clone(),
+                    flagged: raw.flagged.unwrap_or(false),
+                    unit_status,
                 });
             }
             None => {

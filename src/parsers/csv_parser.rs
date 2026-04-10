@@ -1,6 +1,6 @@
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker};
+use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker, UnitStatus};
 use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Common header names for the test/biomarker name column
@@ -162,13 +162,14 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
                     continue;
                 }
 
-                let unit = if norm_unit.is_empty() {
+                let (unit, unit_status) = if norm_unit.is_empty() {
                     // Try to get default unit from catalog
-                    catalog::get_marker(&std_name)
-                        .and_then(|m| m.allowed_units.first().cloned())
-                        .unwrap_or_default()
+                    match catalog::get_marker(&std_name).and_then(|m| m.allowed_units.first().cloned()) {
+                        Some(inferred) => (inferred, UnitStatus::Inferred),
+                        None => (String::new(), UnitStatus::Missing),
+                    }
                 } else {
-                    norm_unit
+                    (norm_unit, UnitStatus::Observed)
                 };
 
                 biomarkers.push(ParsedBiomarker {
@@ -182,6 +183,9 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
                     confidence,
                     resolution_method,
                     comparator,
+                    reference_range: None,
+                    flagged: false,
+                    unit_status,
                 });
             }
             None => {

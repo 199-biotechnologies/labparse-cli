@@ -3,7 +3,7 @@ use regex::Regex;
 
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker};
+use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker, UnitStatus};
 use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Pattern: <name> <value> <unit>
@@ -154,12 +154,13 @@ fn try_extract(
         return None;
     }
 
-    let unit = if norm_unit.is_empty() {
-        catalog::get_marker(&std_name)
-            .and_then(|m| m.allowed_units.first().cloned())
-            .unwrap_or_default()
+    let (unit, unit_status) = if norm_unit.is_empty() {
+        match catalog::get_marker(&std_name).and_then(|m| m.allowed_units.first().cloned()) {
+            Some(inferred) => (inferred, UnitStatus::Inferred),
+            None => (String::new(), UnitStatus::Missing),
+        }
     } else {
-        norm_unit
+        (norm_unit, UnitStatus::Observed)
     };
 
     Some(ParsedBiomarker {
@@ -173,5 +174,8 @@ fn try_extract(
         confidence,
         resolution_method,
         comparator,
+        reference_range: None,
+        flagged: false,
+        unit_status,
     })
 }

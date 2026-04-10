@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::normalize::{Comparator, ParsedBiomarker};
+use crate::normalize::{Comparator, ParsedBiomarker, UnitStatus};
 use crate::parsers::{ConflictCandidate, ConflictMarker, ParseResult};
 
 #[derive(Serialize)]
@@ -28,6 +28,16 @@ fn is_eq_comparator(cmp: &Option<Comparator>) -> bool {
     cmp.map_or(true, |c| c.is_eq())
 }
 
+/// Helper to check if flagged is false (for skip_serializing_if)
+fn is_false(v: &bool) -> bool {
+    !*v
+}
+
+/// Helper to check if unit_status is Observed (for skip_serializing_if)
+fn is_observed_unit(status: &Option<UnitStatus>) -> bool {
+    status.map_or(true, |s| s.is_observed())
+}
+
 #[derive(Serialize)]
 pub struct JsonBiomarker {
     pub name: String,
@@ -42,6 +52,15 @@ pub struct JsonBiomarker {
     /// Value comparator (<, >, <=, >=) - omitted when Eq (exact value)
     #[serde(skip_serializing_if = "is_eq_comparator")]
     pub comparator: Option<Comparator>,
+    /// Reference range from the lab report (e.g., "4.0 - 5.5")
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reference_range: Option<String>,
+    /// Whether the value is flagged as abnormal (outside reference range)
+    #[serde(skip_serializing_if = "is_false")]
+    pub flagged: bool,
+    /// Unit provenance: "Inferred" or "Missing" - omitted when "Observed" (from source)
+    #[serde(skip_serializing_if = "is_observed_unit")]
+    pub unit_status: Option<UnitStatus>,
 }
 
 /// Unresolved markers — structured passthrough (not raw text in standardized_name)
@@ -111,6 +130,13 @@ impl From<&ParsedBiomarker> for JsonBiomarker {
             Some(bm.comparator)
         };
 
+        // Only include unit_status if it's not Observed
+        let unit_status = if bm.unit_status.is_observed() {
+            None
+        } else {
+            Some(bm.unit_status)
+        };
+
         Self {
             name: bm.name.clone(),
             standardized_name: bm.standardized_name.clone(),
@@ -122,6 +148,9 @@ impl From<&ParsedBiomarker> for JsonBiomarker {
             confidence: bm.confidence.clone(),
             resolution_method: bm.resolution_method.clone(),
             comparator,
+            reference_range: bm.reference_range.clone(),
+            flagged: bm.flagged,
+            unit_status,
         }
     }
 }

@@ -273,6 +273,22 @@ pub fn parse_number_with_hint(raw: &str, typical_max: Option<f64>) -> Result<Par
 // Comparator and biomarker types
 // ============================================================================
 
+/// Unit provenance tracking — was the unit observed in source, inferred from catalog, or missing?
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
+pub enum UnitStatus {
+    #[default]
+    Observed,  // Unit was explicitly in the source
+    Inferred,  // Unit was inferred from catalog (first allowed_unit)
+    Missing,   // No unit and couldn't infer from catalog
+}
+
+impl UnitStatus {
+    /// Returns true if this is the default Observed status
+    pub fn is_observed(&self) -> bool {
+        *self == UnitStatus::Observed
+    }
+}
+
 /// Value comparator for lab results (e.g., "<5" means less than 5)
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize)]
 pub enum Comparator {
@@ -331,6 +347,12 @@ pub struct ParsedBiomarker {
     /// Value comparator (<, >, <=, >=) - defaults to Eq (exact value)
     #[serde(skip_serializing_if = "Comparator::is_eq")]
     pub comparator: Comparator,
+    /// Reference range from the lab report (e.g., "4.0 - 5.5")
+    pub reference_range: Option<String>,
+    /// Whether the value is flagged as abnormal (outside reference range)
+    pub flagged: bool,
+    /// Unit provenance: Observed (from source), Inferred (from catalog), or Missing
+    pub unit_status: UnitStatus,
 }
 
 /// Attempt to normalize a raw biomarker name using the structured catalog.
