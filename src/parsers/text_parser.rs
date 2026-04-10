@@ -44,6 +44,23 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
     .unwrap()
 });
 
+/// HealthHub / NUH format: "Name\nResults: value (unit)"
+static HEALTHHUB_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(
+        r"(?xm)
+        ^[ \t]*(?P<name>[A-Za-z][A-Za-z0-9\-\(\)/,\.\ \t]*[A-Za-z0-9\)])
+        [ \t]*\n
+        [ \t]*Results:\s*
+        (?P<cmp><=|>=|[<>]|\*)?
+        \s*
+        (?P<value>\d+(?:[.,]\d+)?)
+        \s*
+        (?:\((?P<unit>[^)]+)\))?
+        "
+    )
+    .unwrap()
+});
+
 /// Pattern for "name: value unit" with colon separator
 static COLON_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
@@ -66,14 +83,32 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     let mut seen_names = std::collections::HashSet::new();
     let mut matched_spans = Vec::new();
 
-    // Try COLON_PATTERN first as it's more specific
-    for cap in COLON_PATTERN.captures_iter(content) {
+    // Try HEALTHHUB_PATTERN first (multi-line "Name\nResults: value (unit)" format)
+    for cap in HEALTHHUB_PATTERN.captures_iter(content) {
         let mat = cap.get(0).unwrap();
         let span = (mat.start(), mat.end());
 
         if let Some(result) = try_extract(&cap, &mut seen_names, &mut warnings, &mut unresolved) {
             biomarkers.push(result);
             matched_spans.push(span);
+        }
+    }
+
+    // Try COLON_PATTERN (single-line "name: value unit")
+    for cap in COLON_PATTERN.captures_iter(content) {
+        let mat = cap.get(0).unwrap();
+        let start = mat.start();
+        let end = mat.end();
+
+        let is_overlapping = matched_spans.iter().any(|(ms, me)| {
+            (start >= *ms && start < *me) || (end > *ms && end <= *me)
+        });
+
+        if !is_overlapping {
+            if let Some(result) = try_extract(&cap, &mut seen_names, &mut warnings, &mut unresolved) {
+                biomarkers.push(result);
+                matched_spans.push((start, end));
+            }
         }
     }
 

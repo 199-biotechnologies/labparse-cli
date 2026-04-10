@@ -76,6 +76,38 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
             return Err(LabParseError::FileNotFound(path.display().to_string()));
         }
         if is_pdf(path) {
+            // Try born-digital text extraction first (fast, reliable)
+            if let Ok(Some(text)) = parsers::pdf_parser::extract_text_from_pdf(path) {
+                // Step 1: Try regex-based parsing (instant, handles simple formats)
+                let mut result = parsers::auto_parse(&text, "pdftotext")?;
+                let enough_markers = result.biomarkers.len() >= 3
+                    && result.unresolved.len() < result.biomarkers.len() * 5;
+                if enough_markers {
+                    result.parser_name = "pdf-text".to_string();
+                    let elapsed = start.elapsed().as_millis();
+                    let source = format!("pdf:{}", path.display());
+                    return Ok((result, source, elapsed));
+                }
+
+                // Step 2: Regex insufficient — use LLM to structure the text
+                eprintln!(
+                    "info: regex found {} markers ({} unresolved), using LLM",
+                    result.biomarkers.len(), result.unresolved.len()
+                );
+                match parsers::pdf_parser::llm_structure_text(&text) {
+                    Ok(raw_markers) if !raw_markers.is_empty() => {
+                        let page_results = vec![parsers::pdf_parser::make_page_result(1, raw_markers)];
+                        let mut result = parsers::pdf_parser::resolve_results(page_results)?;
+                        result.parser_name = "pdf-llm".to_string();
+                        let elapsed = start.elapsed().as_millis();
+                        let source = format!("pdf:{}", path.display());
+                        return Ok((result, source, elapsed));
+                    }
+                    Ok(_) => eprintln!("info: LLM returned 0 markers, trying vision model"),
+                    Err(e) => eprintln!("info: LLM failed ({}), trying vision model", e),
+                }
+            }
+            // Fall back to VLM for scanned PDFs or when all else fails
             let result = parsers::pdf_parser::parse(path, cli.dpi, "")?;
             let elapsed = start.elapsed().as_millis();
             let source = format!("pdf:{}", path.display());

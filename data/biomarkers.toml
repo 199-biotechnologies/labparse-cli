@@ -61,9 +61,9 @@ qualifier = "fasting"
 display_name = "Fasting Insulin"
 aliases = [
     "fasting insulin", "serum insulin", "insulin level", "insulina",
-    "insuline", "insulin (fasting)",
+    "insuline", "insulin (fasting)", "insulin",
 ]
-allowed_units = ["µU/mL", "mIU/L", "pmol/L", "µIU/mL"]
+allowed_units = ["µU/mL", "mIU/L", "pmol/L", "µIU/mL", "mU/L"]
 loinc = "1668-3"
 category = "metabolic"
 
@@ -131,7 +131,7 @@ qualifier = ""
 display_name = "Total Cholesterol"
 aliases = [
     "cholesterol", "tc", "total chol", "chol", "serum cholesterol", "fasting cholesterol",
-    "colesterolo totale", "cholesterin", "cholesterol total",
+    "colesterolo totale", "cholesterin", "cholesterol total", "cholesterol-total",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2093-3"
@@ -147,6 +147,7 @@ aliases = [
     "ldl", "ldl-c", "ldl cholesterol", "low density lipoprotein",
     "ldl cholesterol (calculated)", "ldl cholesterol (direct)",
     "ldl-cholesterol", "colesterolo ldl", "ldl calc", "ldl direct",
+    "cholesterol-ldl", "cholesterol ldl", "ldl chol", "ldl chol (calculated)",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "13457-7"
@@ -160,7 +161,7 @@ qualifier = ""
 display_name = "HDL Cholesterol"
 aliases = [
     "hdl", "hdl-c", "hdl cholesterol", "high density lipoprotein",
-    "hdl-cholesterol", "colesterolo hdl",
+    "hdl-cholesterol", "colesterolo hdl", "cholesterol-hdl", "cholesterol hdl",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2085-9"
@@ -739,9 +740,9 @@ specimen = "serum"
 qualifier = ""
 display_name = "Uric Acid"
 aliases = [
-    "ua", "serum uric acid", "acido urico",
+    "ua", "serum uric acid", "acido urico", "uric acid",
 ]
-allowed_units = ["mg/dL", "µmol/L"]
+allowed_units = ["mg/dL", "µmol/L", "mmol/L"]
 loinc = "3084-1"
 category = "kidney"
 
@@ -793,7 +794,7 @@ qualifier = ""
 display_name = "ALT"
 aliases = [
     "alanine aminotransferase", "alanine transferase", "sgpt", "gpt",
-    "alanine transaminase", "transaminasi gpt",
+    "alanine transaminase", "transaminasi gpt", "alanine transaminase (alt)", "sgpt (alt)", "sgpt/alt",
 ]
 allowed_units = ["U/L"]
 loinc = "1742-6"
@@ -807,7 +808,7 @@ qualifier = ""
 display_name = "AST"
 aliases = [
     "aspartate aminotransferase", "aspartate transferase", "sgot", "got",
-    "aspartate transaminase", "transaminasi got",
+    "aspartate transaminase", "transaminasi got", "aspartate transaminase (ast)", "sgot (ast)", "sgot/ast",
 ]
 allowed_units = ["U/L"]
 loinc = "1920-8"
@@ -835,7 +836,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "ALP"
 aliases = [
-    "alkaline phosphatase", "alk phos", "fosfatasi alcalina",
+    "alkaline phosphatase", "alk phos", "fosfatasi alcalina", "alkaline phosphatase (alp)",
 ]
 allowed_units = ["U/L"]
 loinc = "6768-6"
@@ -848,7 +849,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Total Bilirubin"
 aliases = [
-    "bilirubin", "bilirubin total", "bilirubina totale", "tbil",
+    "bilirubin", "bilirubin total", "bilirubina totale", "tbil", "bilirubin, total",
     "total bili",
 ]
 allowed_units = ["mg/dL", "µmol/L"]
@@ -889,7 +890,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Albumin"
 aliases = [
-    "serum albumin", "alb", "albumina",
+    "serum albumin", "alb", "albumina", "albumin serum", "albumin, serum",
 ]
 allowed_units = ["g/L", "g/dL"]
 loinc = "1751-7"
@@ -1438,7 +1439,7 @@ display_name = "Vitamin D"
 aliases = [
     "vitamin d", "25-oh vitamin d", "25(oh)d", "25-hydroxyvitamin d", "vitamin d 25(oh)", "vitamin d 25-oh",
     "vit d", "vitamina d", "cholecalciferol",
-    "25-hydroxy vitamin d", "calcifediol",
+    "25-hydroxy vitamin d", "calcifediol", "vitamin d total",
 ]
 allowed_units = ["ng/mL", "nmol/L"]
 loinc = "1989-3"

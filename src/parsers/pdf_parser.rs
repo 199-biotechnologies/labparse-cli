@@ -37,9 +37,9 @@ Output ONLY the JSON array, nothing else.";
 
 const MLX_MODEL: &str = "mlx-community/Qwen3.5-9B-4bit";
 
-/// Raw biomarker from vision model output
+/// Raw biomarker from vision model or LLM output
 #[derive(Debug, Deserialize, Clone)]
-struct VisionBiomarker {
+pub struct VisionBiomarker {
     name: String,
     value: serde_json::Value,
     #[serde(default)]
@@ -58,12 +58,189 @@ struct VisionBiomarker {
 
 /// Per-page result from the Python batch extraction
 #[derive(Debug, Deserialize)]
-struct PageResult {
-    page: usize,
-    markers: Vec<VisionBiomarker>,
-    elapsed_s: f64,
+pub struct PageResult {
+    pub page: usize,
+    pub markers: Vec<VisionBiomarker>,
+    pub elapsed_s: f64,
     #[serde(default)]
     error: Option<String>,
+}
+
+/// Try extracting text from a born-digital PDF using pdftotext.
+/// Returns Some(text) if the PDF contains extractable text, None for scanned PDFs.
+pub fn extract_text_from_pdf(pdf_path: &Path) -> Result<Option<String>, LabParseError> {
+    let output = Command::new("pdftotext")
+        .args(["-layout", pdf_path.to_str().unwrap_or(""), "-"])
+        .output();
+
+    match output {
+        Ok(out) if out.status.success() => {
+            let text = String::from_utf8_lossy(&out.stdout).to_string();
+            let non_ws_chars: usize = text.chars().filter(|c| !c.is_whitespace()).count();
+            if non_ws_chars > 50 {
+                Ok(Some(text))
+            } else {
+                Ok(None)
+            }
+        }
+        Ok(_) => Ok(None),
+        Err(_) => Ok(None),
+    }
+}
+
+/// Structure raw lab report text into biomarker JSON using an LLM.
+/// Tries OpenRouter (gpt-4.1-mini) first, falls back to local Qwen.
+pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
+    let prompt = r#"Extract ALL biomarkers from this lab report text. Output ONLY a valid JSON array.
+Each object must have: "name" (string), "value" (number), "unit" (string, empty if none), "reference_range" (string or null), "flagged" (boolean, true if marked abnormal with * or similar).
+Rules:
+- Skip headers, page numbers, doctor names, addresses, dates
+- Skip classification/interpretation tables
+- value must be a number, not a string
+- Include ALL test results, don't skip any
+Output ONLY the JSON array, nothing else."#;
+
+    let max_chars = 30000;
+    let text_slice = if raw_text.len() <= max_chars {
+        raw_text
+    } else {
+        &raw_text[..raw_text[..max_chars].rfind('\n').unwrap_or(max_chars)]
+    };
+    let full_prompt = format!("{}\n\n---\n{}", prompt, text_slice);
+
+    // Try OpenRouter first (fast, cheap, reliable JSON)
+    if let Ok(key) = std::env::var("OPENROUTER_API_KEY") {
+        if let Ok(markers) = call_openrouter(&key, &full_prompt) {
+            return Ok(markers);
+        }
+        eprintln!("info: OpenRouter failed, trying local model");
+    }
+
+    // Fallback: local Qwen via mlx_lm
+    call_local_llm(&full_prompt)
+}
+
+fn call_openrouter(api_key: &str, prompt: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
+    let request_body = serde_json::json!({
+        "model": "openai/gpt-4.1-mini",
+        "messages": [
+            {"role": "system", "content": "You extract biomarkers from lab reports into JSON arrays. Output ONLY valid JSON."},
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 0.0,
+        "max_tokens": 8192
+    });
+
+    let body_str = serde_json::to_string(&request_body)
+        .map_err(|e| LabParseError::VisionError(format!("JSON serialize error: {}", e)))?;
+
+    let tmp_body = std::env::temp_dir().join(format!("labparse_api_{}.json", std::process::id()));
+    std::fs::write(&tmp_body, &body_str)
+        .map_err(|e| LabParseError::VisionError(format!("Write temp body failed: {}", e)))?;
+
+    let output = Command::new("curl")
+        .args([
+            "-s", "--max-time", "60",
+            "-X", "POST",
+            "https://openrouter.ai/api/v1/chat/completions",
+            "-H", &format!("Authorization: Bearer {}", api_key),
+            "-H", "Content-Type: application/json",
+            "-d", &format!("@{}", tmp_body.display()),
+        ])
+        .output()
+        .map_err(|e| LabParseError::VisionError(format!("curl failed: {}", e)))?;
+
+    let _ = std::fs::remove_file(&tmp_body);
+
+    if !output.status.success() {
+        return Err(LabParseError::VisionError("OpenRouter API call failed".into()));
+    }
+
+    let response: serde_json::Value = serde_json::from_slice(&output.stdout)
+        .map_err(|e| LabParseError::VisionError(format!("Invalid API response: {}", e)))?;
+
+    let content = response["choices"][0]["message"]["content"]
+        .as_str()
+        .ok_or_else(|| LabParseError::VisionError("No content in API response".into()))?;
+
+    parse_llm_json(content)
+}
+
+fn call_local_llm(prompt: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
+    let py_script = format!(
+        r#"
+import json, sys
+try:
+    from mlx_lm import load, generate
+    model, tokenizer = load("mlx-community/Qwen2.5-7B-Instruct-4bit")
+    messages = [{{"role": "user", "content": {}}}]
+    prompt_text = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    response = generate(model, tokenizer, prompt=prompt_text, max_tokens=4096, verbose=False)
+    print(response)
+except Exception as e:
+    print(json.dumps({{"error": str(e)}}))
+    sys.exit(1)
+"#,
+        serde_json::to_string(prompt).unwrap_or_default()
+    );
+
+    let output = Command::new("python3")
+        .args(["-c", &py_script])
+        .output()
+        .map_err(|e| LabParseError::VisionError(format!("python3 failed: {}", e)))?;
+
+    let text = String::from_utf8_lossy(&output.stdout).to_string();
+    parse_llm_json(&text)
+}
+
+fn parse_llm_json(text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
+    let trimmed = text.trim();
+
+    if let Ok(markers) = serde_json::from_str::<Vec<VisionBiomarker>>(trimmed) {
+        return Ok(markers);
+    }
+
+    if let Ok(obj) = serde_json::from_str::<serde_json::Value>(trimmed) {
+        for key in ["markers", "biomarkers", "results", "data"] {
+            if let Some(arr) = obj.get(key).and_then(|v| v.as_array()) {
+                if let Ok(markers) = serde_json::from_value::<Vec<VisionBiomarker>>(
+                    serde_json::Value::Array(arr.clone()),
+                ) {
+                    return Ok(markers);
+                }
+            }
+        }
+    }
+
+    if let Some(start) = trimmed.find('[') {
+        if let Some(end) = trimmed.rfind(']') {
+            if end > start {
+                if let Ok(markers) = serde_json::from_str::<Vec<VisionBiomarker>>(&trimmed[start..=end]) {
+                    return Ok(markers);
+                }
+            }
+        }
+    }
+
+    Err(LabParseError::VisionError(format!(
+        "Could not parse LLM output as biomarker JSON: {}",
+        &trimmed[..trimmed.len().min(200)]
+    )))
+}
+
+/// Create a PageResult from LLM-structured markers
+pub fn make_page_result(page: usize, markers: Vec<VisionBiomarker>) -> PageResult {
+    PageResult {
+        page,
+        markers,
+        elapsed_s: 0.0,
+        error: None,
+    }
+}
+
+/// Resolve page results into ParseResult (public for LLM path)
+pub fn resolve_results(page_results: Vec<PageResult>) -> Result<ParseResult, LabParseError> {
+    resolve_page_results(page_results)
 }
 
 /// Parse image file(s) directly (JPG, PNG, etc.) — no PDF conversion needed.
