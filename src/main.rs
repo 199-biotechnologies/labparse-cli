@@ -33,7 +33,8 @@ fn main() {
 
     match run(&cli) {
         Ok((result, source, elapsed)) => {
-            if result.biomarkers.is_empty() {
+            // Only error if BOTH resolved and unresolved are empty
+            if result.biomarkers.is_empty() && result.unresolved.is_empty() {
                 let err = LabParseError::NoBiomarkersFound;
                 if use_json {
                     eprintln!("{}", output::json::render_error(&err.to_string()));
@@ -41,6 +42,13 @@ fn main() {
                     eprintln!("error: {}", err);
                 }
                 err.exit();
+            }
+            // Warn if outputting unresolved-only results (no resolved markers)
+            if result.biomarkers.is_empty() && !result.unresolved.is_empty() {
+                eprintln!(
+                    "warning: no markers resolved, {} unresolved marker(s) in output",
+                    result.unresolved.len()
+                );
             }
             if use_json {
                 println!("{}", output::json::render(&result, &source, elapsed));
