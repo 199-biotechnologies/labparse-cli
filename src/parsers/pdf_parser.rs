@@ -360,9 +360,25 @@ for i, img_path in enumerate(images):
         try:
             markers = json.loads(text)
             if not isinstance(markers, list):
-                markers = []
-        except json.JSONDecodeError:
-            markers = []
+                raise ValueError(f"Model returned {{type(markers).__name__}}, expected list")
+        except json.JSONDecodeError as e:
+            print(json.dumps({{
+                "event": "page_done",
+                "page": page_num,
+                "markers": [],
+                "elapsed_s": round(time.time() - start, 1),
+                "error": f"Invalid JSON from model: {{str(e)[:200]}}"
+            }}), flush=True)
+            continue
+        except ValueError as e:
+            print(json.dumps({{
+                "event": "page_done",
+                "page": page_num,
+                "markers": [],
+                "elapsed_s": round(time.time() - start, 1),
+                "error": str(e)
+            }}), flush=True)
+            continue
 
         print(json.dumps({{
             "event": "page_done",
