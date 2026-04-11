@@ -29,6 +29,11 @@ pub fn validate(result: &mut ParseResult) {
         downgrade_to = worse_status(downgrade_to, v.suggested_status);
     }
 
+    // D1: shared status gate — catches false-success the parser missed
+    let audit = ExtractionAudit::from_result(result);
+    let audit_status = assess_document_status(&audit);
+    downgrade_to = worse_status(downgrade_to, audit_status);
+
     result.document_status = downgrade_to;
 }
 
@@ -256,6 +261,72 @@ fn check_reference_range_consistency(biomarkers: &mut [ParsedBiomarker]) -> Vali
     result
 }
 
+// ── D1: Shared document status assessment ──
+
+/// Extraction quality signals used to determine document status.
+/// Shared across text, CSV, and PDF parsers for consistent fail-closed behavior.
+pub struct ExtractionAudit {
+    pub resolved_rows: usize,
+    pub unresolved_rows: usize,
+    pub conflict_rows: usize,
+    pub ambiguous_rows: usize,
+    pub non_observed_unit_rows: usize,
+    pub failed_pages: usize,
+    pub truncated_pages: usize,
+    pub lexical_rejections: usize,
+}
+
+impl ExtractionAudit {
+    pub fn from_result(result: &ParseResult) -> Self {
+        let ambiguous_rows = result.biomarkers.iter()
+            .filter(|b| b.confidence == "ambiguous")
+            .count();
+        let non_observed_unit_rows = result.biomarkers.iter()
+            .filter(|b| {
+                b.unit_status == crate::normalize::UnitStatus::Missing
+                    || b.unit_status == crate::normalize::UnitStatus::Inferred
+            })
+            .count();
+        let failed_pages = result.page_statuses.iter()
+            .filter(|p| p.status == crate::parsers::PageExtractStatus::Failed)
+            .count();
+        let truncated_pages = result.page_statuses.iter()
+            .filter(|p| p.status == crate::parsers::PageExtractStatus::Partial)
+            .count();
+        Self {
+            resolved_rows: result.biomarkers.len(),
+            unresolved_rows: result.unresolved.len(),
+            conflict_rows: result.conflicts.len(),
+            ambiguous_rows,
+            non_observed_unit_rows,
+            failed_pages,
+            truncated_pages,
+            lexical_rejections: 0,
+        }
+    }
+}
+
+pub fn assess_document_status(audit: &ExtractionAudit) -> DocumentStatus {
+    if audit.failed_pages > 0 {
+        return DocumentStatus::PartialFailure;
+    }
+    if audit.resolved_rows == 0 && audit.unresolved_rows > 0 {
+        return DocumentStatus::NeedsReview;
+    }
+    if audit.unresolved_rows > audit.resolved_rows {
+        return DocumentStatus::NeedsReview;
+    }
+    if audit.conflict_rows > 0
+        || audit.ambiguous_rows > 0
+        || audit.non_observed_unit_rows > 0
+        || audit.truncated_pages > 0
+        || audit.lexical_rejections > 0
+    {
+        return DocumentStatus::NeedsReview;
+    }
+    DocumentStatus::Complete
+}
+
 /// Parse a reference range string into (low, high) bounds.
 /// Handles: "4.3 - 5.4", "4.3-5.4", "<5.0", "> 1.0", "(2.6 - 24.9)"
 fn parse_reference_range(s: &str) -> Option<(f64, f64)> {
@@ -302,6 +373,81 @@ mod tests {
         assert_eq!(parse_reference_range("<5.0"), Some((f64::NEG_INFINITY, 5.0)));
         assert_eq!(parse_reference_range("> 1.0"), Some((1.0, f64::INFINITY)));
         assert_eq!(parse_reference_range("(2.6 - 24.9)"), Some((2.6, 24.9)));
+    }
+
+    #[test]
+    fn test_assess_zero_resolved_with_unresolved() {
+        let audit = ExtractionAudit {
+            resolved_rows: 0,
+            unresolved_rows: 3,
+            conflict_rows: 0,
+            ambiguous_rows: 0,
+            non_observed_unit_rows: 0,
+            failed_pages: 0,
+            truncated_pages: 0,
+            lexical_rejections: 0,
+        };
+        assert!(matches!(assess_document_status(&audit), DocumentStatus::NeedsReview));
+    }
+
+    #[test]
+    fn test_assess_unresolved_dominates() {
+        let audit = ExtractionAudit {
+            resolved_rows: 2,
+            unresolved_rows: 10,
+            conflict_rows: 0,
+            ambiguous_rows: 0,
+            non_observed_unit_rows: 0,
+            failed_pages: 0,
+            truncated_pages: 0,
+            lexical_rejections: 0,
+        };
+        assert!(matches!(assess_document_status(&audit), DocumentStatus::NeedsReview));
+    }
+
+    #[test]
+    fn test_assess_clean_extraction() {
+        let audit = ExtractionAudit {
+            resolved_rows: 10,
+            unresolved_rows: 2,
+            conflict_rows: 0,
+            ambiguous_rows: 0,
+            non_observed_unit_rows: 0,
+            failed_pages: 0,
+            truncated_pages: 0,
+            lexical_rejections: 0,
+        };
+        assert!(matches!(assess_document_status(&audit), DocumentStatus::Complete));
+    }
+
+    #[test]
+    fn test_assess_failed_pages() {
+        let audit = ExtractionAudit {
+            resolved_rows: 5,
+            unresolved_rows: 0,
+            conflict_rows: 0,
+            ambiguous_rows: 0,
+            non_observed_unit_rows: 0,
+            failed_pages: 1,
+            truncated_pages: 0,
+            lexical_rejections: 0,
+        };
+        assert!(matches!(assess_document_status(&audit), DocumentStatus::PartialFailure));
+    }
+
+    #[test]
+    fn test_assess_inferred_units() {
+        let audit = ExtractionAudit {
+            resolved_rows: 5,
+            unresolved_rows: 0,
+            conflict_rows: 0,
+            ambiguous_rows: 0,
+            non_observed_unit_rows: 2,
+            failed_pages: 0,
+            truncated_pages: 0,
+            lexical_rejections: 0,
+        };
+        assert!(matches!(assess_document_status(&audit), DocumentStatus::NeedsReview));
     }
 
     #[test]

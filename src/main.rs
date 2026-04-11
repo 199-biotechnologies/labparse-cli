@@ -107,8 +107,11 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                     )));
                 }
 
+                // D3: Strip boilerplate before regex parsing
+                let cleaned = parsers::pdf_parser::clean_pdftotext(&text);
+
                 // Step 1: Try regex-based parsing (instant, handles simple formats)
-                let mut result = parsers::auto_parse(&text, "pdftotext")?;
+                let mut result = parsers::auto_parse(&cleaned, "pdftotext")?;
                 let enough_markers = result.biomarkers.len() >= 3
                     && result.unresolved.len() < result.biomarkers.len() * 5;
                 if enough_markers {
@@ -175,13 +178,28 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                     Err(e) => eprintln!("info: LLM failed ({}), trying vision model", e),
                 }
             }
-            // Fall back to VLM for scanned PDFs or when all else fails
+            // Scanned PDF / no text layer — fail fast unless experimental VLM enabled
+            if !cli.experimental_vlm {
+                return Err(LabParseError::ParseFailure(
+                    "No text layer found in PDF. Scanned/image-only PDFs require \
+                     --experimental-vlm flag (local Qwen3.5-9B, slow and unreliable). \
+                     Remote vision backend coming soon."
+                        .to_string(),
+                ));
+            }
             let result = parsers::pdf_parser::parse(path, cli.dpi, "")?;
             let elapsed = start.elapsed().as_millis();
             let source = format!("pdf:{}", path.display());
             return Ok((result, source, elapsed));
         }
         if is_image(path) {
+            if !cli.experimental_vlm {
+                return Err(LabParseError::ParseFailure(
+                    "Image input requires --experimental-vlm flag (local Qwen3.5-9B). \
+                     Remote vision backend coming soon."
+                        .to_string(),
+                ));
+            }
             let result = parsers::pdf_parser::parse_image(path)?;
             let elapsed = start.elapsed().as_millis();
             let source = format!("image:{}", path.display());

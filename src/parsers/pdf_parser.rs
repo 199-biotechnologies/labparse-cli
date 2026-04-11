@@ -167,6 +167,98 @@ pub fn split_into_pages(text: &str) -> Vec<String> {
     }
 }
 
+/// Strip boilerplate lines from pdftotext output before regex parsing.
+/// Removes headers, footers, page counters, generated timestamps, remarks sections,
+/// and facility boilerplate that the regex parser misinterprets as biomarker data.
+pub fn clean_pdftotext(text: &str) -> String {
+    use once_cell::sync::Lazy;
+    use regex::Regex;
+
+    static PAGE_COUNTER: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)^\s*Page\s+\d+\s+of\s+\d+\s*$").unwrap());
+    static GENERATED_ON: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)^\s*Generated\s+On:.*$").unwrap());
+    static COMPUTER_GENERATED: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)^\s*This is a computer generated document.*$").unwrap());
+    static LAB_TEST_HEADER: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)^\s*Lab\s+Test\s+Result\s*$").unwrap());
+    static FACILITY_LINE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)^\s*(?:Ordering|Performing)\s+Facility:.*$").unwrap()
+    });
+    static REMARKS_SECTION: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)^\s*(?:Remarks|Interpretation|Comments|Clinical Notes)\s*:\s*$").unwrap()
+    });
+    static SERUM_INDICES: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)^\s*Serum\s+Indices\b.*$").unwrap());
+    static HAEMOLYSIS_LINE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)^\s*(?:Not\s+)?(?:Haemolysed|Lipaemic|Icteric).*$").unwrap()
+    });
+    static DATE_LINE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)^\s*Date:\s+\d{1,2}\s+\w{3}\s+\d{4}").unwrap()
+    });
+    static REF_RANGE_LABEL: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)^\s*Ref\.?\s*Range\s*:").unwrap()
+    });
+
+    let mut lines: Vec<&str> = Vec::new();
+    let mut in_remarks = false;
+    let mut skip_next_nric = false;
+
+    for line in text.lines() {
+        let trimmed = line.trim();
+
+        if trimmed.is_empty() {
+            in_remarks = false;
+            lines.push(line);
+            continue;
+        }
+
+        // Skip boilerplate patterns
+        if PAGE_COUNTER.is_match(trimmed)
+            || GENERATED_ON.is_match(trimmed)
+            || COMPUTER_GENERATED.is_match(trimmed)
+            || LAB_TEST_HEADER.is_match(trimmed)
+            || FACILITY_LINE.is_match(trimmed)
+            || SERUM_INDICES.is_match(trimmed)
+            || HAEMOLYSIS_LINE.is_match(trimmed)
+            || DATE_LINE.is_match(trimmed)
+            || REF_RANGE_LABEL.is_match(trimmed)
+        {
+            if LAB_TEST_HEADER.is_match(trimmed) {
+                // Next 1-2 lines are patient name + NRIC (repeated on each page)
+                skip_next_nric = true;
+            }
+            continue;
+        }
+
+        // Skip patient name/NRIC lines that follow "Lab Test Result"
+        if skip_next_nric {
+            // NRIC pattern or short uppercase name
+            if trimmed.len() < 40
+                && (trimmed.chars().all(|c| c.is_ascii_uppercase() || c.is_whitespace())
+                    || trimmed.chars().any(|c| c.is_ascii_digit())
+                        && trimmed.len() < 12)
+            {
+                continue;
+            }
+            skip_next_nric = false;
+        }
+
+        // Skip remarks section content (until next empty line)
+        if REMARKS_SECTION.is_match(trimmed) {
+            in_remarks = true;
+            continue;
+        }
+        if in_remarks {
+            continue;
+        }
+
+        lines.push(line);
+    }
+
+    lines.join("\n")
+}
+
 /// Sanitize text before sending to remote API.
 /// Removes obvious PHI patterns: NRIC/SSN, addresses with street numbers, doctor titles.
 /// Keeps biomarker data intact.

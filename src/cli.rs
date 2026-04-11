@@ -31,6 +31,11 @@ pub struct Cli {
     #[arg(long, default_value = "150")]
     pub dpi: u32,
 
+    /// Enable experimental local VLM (Qwen3.5-9B) for scanned PDFs.
+    /// Without this flag, scanned PDFs without a text layer fail fast.
+    #[arg(long)]
+    pub experimental_vlm: bool,
+
     #[command(subcommand)]
     pub command: Option<Commands>,
 }
