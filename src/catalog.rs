@@ -343,6 +343,19 @@ pub fn normalize_pipeline(raw: &str) -> String {
         }
     }
 
+    // Step 1b: Strip specimen suffixes after comma (e.g. "Calcium, Serum" → "calcium")
+    // Only strip pure specimen markers — NOT qualifiers like ", Fasting" or ", Total"
+    // which are clinically meaningful (catalog handles them via aliases).
+    for suffix in &[
+        ", serum", ", plasma", ", whole blood", ", blood", ", urine",
+        ", random",
+    ] {
+        if let Some(rest) = s.strip_suffix(suffix) {
+            s = rest.trim().to_string();
+            break;
+        }
+    }
+
     // Step 2: Strip method suffixes
     for suffix in METHOD_SUFFIXES {
         if let Some(rest) = s.strip_suffix(suffix) {
