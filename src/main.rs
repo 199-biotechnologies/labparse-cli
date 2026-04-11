@@ -4,6 +4,7 @@ mod errors;
 mod normalize;
 mod output;
 mod parsers;
+mod validate;
 
 use std::io::Read;
 use std::time::Instant;
@@ -32,7 +33,10 @@ fn main() {
     let use_json = cli.json || !output::is_tty();
 
     match run(&cli) {
-        Ok((result, source, elapsed)) => {
+        Ok((mut result, source, elapsed)) => {
+            // Run validation stack (plausibility, cross-marker math, ref range consistency)
+            validate::validate(&mut result);
+
             // Only error if BOTH resolved and unresolved are empty
             if result.biomarkers.is_empty() && result.unresolved.is_empty() {
                 let err = LabParseError::NoBiomarkersFound;
@@ -95,6 +99,14 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
         if is_pdf(path) {
             // Try born-digital text extraction first (fast, reliable)
             if let Ok(Some(text)) = parsers::pdf_parser::extract_text_from_pdf(path) {
+                // Verify single patient across all pages
+                let pages = parsers::pdf_parser::split_into_pages(&text);
+                if let Err(e) = parsers::pdf_parser::verify_single_patient(&pages) {
+                    return Err(LabParseError::ParseFailure(format!(
+                        "Multi-patient document detected — refusing to merge: {}", e
+                    )));
+                }
+
                 // Step 1: Try regex-based parsing (instant, handles simple formats)
                 let mut result = parsers::auto_parse(&text, "pdftotext")?;
                 let enough_markers = result.biomarkers.len() >= 3
@@ -111,29 +123,44 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                     "info: regex found {} markers ({} unresolved), using LLM",
                     result.biomarkers.len(), result.unresolved.len()
                 );
-                match parsers::pdf_parser::llm_structure_text(&text) {
-                    Ok(raw_markers) if !raw_markers.is_empty() => {
-                        // Verify LLM output against source text (anti-hallucination)
-                        let original_count = raw_markers.len();
-                        let mut verify_warnings = Vec::new();
-                        let verified = parsers::pdf_parser::verify_against_source(
-                            raw_markers, &text, &mut verify_warnings,
-                        );
-                        let rejected_count = original_count - verified.len();
-                        for w in &verify_warnings {
+                match parsers::pdf_parser::llm_structure_text_paged(&text) {
+                    Ok(page_results) if !page_results.is_empty() => {
+                        // Verify each page's markers against the page text
+                        let pages = parsers::pdf_parser::split_into_pages(&text);
+                        let mut verified_pages = Vec::new();
+                        let mut total_original = 0;
+                        let mut total_rejected = 0;
+                        let mut all_verify_warnings = Vec::new();
+
+                        for pr in page_results {
+                            let page_text = pages.get(pr.page.saturating_sub(1))
+                                .cloned()
+                                .unwrap_or_default();
+                            let original_count = pr.markers.len();
+                            total_original += original_count;
+                            let mut verify_warnings = Vec::new();
+                            let verified = parsers::pdf_parser::verify_against_source(
+                                pr.markers, &page_text, &mut verify_warnings,
+                            );
+                            total_rejected += original_count - verified.len();
+                            all_verify_warnings.extend(verify_warnings);
+                            verified_pages.push(parsers::pdf_parser::make_page_result_with_error(
+                                pr.page, verified, pr.error,
+                            ));
+                        }
+
+                        for w in &all_verify_warnings {
                             eprintln!("info: {}", w);
                         }
-                        let page_results = vec![parsers::pdf_parser::make_page_result(1, verified)];
-                        let mut result = parsers::pdf_parser::resolve_results(page_results)?;
-                        result.warnings.extend(verify_warnings);
+
+                        let mut result = parsers::pdf_parser::resolve_results(verified_pages)?;
+                        result.warnings.extend(all_verify_warnings);
                         result.parser_name = "pdf-llm".to_string();
 
-                        // If lexical verification rejected anything, force NeedsReview
-                        // (rejected markers indicate possible hallucination — must be reviewed)
-                        if rejected_count > 0 {
+                        if total_rejected > 0 {
                             result.warnings.push(format!(
                                 "Lexical verification rejected {} of {} markers — possible hallucination",
-                                rejected_count, original_count
+                                total_rejected, total_original
                             ));
                             if result.document_status == parsers::DocumentStatus::Complete {
                                 result.document_status = parsers::DocumentStatus::NeedsReview;

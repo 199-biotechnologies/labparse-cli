@@ -69,7 +69,7 @@ pub struct PageResult {
     pub markers: Vec<VisionBiomarker>,
     pub elapsed_s: f64,
     #[serde(default)]
-    error: Option<String>,
+    pub error: Option<String>,
 }
 
 /// Try extracting text from a born-digital PDF using pdftotext.
@@ -94,10 +94,7 @@ pub fn extract_text_from_pdf(pdf_path: &Path) -> Result<Option<String>, LabParse
     }
 }
 
-/// Structure raw lab report text into biomarker JSON using an LLM.
-/// Tries OpenRouter (gpt-5.4-mini) first, falls back to local Qwen.
-pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
-    let prompt = r#"Extract ALL biomarkers from this lab report text. Output ONLY a valid JSON array.
+const EXTRACTION_PROMPT_TEXT: &str = r#"Extract ALL biomarkers from this lab report text. Output ONLY a valid JSON array.
 Each object must have: "name" (string), "value" (number), "unit" (string, empty if none), "reference_range" (string or null), "flagged" (boolean, true if marked abnormal with * or similar), "comparator" (string or null: "<", ">", "<=", ">=" if value has a comparator, null for exact values).
 Rules:
 - Skip headers, page numbers, doctor names, addresses, dates
@@ -107,15 +104,117 @@ Rules:
 - Include ALL test results, don't skip any
 Output ONLY the JSON array, nothing else."#;
 
-    let max_chars = 30000;
-    let text_slice = if raw_text.len() <= max_chars {
-        raw_text
-    } else {
-        &raw_text[..raw_text[..max_chars].rfind('\n').unwrap_or(max_chars)]
-    };
-    let full_prompt = format!("{}\n\n---\n{}", prompt, text_slice);
+/// Extract a patient identity fingerprint from a page header.
+/// Looks for NRIC/MRN patterns and returns the first match.
+/// Returns None if no identity pattern found.
+pub fn extract_patient_id(page_text: &str) -> Option<String> {
+    use once_cell::sync::Lazy;
+    use regex::Regex;
 
-    // Try OpenRouter first (fast, cheap, reliable JSON)
+    static NRIC_RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)\b[STFG]\d{7}[A-Z]\b").unwrap()
+    });
+    static MRN_RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)(?:MRN|I/C|IC|patient\s+id)[:\s#]*([A-Z0-9-]{6,})").unwrap()
+    });
+
+    if let Some(m) = NRIC_RE.find(page_text) {
+        return Some(m.as_str().to_uppercase());
+    }
+    if let Some(caps) = MRN_RE.captures(page_text) {
+        if let Some(m) = caps.get(1) {
+            return Some(m.as_str().to_uppercase());
+        }
+    }
+    None
+}
+
+/// Verify all pages belong to the same patient.
+/// Returns Err if multiple patient IDs are found across pages.
+pub fn verify_single_patient(pages: &[String]) -> Result<(), String> {
+    let mut found_id: Option<String> = None;
+    for (idx, page) in pages.iter().enumerate() {
+        if let Some(id) = extract_patient_id(page) {
+            match &found_id {
+                None => found_id = Some(id),
+                Some(existing) if existing != &id => {
+                    return Err(format!(
+                        "Multiple patient IDs detected: '{}' (page 1) vs '{}' (page {})",
+                        existing,
+                        id,
+                        idx + 1
+                    ));
+                }
+                _ => {}
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Split pdftotext output into pages on form-feed (\f) characters.
+/// pdftotext inserts \f between pages by default.
+pub fn split_into_pages(text: &str) -> Vec<String> {
+    let pages: Vec<String> = text
+        .split('\u{000C}')
+        .map(|p| p.trim().to_string())
+        .filter(|p| !p.is_empty())
+        .collect();
+    if pages.is_empty() {
+        vec![text.to_string()]
+    } else {
+        pages
+    }
+}
+
+/// Sanitize text before sending to remote API.
+/// Removes obvious PHI patterns: NRIC/SSN, addresses with street numbers, doctor titles.
+/// Keeps biomarker data intact.
+fn sanitize_for_remote(text: &str) -> String {
+    use once_cell::sync::Lazy;
+    use regex::Regex;
+
+    static NRIC_RE: Lazy<Regex> = Lazy::new(|| {
+        // Singapore NRIC: S/T/F/G + 7 digits + letter
+        Regex::new(r"(?i)\b[STFG]\d{7}[A-Z]\b").unwrap()
+    });
+    static SSN_RE: Lazy<Regex> = Lazy::new(|| {
+        // US SSN: 3-2-4
+        Regex::new(r"\b\d{3}-\d{2}-\d{4}\b").unwrap()
+    });
+    static DOB_RE: Lazy<Regex> = Lazy::new(|| {
+        // Common DOB formats
+        Regex::new(r"\b(?:DOB|D\.O\.B|Date of Birth)[:\s]*\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b").unwrap()
+    });
+    static MRN_RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?i)\b(?:MRN|patient\s+id|lab\s+no|ref\s+no)[:\s#]*[A-Z0-9-]+\b").unwrap()
+    });
+    static PHONE_RE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"\b(?:\+?\d{1,3}[\s-]?)?\(?\d{3}\)?[\s-]?\d{3}[\s-]?\d{4}\b").unwrap()
+    });
+
+    let mut sanitized = text.to_string();
+    sanitized = NRIC_RE.replace_all(&sanitized, "<ID>").to_string();
+    sanitized = SSN_RE.replace_all(&sanitized, "<SSN>").to_string();
+    sanitized = DOB_RE.replace_all(&sanitized, "<DOB>").to_string();
+    sanitized = MRN_RE.replace_all(&sanitized, "<MRN>").to_string();
+    sanitized = PHONE_RE.replace_all(&sanitized, "<PHONE>").to_string();
+    sanitized
+}
+
+/// Structure a single page of lab report text into biomarker JSON via LLM.
+fn llm_structure_page(page_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
+    let max_chars = 30000;
+    let text_slice = if page_text.len() <= max_chars {
+        page_text
+    } else {
+        &page_text[..page_text[..max_chars].rfind('\n').unwrap_or(max_chars)]
+    };
+
+    // Sanitize before sending to remote API (strip NRIC, SSN, DOB, MRN, phone)
+    let sanitized = sanitize_for_remote(text_slice);
+    let full_prompt = format!("{}\n\n---\n{}", EXTRACTION_PROMPT_TEXT, sanitized);
+
     if let Ok(key) = std::env::var("OPENROUTER_API_KEY") {
         match call_openrouter(&key, &full_prompt) {
             Ok(markers) => return Ok(markers),
@@ -123,8 +222,79 @@ Output ONLY the JSON array, nothing else."#;
         }
     }
 
-    // Fallback: local Qwen via mlx_lm
     call_local_llm(&full_prompt)
+}
+
+/// Structure raw lab report text into biomarker JSON using an LLM.
+/// Now splits on form feeds and processes each page separately.
+/// Returns flattened list of all markers across pages.
+pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
+    let pages = split_into_pages(raw_text);
+    let mut all_markers = Vec::new();
+
+    for (idx, page) in pages.iter().enumerate() {
+        let page_num = idx + 1;
+        if page.len() < 50 {
+            // Skip empty/trivial pages
+            continue;
+        }
+        match llm_structure_page(page) {
+            Ok(mut markers) => {
+                // Tag each marker with its page number
+                for m in &mut markers {
+                    m.page = Some(page_num);
+                }
+                all_markers.extend(markers);
+            }
+            Err(e) => {
+                eprintln!("info: page {} extraction failed: {}", page_num, e);
+            }
+        }
+    }
+
+    Ok(all_markers)
+}
+
+/// Structure raw text and return per-page results for proper page accounting.
+pub fn llm_structure_text_paged(raw_text: &str) -> Result<Vec<PageResult>, LabParseError> {
+    let pages = split_into_pages(raw_text);
+    let mut page_results = Vec::new();
+
+    for (idx, page) in pages.iter().enumerate() {
+        let page_num = idx + 1;
+        if page.len() < 50 {
+            page_results.push(PageResult {
+                page: page_num,
+                markers: Vec::new(),
+                elapsed_s: 0.0,
+                error: Some("page too short".to_string()),
+            });
+            continue;
+        }
+        match llm_structure_page(page) {
+            Ok(mut markers) => {
+                for m in &mut markers {
+                    m.page = Some(page_num);
+                }
+                page_results.push(PageResult {
+                    page: page_num,
+                    markers,
+                    elapsed_s: 0.0,
+                    error: None,
+                });
+            }
+            Err(e) => {
+                page_results.push(PageResult {
+                    page: page_num,
+                    markers: Vec::new(),
+                    elapsed_s: 0.0,
+                    error: Some(e.to_string()),
+                });
+            }
+        }
+    }
+
+    Ok(page_results)
 }
 
 fn call_openrouter(api_key: &str, prompt: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
@@ -369,6 +539,20 @@ pub fn make_page_result(page: usize, markers: Vec<VisionBiomarker>) -> PageResul
         markers,
         elapsed_s: 0.0,
         error: None,
+    }
+}
+
+/// Create a PageResult preserving an existing error from upstream
+pub fn make_page_result_with_error(
+    page: usize,
+    markers: Vec<VisionBiomarker>,
+    error: Option<String>,
+) -> PageResult {
+    PageResult {
+        page,
+        markers,
+        elapsed_s: 0.0,
+        error,
     }
 }
 
