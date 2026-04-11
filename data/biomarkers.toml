@@ -453,7 +453,8 @@ qualifier = ""
 display_name = "WBC"
 aliases = [
     "wbc", "white blood cells", "white blood cell count", "leukocytes",
-    "leucocytes", "white cell count", "leucociti",
+    "leucocytes", "white cell count", "total white cell count",
+    "total white blood cell count", "leucociti",
 ]
 allowed_units = ["x10^9/L", "K/µL", "10^3/µL"]
 loinc = "6690-2"
@@ -549,7 +550,7 @@ specimen = "whole blood"
 qualifier = "percent"
 display_name = "Neutrophils (%)"
 aliases = [
-    "neutrophils %", "neutrophils percent", "neutrophil %",
+    "neutrophils", "neutrophils %", "neutrophils percent", "neutrophil %",
     "neutrophils relative", "neutrofili %",
 ]
 allowed_units = ["%"]
@@ -578,7 +579,7 @@ specimen = "whole blood"
 qualifier = "percent"
 display_name = "Lymphocytes (%)"
 aliases = [
-    "lymphocytes %", "lymphocytes percent", "lymphocyte %",
+    "lymphocytes", "lymphocytes %", "lymphocytes percent", "lymphocyte %",
     "lymphocytes relative", "linfociti %",
 ]
 allowed_units = ["%"]
@@ -607,7 +608,7 @@ specimen = "whole blood"
 qualifier = "percent"
 display_name = "Monocytes (%)"
 aliases = [
-    "monocytes %", "monocytes percent", "monocyte %",
+    "monocytes", "monocytes %", "monocytes percent", "monocyte %",
     "monocytes relative",
 ]
 allowed_units = ["%"]
@@ -636,7 +637,7 @@ specimen = "whole blood"
 qualifier = "percent"
 display_name = "Eosinophils (%)"
 aliases = [
-    "eosinophils %", "eosinophils percent", "eosinophil %",
+    "eosinophils", "eosinophils %", "eosinophils percent", "eosinophil %",
     "eosinophils relative",
 ]
 allowed_units = ["%"]
@@ -665,7 +666,7 @@ specimen = "whole blood"
 qualifier = "percent"
 display_name = "Basophils (%)"
 aliases = [
-    "basophils %", "basophils percent", "basophil %",
+    "basophils", "basophils %", "basophils percent", "basophil %",
     "basophils relative",
 ]
 allowed_units = ["%"]
@@ -858,7 +859,7 @@ component = "Microalbumin"
 specimen = "urine"
 qualifier = ""
 display_name = "Microalbumin"
-aliases = ["urine microalbumin", "urine albumin", "albumin urine", "microalbuminuria"]
+aliases = ["urine microalbumin", "urine albumin", "albumin urine", "microalbuminuria", "microalbumin random", "urine microalbumin random"]
 allowed_units = ["mg/L", "mg/dL", "µg/min"]
 loinc = "14957-5"
 category = "kidney"
@@ -1638,7 +1639,7 @@ component = "Zinc"
 specimen = "serum"
 qualifier = ""
 display_name = "Zinc"
-aliases = ["serum zinc", "zn", "zinco"]
+aliases = ["serum zinc", "zinc serum", "zn", "zinco"]
 allowed_units = ["µg/dL", "µmol/L"]
 loinc = "2601-3"
 category = "nutritional"
@@ -3410,4 +3411,45 @@ ambiguous_name = "iron"
 default_id = "iron"
 candidates = [
     { id = "iron" },
+]
+
+# CBC differential disambiguation: bare name → use unit to pick % vs abs
+[[disambiguation]]
+ambiguous_name = "neutrophils"
+default_id = "neutrophils_pct"
+candidates = [
+    { id = "neutrophils_pct", when_unit_in = ["%"] },
+    { id = "neutrophils_abs", when_unit_in = ["x10^9/L", "K/µL", "10^3/µL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "lymphocytes"
+default_id = "lymphocytes_pct"
+candidates = [
+    { id = "lymphocytes_pct", when_unit_in = ["%"] },
+    { id = "lymphocytes_abs", when_unit_in = ["x10^9/L", "K/µL", "10^3/µL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "monocytes"
+default_id = "monocytes_pct"
+candidates = [
+    { id = "monocytes_pct", when_unit_in = ["%"] },
+    { id = "monocytes_abs", when_unit_in = ["x10^9/L", "K/µL", "10^3/µL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "eosinophils"
+default_id = "eosinophils_pct"
+candidates = [
+    { id = "eosinophils_pct", when_unit_in = ["%"] },
+    { id = "eosinophils_abs", when_unit_in = ["x10^9/L", "K/µL", "10^3/µL"] },
+]
+
+[[disambiguation]]
+ambiguous_name = "basophils"
+default_id = "basophils_pct"
+candidates = [
+    { id = "basophils_pct", when_unit_in = ["%"] },
+    { id = "basophils_abs", when_unit_in = ["x10^9/L", "K/µL", "10^3/µL"] },
 ]

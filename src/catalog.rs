@@ -356,6 +356,14 @@ pub fn normalize_pipeline(raw: &str) -> String {
         }
     }
 
+    // Step 1c: Strip spaceless specimen suffixes (e.g. "Microalbumin Random" → "microalbumin")
+    for suffix in &[" serum", " plasma", " random", " whole blood"] {
+        if let Some(rest) = s.strip_suffix(suffix) {
+            s = rest.trim().to_string();
+            break;
+        }
+    }
+
     // Step 2: Strip method suffixes
     for suffix in METHOD_SUFFIXES {
         if let Some(rest) = s.strip_suffix(suffix) {
