@@ -438,10 +438,14 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
             serde_json::Value::String(s) => {
                 let trimmed = s.trim();
                 // Extract comparator from string prefix if not in dedicated field
-                let (cmp_str, num_str) = if trimmed.starts_with("<=") || trimmed.starts_with("≤") {
-                    ("<=", &trimmed[if trimmed.starts_with("≤") { 1 } else { 2 }..])
-                } else if trimmed.starts_with(">=") || trimmed.starts_with("≥") {
-                    (">=", &trimmed[if trimmed.starts_with("≥") { 1 } else { 2 }..])
+                let (cmp_str, num_str) = if trimmed.starts_with("<=") {
+                    ("<=", &trimmed[2..])
+                } else if trimmed.starts_with(">=") {
+                    (">=", &trimmed[2..])
+                } else if trimmed.starts_with('≤') {
+                    ("<=", &trimmed['≤'.len_utf8()..])
+                } else if trimmed.starts_with('≥') {
+                    (">=", &trimmed['≥'.len_utf8()..])
                 } else if trimmed.starts_with('<') {
                     ("<", &trimmed[1..])
                 } else if trimmed.starts_with('>') {

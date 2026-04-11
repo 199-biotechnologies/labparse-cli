@@ -131,11 +131,13 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     }
 
     // Compute document status based on extraction quality
+    let has_missing_units = biomarkers.iter().any(|b| b.unit_status == UnitStatus::Missing);
+    let has_ambiguous = biomarkers.iter().any(|b| b.confidence == "ambiguous");
     let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
-        // Found values but couldn't resolve any — likely wrong format or catalog gaps
         DocumentStatus::NeedsReview
     } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
-        // Resolved some but unresolved vastly outnumber — noisy extraction
+        DocumentStatus::NeedsReview
+    } else if has_missing_units || has_ambiguous {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete

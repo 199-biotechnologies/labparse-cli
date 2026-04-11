@@ -1,6 +1,6 @@
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker, UnitStatus};
+use crate::normalize::{normalize_name, normalize_unit, parse_number, Comparator, ParsedBiomarker, UnitStatus};
 use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Common header names for the test/biomarker name column
@@ -56,11 +56,15 @@ fn find_column(headers: &csv::StringRecord, candidates: &[&str]) -> Option<usize
 fn parse_number_with_comparator(s: &str) -> Option<(f64, Comparator)> {
     let trimmed = s.trim();
 
-    // Extract comparator and remaining numeric string
-    let (cmp, num_str) = if trimmed.starts_with("<=") || trimmed.starts_with("≤") {
-        (Comparator::Le, &trimmed[if trimmed.starts_with("≤") { 1 } else { 2 }..])
-    } else if trimmed.starts_with(">=") || trimmed.starts_with("≥") {
-        (Comparator::Ge, &trimmed[if trimmed.starts_with("≥") { 1 } else { 2 }..])
+    // Extract comparator and remaining numeric string (char-boundary safe)
+    let (cmp, num_str) = if trimmed.starts_with("<=") {
+        (Comparator::Le, &trimmed[2..])
+    } else if trimmed.starts_with(">=") {
+        (Comparator::Ge, &trimmed[2..])
+    } else if trimmed.starts_with('≤') {
+        (Comparator::Le, &trimmed['≤'.len_utf8()..])
+    } else if trimmed.starts_with('≥') {
+        (Comparator::Ge, &trimmed['≥'.len_utf8()..])
     } else if trimmed.starts_with('<') {
         (Comparator::Lt, &trimmed[1..])
     } else if trimmed.starts_with('>') {
@@ -69,8 +73,7 @@ fn parse_number_with_comparator(s: &str) -> Option<(f64, Comparator)> {
         (Comparator::Eq, trimmed)
     };
 
-    let cleaned = num_str.trim().replace(',', "");
-    cleaned.parse::<f64>().ok().map(|v| (v, cmp))
+    parse_number(num_str.trim()).ok().map(|parsed| (parsed.value, cmp))
 }
 
 /// Detect delimiter from the first line: tab, semicolon, or comma (default)
@@ -202,9 +205,13 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         }
     }
 
+    let has_missing_units = biomarkers.iter().any(|b| b.unit_status == UnitStatus::Missing);
+    let has_ambiguous = biomarkers.iter().any(|b| b.confidence == "ambiguous");
     let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
         DocumentStatus::NeedsReview
     } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
+        DocumentStatus::NeedsReview
+    } else if has_missing_units || has_ambiguous {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete
