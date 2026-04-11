@@ -34,7 +34,7 @@ aliases = [
     "glicemia a digiuno", "nuchtern glukose",
     "glucose (fasting)", "glucose fasting", "glucose, fasting",
     "glucose, serum, fasting", "glucose serum fasting",
-    "blutzucker, plasma", "glucose (plasma) after 2 hours", "glucose, plasma"
+    "blutzucker, plasma", "glucose, plasma"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "1558-6"
@@ -456,7 +456,7 @@ qualifier = ""
 display_name = "Hematocrit"
 aliases = [
     "hct", "haematocrit", "packed cell volume", "pcv", "ematocrito",
-    "b_hematokrit [hct]", "hematocrit (%)", "hematocrit (hct)", "hämatokrit"
+    "b_hematokrit [hct]", "hematocrit (hct)", "hämatokrit"
 ]
 allowed_units = ["%", "L/L", "ratio"]
 loinc = "4544-3"
@@ -527,7 +527,7 @@ specimen = "whole blood"
 qualifier = ""
 display_name = "MCH"
 aliases = ["mean corpuscular hemoglobin", "mean corpuscular haemoglobin", "mean cell hemoglobin",
-    "b_barvivo erytr. [mch]", "mch (pg)", "mean cell hemoglobin (mch)", "mean corpuscular hemoglobin (mch)", "mean hemoglobin content (mch)"
+    "b_barvivo erytr. [mch]", "mean cell hemoglobin (mch)", "mean corpuscular hemoglobin (mch)", "mean hemoglobin content (mch)"
 ]
 allowed_units = ["pg"]
 loinc = "785-6"
@@ -553,7 +553,7 @@ specimen = "whole blood"
 qualifier = ""
 display_name = "RDW"
 aliases = ["red cell distribution width", "red blood cell distribution width", "rdw-cv", "rdw cv",
-    "b_rdw-cv", "erythrocyte distribution width", "erythrocyte distribution width (rdw-cv)", "erythrocyte distribution width [ratio]", "rdw - cv (%)", "red cell dist width (rdw)", "red cell dist width (rdw-cv)", "red cell distribution width (rdw)", "width of erythrocyte distribution (rdw-cv)"
+    "b_rdw-cv", "erythrocyte distribution width", "erythrocyte distribution width (rdw-cv)", "erythrocyte distribution width [ratio]", "red cell dist width (rdw)", "red cell dist width (rdw-cv)", "red cell distribution width (rdw)", "width of erythrocyte distribution (rdw-cv)"
 ]
 allowed_units = ["%", "fL"]
 loinc = "788-0"
@@ -566,7 +566,7 @@ specimen = "whole blood"
 qualifier = ""
 display_name = "MPV"
 aliases = ["mean platelet volume",
-    "mean platelet volume (mpv)", "mpv (mean platelet volume) (fl)", "platelet mean volume", "platelet mean volume [entitic volume] in blood by rees-ecker", "platelet mean volume, blood"
+    "mean platelet volume (mpv)", "platelet mean volume", "platelet mean volume [entitic volume] in blood by rees-ecker", "platelet mean volume, blood"
 ]
 allowed_units = ["fL"]
 loinc = "32623-1"
@@ -1481,7 +1481,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "Progesterone"
 aliases = ["p4", "serum progesterone", "progesterone",
-    "progesteron", "s_progesteron", "s_progesteron [ng/ml]"
+    "progesteron", "s_progesteron"
 ]
 allowed_units = ["ng/mL", "nmol/L"]
 loinc = "2839-9"
@@ -1566,7 +1566,7 @@ display_name = "Cortisol (AM)"
 aliases = [
     "cortisol", "am cortisol", "morning cortisol", "serum cortisol",
     "cortisolo", "cortisol (morning)",
-    "compound f", "cortisol (in serum)", "cortisol - am", "cortisol - pm", "cortisol, serum", "hydrocortisone", "s_kortizol"
+    "compound f", "cortisol (in serum)", "cortisol - am", "cortisol, serum", "hydrocortisone", "s_kortizol"
 ]
 allowed_units = ["µg/dL", "nmol/L"]
 loinc = "2143-6"
@@ -1999,7 +1999,7 @@ aliases = ["immunoglobulin a", "immunoglobulina a",
     "immunoglobulin a, quant, serum", "immunoglobulin a, quantitative", "immunoglobulin a, total", "s_iga"
 ]
 allowed_units = ["mg/dL", "g/L"]
-loinc = "2458-8"
+loinc = "19113-0"
 category = "immunology"
 
 [[marker]]
@@ -2038,7 +2038,7 @@ aliases = ["immunoglobulin e", "total ige", "immunoglobulina e",
     "ige, total", "immunoglobulin e, total"
 ]
 allowed_units = ["IU/mL", "kU/L"]
-loinc = "2458-8"
+loinc = "19113-0"
 category = "immunology"
 
 [[marker]]
@@ -2095,7 +2095,7 @@ component = "Antistreptolysin O"
 specimen = "serum"
 qualifier = ""
 display_name = "ASO"
-aliases = ["antistreptolysin o", "aso titer", "tas",
+aliases = ["antistreptolysin o", "aso titer",
     "antistreptolysin", "antistreptolysin o (aslo)", "antistreptolysin o (aso) antibodies", "antistreptolysin o ab", "aslo", "streptokokken-antikörper"
 ]
 allowed_units = ["IU/mL"]
@@ -3023,7 +3023,7 @@ display_name = "VEGF"
 aliases = [
     "vegf", "vegf-a", "vascular endothelial growth factor",
     "vegf level",
-    "hemoglobin (urine)", "hemoglobin, urine"
+    
 ]
 allowed_units = ["pg/mL", "ng/L"]
 loinc = "49137-3"
@@ -3474,7 +3474,7 @@ aliases = [
     "apolipoprotein e level", "apo-e",
 ]
 allowed_units = ["mg/L", "mg/dL"]
-loinc = "1869-7"
+loinc = "1886-1"
 category = "lipid"
 
 
@@ -3491,7 +3491,7 @@ aliases = [
     "thyroxine-binding globulin", "thyroxine binding globulin"
 ]
 allowed_units = ["µg/mL", "mg/L", "nmol/L"]
-loinc = "3034-6"
+loinc = "3021-3"
 category = "thyroid"
 
 [[marker]]
