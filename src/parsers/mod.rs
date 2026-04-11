@@ -41,6 +41,7 @@ pub enum DocumentStatus {
 
 /// Per-page extraction status
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)] // Partial variant used in future validation/escalation
 pub enum PageExtractStatus {
     Ok,
     Failed,

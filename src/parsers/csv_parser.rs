@@ -57,18 +57,18 @@ fn parse_number_with_comparator(s: &str) -> Option<(f64, Comparator)> {
     let trimmed = s.trim();
 
     // Extract comparator and remaining numeric string (char-boundary safe)
-    let (cmp, num_str) = if trimmed.starts_with("<=") {
-        (Comparator::Le, &trimmed[2..])
-    } else if trimmed.starts_with(">=") {
-        (Comparator::Ge, &trimmed[2..])
-    } else if trimmed.starts_with('≤') {
-        (Comparator::Le, &trimmed['≤'.len_utf8()..])
-    } else if trimmed.starts_with('≥') {
-        (Comparator::Ge, &trimmed['≥'.len_utf8()..])
-    } else if trimmed.starts_with('<') {
-        (Comparator::Lt, &trimmed[1..])
-    } else if trimmed.starts_with('>') {
-        (Comparator::Gt, &trimmed[1..])
+    let (cmp, num_str) = if let Some(rest) = trimmed.strip_prefix("<=") {
+        (Comparator::Le, rest)
+    } else if let Some(rest) = trimmed.strip_prefix(">=") {
+        (Comparator::Ge, rest)
+    } else if let Some(rest) = trimmed.strip_prefix('≤') {
+        (Comparator::Le, rest)
+    } else if let Some(rest) = trimmed.strip_prefix('≥') {
+        (Comparator::Ge, rest)
+    } else if let Some(rest) = trimmed.strip_prefix('<') {
+        (Comparator::Lt, rest)
+    } else if let Some(rest) = trimmed.strip_prefix('>') {
+        (Comparator::Gt, rest)
     } else {
         (Comparator::Eq, trimmed)
     };
@@ -126,7 +126,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     let mut biomarkers = Vec::new();
     let mut unresolved = Vec::new();
     let mut warnings = Vec::new();
-    let mut seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+    let seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
 
     for record in rdr.records() {
         let record = record?;
@@ -215,13 +215,12 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
 
     let has_missing_units = biomarkers.iter().any(|b| b.unit_status == UnitStatus::Missing);
     let has_ambiguous = biomarkers.iter().any(|b| b.confidence == "ambiguous");
-    let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
-        DocumentStatus::NeedsReview
-    } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
-        DocumentStatus::NeedsReview
-    } else if has_missing_units || has_ambiguous {
-        DocumentStatus::NeedsReview
-    } else if !conflicts.is_empty() {
+    let needs_review = (biomarkers.is_empty() && !unresolved.is_empty())
+        || (!biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3)
+        || has_missing_units
+        || has_ambiguous
+        || !conflicts.is_empty();
+    let document_status = if needs_review {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete

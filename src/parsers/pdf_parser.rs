@@ -228,6 +228,7 @@ fn llm_structure_page(page_text: &str) -> Result<Vec<VisionBiomarker>, LabParseE
 /// Structure raw lab report text into biomarker JSON using an LLM.
 /// Now splits on form feeds and processes each page separately.
 /// Returns flattened list of all markers across pages.
+#[allow(dead_code)] // kept for backward compat, prefer llm_structure_text_paged
 pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
     let pages = split_into_pages(raw_text);
     let mut all_markers = Vec::new();
@@ -533,6 +534,7 @@ pub fn verify_against_source(
 }
 
 /// Create a PageResult from LLM-structured markers
+#[allow(dead_code)] // kept for backward compat
 pub fn make_page_result(page: usize, markers: Vec<VisionBiomarker>) -> PageResult {
     PageResult {
         page,
@@ -666,18 +668,18 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
             serde_json::Value::String(s) => {
                 let trimmed = s.trim();
                 // Extract comparator from string prefix if not in dedicated field
-                let (cmp_str, num_str) = if trimmed.starts_with("<=") {
-                    ("<=", &trimmed[2..])
-                } else if trimmed.starts_with(">=") {
-                    (">=", &trimmed[2..])
-                } else if trimmed.starts_with('≤') {
-                    ("<=", &trimmed['≤'.len_utf8()..])
-                } else if trimmed.starts_with('≥') {
-                    (">=", &trimmed['≥'.len_utf8()..])
-                } else if trimmed.starts_with('<') {
-                    ("<", &trimmed[1..])
-                } else if trimmed.starts_with('>') {
-                    (">", &trimmed[1..])
+                let (cmp_str, num_str) = if let Some(rest) = trimmed.strip_prefix("<=") {
+                    ("<=", rest)
+                } else if let Some(rest) = trimmed.strip_prefix(">=") {
+                    (">=", rest)
+                } else if let Some(rest) = trimmed.strip_prefix('≤') {
+                    ("<=", rest)
+                } else if let Some(rest) = trimmed.strip_prefix('≥') {
+                    (">=", rest)
+                } else if let Some(rest) = trimmed.strip_prefix('<') {
+                    ("<", rest)
+                } else if let Some(rest) = trimmed.strip_prefix('>') {
+                    (">", rest)
                 } else {
                     ("", trimmed)
                 };

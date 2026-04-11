@@ -27,6 +27,7 @@ pub struct CatalogFile {
 }
 
 #[derive(Debug, Clone, Deserialize)]
+#[allow(dead_code)] // qualifier and allowed_units used during loading + future validation
 pub struct MarkerEntry {
     pub id: String,
     pub component: String,
@@ -67,6 +68,7 @@ pub struct DisambiguationCandidate {
 // ── Resolution result ──
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // allowed_units used in normalize.rs and future validators
 pub struct ResolvedMarker {
     pub canonical_id: String,
     pub display_name: String,
@@ -96,6 +98,7 @@ impl Confidence {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+#[allow(dead_code)] // Unresolved variant used by future validators
 pub enum ResolutionMethod {
     ExactAlias,
     NormalizedPipeline,
@@ -568,7 +571,7 @@ pub fn categories() -> Vec<String> {
 /// List all marker entries, optionally filtered by category
 pub fn list_all(category: Option<&str>) -> Vec<&'static MarkerEntry> {
     let mut entries: Vec<_> = CATALOG.markers.values()
-        .filter(|m| category.map_or(true, |c| m.category == c))
+        .filter(|m| category.is_none_or(|c| m.category == c))
         .collect();
     entries.sort_by(|a, b| a.id.cmp(&b.id));
     entries

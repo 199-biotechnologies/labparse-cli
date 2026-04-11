@@ -200,7 +200,7 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
 /// Detect PDF by extension or magic bytes
 fn is_pdf(path: &std::path::Path) -> bool {
     if let Some(ext) = path.extension() {
-        return ext.to_ascii_lowercase() == "pdf";
+        return ext.eq_ignore_ascii_case("pdf");
     }
     if let Ok(bytes) = std::fs::read(path) {
         return bytes.starts_with(b"%PDF-");

@@ -136,13 +136,12 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     // Compute document status based on extraction quality
     let has_missing_units = biomarkers.iter().any(|b| b.unit_status == UnitStatus::Missing);
     let has_ambiguous = biomarkers.iter().any(|b| b.confidence == "ambiguous");
-    let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
-        DocumentStatus::NeedsReview
-    } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
-        DocumentStatus::NeedsReview
-    } else if has_missing_units || has_ambiguous {
-        DocumentStatus::NeedsReview
-    } else if !conflicts.is_empty() {
+    let needs_review = (biomarkers.is_empty() && !unresolved.is_empty())
+        || (!biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3)
+        || has_missing_units
+        || has_ambiguous
+        || !conflicts.is_empty();
+    let document_status = if needs_review {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete
@@ -162,7 +161,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
 fn try_extract(
     cap: &regex::Captures,
     seen_names: &mut std::collections::HashSet<String>,
-    warnings: &mut Vec<String>,
+    _warnings: &mut Vec<String>,
     unresolved: &mut Vec<UnresolvedMarker>,
 ) -> Option<ParsedBiomarker> {
     let raw_name = cap.name("name")?.as_str().trim();

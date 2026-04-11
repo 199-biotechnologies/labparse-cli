@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::normalize::{Comparator, ParsedBiomarker, UnitStatus};
-use crate::parsers::{ConflictCandidate, ConflictMarker, DocumentStatus, PageStatus, ParseResult};
+use crate::parsers::{ConflictCandidate, ConflictMarker, DocumentStatus, ParseResult};
 
 #[derive(Serialize)]
 pub struct JsonEnvelope {
@@ -25,7 +25,7 @@ pub struct JsonData {
 
 /// Helper to check if comparator is Eq (for skip_serializing_if)
 fn is_eq_comparator(cmp: &Option<Comparator>) -> bool {
-    cmp.map_or(true, |c| c.is_eq())
+    cmp.is_none_or(|c| c.is_eq())
 }
 
 /// Helper to check if flagged is false (for skip_serializing_if)
@@ -35,7 +35,7 @@ fn is_false(v: &bool) -> bool {
 
 /// Helper to check if unit_status is Observed (for skip_serializing_if)
 fn is_observed_unit(status: &Option<UnitStatus>) -> bool {
-    status.map_or(true, |s| s.is_observed())
+    status.is_none_or(|s| s.is_observed())
 }
 
 #[derive(Serialize)]

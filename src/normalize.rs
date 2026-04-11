@@ -94,7 +94,7 @@ pub fn parse_number(raw: &str) -> Result<ParsedNumber, String> {
             let after_len = after_comma.len();
 
             // 1-2 digits after comma: decimal comma (1,5 -> 1.5, 1,25 -> 1.25)
-            if after_len >= 1 && after_len <= 2 {
+            if (1..=2).contains(&after_len) {
                 let normalized = numeric_part.replace(',', ".");
                 match normalized.parse::<f64>() {
                     Ok(v) => Ok(ParsedNumber {
@@ -217,6 +217,7 @@ pub fn parse_number(raw: &str) -> Result<ParsedNumber, String> {
 /// # Returns
 /// * `Ok(ParsedNumber)` - Successfully parsed number, potentially re-interpreted
 /// * `Err(String)` - Parse failure with reason
+#[allow(dead_code)] // available for future use by validators
 pub fn parse_number_with_hint(raw: &str, typical_max: Option<f64>) -> Result<ParsedNumber, String> {
     let mut result = parse_number(raw)?;
 
