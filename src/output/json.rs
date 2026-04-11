@@ -1,7 +1,7 @@
 use serde::Serialize;
 
 use crate::normalize::{Comparator, ParsedBiomarker, UnitStatus};
-use crate::parsers::{ConflictCandidate, ConflictMarker, ParseResult};
+use crate::parsers::{ConflictCandidate, ConflictMarker, DocumentStatus, PageStatus, ParseResult};
 
 #[derive(Serialize)]
 pub struct JsonEnvelope {
@@ -113,10 +113,22 @@ impl From<&ConflictCandidate> for JsonConflictCandidate {
 }
 
 #[derive(Serialize)]
+pub struct JsonPageStatus {
+    pub page: usize,
+    pub status: &'static str,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub error: Option<String>,
+    pub marker_count: usize,
+}
+
+#[derive(Serialize)]
 pub struct JsonMetadata {
     pub elapsed_ms: u128,
     pub markers_found: usize,
     pub markers_unresolved: usize,
+    pub document_status: &'static str,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub page_statuses: Vec<JsonPageStatus>,
     pub parser: String,
     pub catalog_version: &'static str,
 }
@@ -155,17 +167,35 @@ impl From<&ParsedBiomarker> for JsonBiomarker {
     }
 }
 
+fn document_status_str(status: DocumentStatus) -> &'static str {
+    match status {
+        DocumentStatus::Complete => "success",
+        DocumentStatus::NeedsReview => "needs_review",
+        DocumentStatus::PartialFailure => "partial_failure",
+    }
+}
+
+fn page_status_str(status: crate::parsers::PageExtractStatus) -> &'static str {
+    match status {
+        crate::parsers::PageExtractStatus::Ok => "ok",
+        crate::parsers::PageExtractStatus::Failed => "failed",
+        crate::parsers::PageExtractStatus::Partial => "partial",
+    }
+}
+
 pub fn render(
     result: &ParseResult,
     source: &str,
     elapsed_ms: u128,
 ) -> String {
-    // Use "needs_review" status if there are conflicts
-    let status = if result.conflicts.is_empty() {
-        "success"
-    } else {
-        "needs_review"
-    };
+    let status = document_status_str(result.document_status);
+
+    let page_statuses: Vec<JsonPageStatus> = result.page_statuses.iter().map(|ps| JsonPageStatus {
+        page: ps.page,
+        status: page_status_str(ps.status),
+        error: ps.error.clone(),
+        marker_count: ps.marker_count,
+    }).collect();
 
     let envelope = JsonEnvelope {
         version: "2",
@@ -186,6 +216,8 @@ pub fn render(
             elapsed_ms,
             markers_found: result.biomarkers.len(),
             markers_unresolved: result.unresolved.len(),
+            document_status: status,
+            page_statuses,
             parser: result.parser_name.clone(),
             catalog_version: "2.0",
         },

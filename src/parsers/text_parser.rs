@@ -3,7 +3,7 @@ use regex::Regex;
 
 use crate::catalog;
 use crate::errors::LabParseError;
-use crate::normalize::{normalize_name, normalize_unit, Comparator, ParsedBiomarker, UnitStatus};
+use crate::normalize::{normalize_name, normalize_unit, parse_number, Comparator, ParsedBiomarker, UnitStatus};
 use crate::parsers::{DocumentStatus, ParseResult, UnresolvedMarker};
 
 /// Pattern: <name> <value> <unit>
@@ -130,8 +130,19 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         }
     }
 
+    // Compute document status based on extraction quality
+    let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
+        // Found values but couldn't resolve any — likely wrong format or catalog gaps
+        DocumentStatus::NeedsReview
+    } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
+        // Resolved some but unresolved vastly outnumber — noisy extraction
+        DocumentStatus::NeedsReview
+    } else {
+        DocumentStatus::Complete
+    };
+
     Ok(ParseResult {
-        document_status: DocumentStatus::Complete,
+        document_status,
         page_statuses: vec![],
         biomarkers,
         unresolved,
@@ -152,8 +163,9 @@ fn try_extract(
     let raw_unit = cap.name("unit").map(|m| m.as_str()).unwrap_or("");
     let raw_cmp = cap.name("cmp").map(|m| m.as_str()).unwrap_or("");
 
-    // Replace decimal comma with period for parsing
-    let value: f64 = raw_value.replace(',', ".").parse().ok()?;
+    // Use locale-aware number parser instead of naive comma replacement
+    let parsed = parse_number(raw_value).ok()?;
+    let value = parsed.value;
     let comparator = Comparator::from_str(raw_cmp);
 
     let norm_unit = if raw_unit.is_empty() {
@@ -190,9 +202,12 @@ fn try_extract(
     }
 
     let (unit, unit_status) = if norm_unit.is_empty() {
-        match catalog::get_marker(&std_name).and_then(|m| m.allowed_units.first().cloned()) {
-            Some(inferred) => (inferred, UnitStatus::Inferred),
-            None => (String::new(), UnitStatus::Missing),
+        // Only infer unit when marker has exactly 1 allowed unit
+        match catalog::get_marker(&std_name) {
+            Some(m) if m.allowed_units.len() == 1 => {
+                (m.allowed_units[0].clone(), UnitStatus::Inferred)
+            }
+            _ => (String::new(), UnitStatus::Missing),
         }
     } else {
         (norm_unit, UnitStatus::Observed)

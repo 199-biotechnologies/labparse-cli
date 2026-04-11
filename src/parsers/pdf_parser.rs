@@ -51,9 +51,15 @@ pub struct VisionBiomarker {
     /// Comparator for the value (<, >, <=, >=)
     #[serde(default)]
     comparator: Option<String>,
+    /// Source text from the document (for verification)
+    #[serde(default)]
+    source_text: Option<String>,
     /// Page number this marker came from (injected during resolution)
     #[serde(skip)]
     page: Option<usize>,
+    /// Catch-all for extra fields LLMs might add
+    #[serde(flatten)]
+    _extra: serde_json::Map<String, serde_json::Value>,
 }
 
 /// Per-page result from the Python batch extraction
@@ -92,11 +98,12 @@ pub fn extract_text_from_pdf(pdf_path: &Path) -> Result<Option<String>, LabParse
 /// Tries OpenRouter (gpt-5.4-mini) first, falls back to local Qwen.
 pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
     let prompt = r#"Extract ALL biomarkers from this lab report text. Output ONLY a valid JSON array.
-Each object must have: "name" (string), "value" (number), "unit" (string, empty if none), "reference_range" (string or null), "flagged" (boolean, true if marked abnormal with * or similar).
+Each object must have: "name" (string), "value" (number), "unit" (string, empty if none), "reference_range" (string or null), "flagged" (boolean, true if marked abnormal with * or similar), "comparator" (string or null: "<", ">", "<=", ">=" if value has a comparator, null for exact values).
 Rules:
 - Skip headers, page numbers, doctor names, addresses, dates
 - Skip classification/interpretation tables
 - value must be a number, not a string
+- If the source shows "<0.15", set value to 0.15 and comparator to "<". NEVER drop the comparator.
 - Include ALL test results, don't skip any
 Output ONLY the JSON array, nothing else."#;
 
@@ -110,10 +117,10 @@ Output ONLY the JSON array, nothing else."#;
 
     // Try OpenRouter first (fast, cheap, reliable JSON)
     if let Ok(key) = std::env::var("OPENROUTER_API_KEY") {
-        if let Ok(markers) = call_openrouter(&key, &full_prompt) {
-            return Ok(markers);
+        match call_openrouter(&key, &full_prompt) {
+            Ok(markers) => return Ok(markers),
+            Err(e) => eprintln!("info: OpenRouter failed ({}), trying local model", e),
         }
-        eprintln!("info: OpenRouter failed, trying local model");
     }
 
     // Fallback: local Qwen via mlx_lm
@@ -134,7 +141,8 @@ fn call_openrouter(api_key: &str, prompt: &str) -> Result<Vec<VisionBiomarker>, 
     let body_str = serde_json::to_string(&request_body)
         .map_err(|e| LabParseError::VisionError(format!("JSON serialize error: {}", e)))?;
 
-    let tmp_body = std::env::temp_dir().join(format!("labparse_api_{}.json", std::process::id()));
+    // Write body to /tmp (not std::env::temp_dir which goes to macOS sandbox dirs)
+    let tmp_body = format!("/tmp/labparse_api_{}.json", std::process::id());
     std::fs::write(&tmp_body, &body_str)
         .map_err(|e| LabParseError::VisionError(format!("Write temp body failed: {}", e)))?;
 
@@ -145,7 +153,7 @@ fn call_openrouter(api_key: &str, prompt: &str) -> Result<Vec<VisionBiomarker>, 
             "https://openrouter.ai/api/v1/chat/completions",
             "-H", &format!("Authorization: Bearer {}", api_key),
             "-H", "Content-Type: application/json",
-            "-d", &format!("@{}", tmp_body.display()),
+            "-d", &format!("@{}", tmp_body),
         ])
         .output()
         .map_err(|e| LabParseError::VisionError(format!("curl failed: {}", e)))?;
@@ -153,15 +161,26 @@ fn call_openrouter(api_key: &str, prompt: &str) -> Result<Vec<VisionBiomarker>, 
     let _ = std::fs::remove_file(&tmp_body);
 
     if !output.status.success() {
-        return Err(LabParseError::VisionError("OpenRouter API call failed".into()));
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        return Err(LabParseError::VisionError(format!("curl failed (exit {}): {}", output.status, stderr)));
     }
 
-    let response: serde_json::Value = serde_json::from_slice(&output.stdout)
-        .map_err(|e| LabParseError::VisionError(format!("Invalid API response: {}", e)))?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    if stdout.is_empty() {
+        return Err(LabParseError::VisionError("OpenRouter returned empty response".into()));
+    }
+
+    let response: serde_json::Value = serde_json::from_str(&stdout)
+        .map_err(|e| LabParseError::VisionError(format!("Invalid API response: {} — first 200 chars: {}", e, &stdout[..stdout.len().min(200)])))?;
+
+    // Check for API error
+    if let Some(err) = response.get("error") {
+        return Err(LabParseError::VisionError(format!("OpenRouter error: {}", err)));
+    }
 
     let content = response["choices"][0]["message"]["content"]
         .as_str()
-        .ok_or_else(|| LabParseError::VisionError("No content in API response".into()))?;
+        .ok_or_else(|| LabParseError::VisionError(format!("No content in API response: {}", &stdout[..stdout.len().min(300)])))?;
 
     parse_llm_json(content)
 }
@@ -194,7 +213,18 @@ except Exception as e:
 }
 
 fn parse_llm_json(text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
-    let trimmed = text.trim();
+    let mut trimmed = text.trim();
+
+    // Strip markdown fences (```json ... ```)
+    if trimmed.starts_with("```") {
+        if let Some(first_newline) = trimmed.find('\n') {
+            trimmed = &trimmed[first_newline + 1..];
+        }
+        if let Some(end) = trimmed.rfind("```") {
+            trimmed = &trimmed[..end];
+        }
+        trimmed = trimmed.trim();
+    }
 
     if let Ok(markers) = serde_json::from_str::<Vec<VisionBiomarker>>(trimmed) {
         return Ok(markers);
@@ -226,6 +256,66 @@ fn parse_llm_json(text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
         "Could not parse LLM output as biomarker JSON: {}",
         &trimmed[..trimmed.len().min(200)]
     )))
+}
+
+/// Verify LLM-extracted markers against source text.
+/// Rejects markers whose numeric value cannot be found in the source.
+/// This is the anti-hallucination gate — a model can only "discover" values
+/// that actually exist in the document text.
+pub fn verify_against_source(
+    markers: Vec<VisionBiomarker>,
+    source_text: &str,
+    warnings: &mut Vec<String>,
+) -> Vec<VisionBiomarker> {
+    let mut verified = Vec::new();
+    let source_lower = source_text.to_lowercase();
+
+    for marker in markers {
+        // Extract the numeric value as a string to search for
+        let value_str = match &marker.value {
+            serde_json::Value::Number(n) => {
+                let f = n.as_f64().unwrap_or(0.0);
+                if f == f.floor() {
+                    format!("{}", f as i64) // 47 not 47.0
+                } else {
+                    format!("{}", f)
+                }
+            }
+            serde_json::Value::String(s) => {
+                // Strip comparator prefix for search
+                s.trim_start_matches("<=").trim_start_matches(">=")
+                    .trim_start_matches('<').trim_start_matches('>')
+                    .trim().to_string()
+            }
+            _ => {
+                warnings.push(format!("Rejected '{}': non-numeric value", marker.name));
+                continue;
+            }
+        };
+
+        // Check if value appears in source text
+        if source_text.contains(&value_str) {
+            verified.push(marker);
+        } else {
+            // Try alternative formats (0.72 vs .72, 4.10 vs 4.1)
+            let alt_value = if value_str.contains('.') {
+                value_str.trim_end_matches('0').trim_end_matches('.').to_string()
+            } else {
+                format!("{}.0", value_str)
+            };
+
+            if source_text.contains(&alt_value) || source_lower.contains(&value_str) {
+                verified.push(marker);
+            } else {
+                warnings.push(format!(
+                    "Rejected '{}' (value {}): not found in source text (possible hallucination)",
+                    marker.name, value_str
+                ));
+            }
+        }
+    }
+
+    verified
 }
 
 /// Create a PageResult from LLM-structured markers
@@ -458,9 +548,13 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                 seen_names.insert(std_name.clone());
 
                 let (unit, unit_status) = if norm_unit.is_empty() {
-                    match catalog::get_marker(&std_name).and_then(|m| m.allowed_units.first().cloned()) {
-                        Some(inferred) => (inferred, UnitStatus::Inferred),
-                        None => (String::new(), UnitStatus::Missing),
+                    // Only infer unit when marker has exactly 1 allowed unit
+                    // Multi-unit markers (e.g. insulin: 5 units) stay blank → NeedsReview
+                    match catalog::get_marker(&std_name) {
+                        Some(m) if m.allowed_units.len() == 1 => {
+                            (m.allowed_units[0].clone(), UnitStatus::Inferred)
+                        }
+                        _ => (String::new(), UnitStatus::Missing),
                     }
                 } else {
                     (norm_unit, UnitStatus::Observed)

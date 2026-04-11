@@ -43,13 +43,30 @@ fn main() {
                 }
                 err.exit();
             }
-            // Warn if outputting unresolved-only results (no resolved markers)
-            if result.biomarkers.is_empty() && !result.unresolved.is_empty() {
-                eprintln!(
-                    "warning: no markers resolved, {} unresolved marker(s) in output",
-                    result.unresolved.len()
-                );
+
+            // Warn based on document status
+            match result.document_status {
+                parsers::DocumentStatus::NeedsReview => {
+                    eprintln!(
+                        "warning: document needs review — {} resolved, {} unresolved, {} conflicts",
+                        result.biomarkers.len(),
+                        result.unresolved.len(),
+                        result.conflicts.len()
+                    );
+                }
+                parsers::DocumentStatus::PartialFailure => {
+                    let failed_pages: Vec<_> = result.page_statuses.iter()
+                        .filter(|p| p.status == parsers::PageExtractStatus::Failed)
+                        .map(|p| p.page.to_string())
+                        .collect();
+                    eprintln!(
+                        "warning: partial failure — pages {} failed",
+                        failed_pages.join(", ")
+                    );
+                }
+                parsers::DocumentStatus::Complete => {}
             }
+
             if use_json {
                 println!("{}", output::json::render(&result, &source, elapsed));
             } else {
@@ -96,8 +113,17 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                 );
                 match parsers::pdf_parser::llm_structure_text(&text) {
                     Ok(raw_markers) if !raw_markers.is_empty() => {
-                        let page_results = vec![parsers::pdf_parser::make_page_result(1, raw_markers)];
+                        // Verify LLM output against source text (anti-hallucination)
+                        let mut verify_warnings = Vec::new();
+                        let verified = parsers::pdf_parser::verify_against_source(
+                            raw_markers, &text, &mut verify_warnings,
+                        );
+                        for w in &verify_warnings {
+                            eprintln!("info: {}", w);
+                        }
+                        let page_results = vec![parsers::pdf_parser::make_page_result(1, verified)];
                         let mut result = parsers::pdf_parser::resolve_results(page_results)?;
+                        result.warnings.extend(verify_warnings);
                         result.parser_name = "pdf-llm".to_string();
                         let elapsed = start.elapsed().as_millis();
                         let source = format!("pdf:{}", path.display());

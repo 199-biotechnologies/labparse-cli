@@ -505,13 +505,16 @@ fn resolve_disambiguation(
         }
     }
 
-    // Fall back to default
-    let confidence = if !disamb.default_id.is_empty() {
-        Confidence::Ambiguous
-    } else {
-        Confidence::Ambiguous
-    };
-    make_resolved(default_entry, confidence, ResolutionMethod::Disambiguation)
+    // No candidate matched — only fall back to default if we have NO evidence to disambiguate
+    // If we had unit or value but still couldn't match, the evidence was insufficient → ambiguous
+    if unit.is_none() && value.is_none() {
+        // No evidence at all — use default with Ambiguous confidence
+        return make_resolved(default_entry, Confidence::Ambiguous, ResolutionMethod::Disambiguation);
+    }
+
+    // Had evidence but no candidate matched — return default but mark as ambiguous
+    // This ensures downstream can flag it for review
+    make_resolved(default_entry, Confidence::Ambiguous, ResolutionMethod::Disambiguation)
 }
 
 fn unit_compatible(entry: &MarkerEntry, unit: Option<&str>) -> bool {

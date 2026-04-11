@@ -163,10 +163,12 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
                 }
 
                 let (unit, unit_status) = if norm_unit.is_empty() {
-                    // Try to get default unit from catalog
-                    match catalog::get_marker(&std_name).and_then(|m| m.allowed_units.first().cloned()) {
-                        Some(inferred) => (inferred, UnitStatus::Inferred),
-                        None => (String::new(), UnitStatus::Missing),
+                    // Only infer unit when marker has exactly 1 allowed unit
+                    match catalog::get_marker(&std_name) {
+                        Some(m) if m.allowed_units.len() == 1 => {
+                            (m.allowed_units[0].clone(), UnitStatus::Inferred)
+                        }
+                        _ => (String::new(), UnitStatus::Missing),
                     }
                 } else {
                     (norm_unit, UnitStatus::Observed)
@@ -200,8 +202,16 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         }
     }
 
+    let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
+        DocumentStatus::NeedsReview
+    } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
+        DocumentStatus::NeedsReview
+    } else {
+        DocumentStatus::Complete
+    };
+
     Ok(ParseResult {
-        document_status: DocumentStatus::Complete,
+        document_status,
         page_statuses: vec![],
         biomarkers,
         unresolved,
