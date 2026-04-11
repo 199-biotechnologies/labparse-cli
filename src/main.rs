@@ -161,13 +161,11 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                         result.parser_name = "pdf-llm".to_string();
 
                         if total_rejected > 0 {
+                            result.lexical_rejections = total_rejected;
                             result.warnings.push(format!(
                                 "Lexical verification rejected {} of {} markers — possible hallucination",
                                 total_rejected, total_original
                             ));
-                            if result.document_status == parsers::DocumentStatus::Complete {
-                                result.document_status = parsers::DocumentStatus::NeedsReview;
-                            }
                         }
 
                         let elapsed = start.elapsed().as_millis();

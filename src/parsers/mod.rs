@@ -67,6 +67,7 @@ pub struct ParseResult {
     pub conflicts: Vec<ConflictMarker>,
     pub warnings: Vec<String>,
     pub parser_name: String,
+    pub lexical_rejections: usize,
 }
 
 /// Detect whether content looks like CSV (structured tabular data)

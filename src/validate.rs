@@ -301,7 +301,7 @@ impl ExtractionAudit {
             non_observed_unit_rows,
             failed_pages,
             truncated_pages,
-            lexical_rejections: 0,
+            lexical_rejections: result.lexical_rejections,
         }
     }
 }
@@ -310,7 +310,7 @@ pub fn assess_document_status(audit: &ExtractionAudit) -> DocumentStatus {
     if audit.failed_pages > 0 {
         return DocumentStatus::PartialFailure;
     }
-    if audit.resolved_rows == 0 && audit.unresolved_rows > 0 {
+    if audit.resolved_rows == 0 {
         return DocumentStatus::NeedsReview;
     }
     if audit.unresolved_rows > audit.resolved_rows {
@@ -380,6 +380,21 @@ mod tests {
         let audit = ExtractionAudit {
             resolved_rows: 0,
             unresolved_rows: 3,
+            conflict_rows: 0,
+            ambiguous_rows: 0,
+            non_observed_unit_rows: 0,
+            failed_pages: 0,
+            truncated_pages: 0,
+            lexical_rejections: 0,
+        };
+        assert!(matches!(assess_document_status(&audit), DocumentStatus::NeedsReview));
+    }
+
+    #[test]
+    fn test_assess_zero_resolved_zero_unresolved() {
+        let audit = ExtractionAudit {
+            resolved_rows: 0,
+            unresolved_rows: 0,
             conflict_rows: 0,
             ambiguous_rows: 0,
             non_observed_unit_rows: 0,

@@ -202,13 +202,14 @@ pub fn clean_pdftotext(text: &str) -> String {
 
     let mut lines: Vec<&str> = Vec::new();
     let mut in_remarks = false;
-    let mut skip_next_nric = false;
+    let mut skip_header_lines: u8 = 0;
 
     for line in text.lines() {
         let trimmed = line.trim();
 
         if trimmed.is_empty() {
             in_remarks = false;
+            skip_header_lines = 0;
             lines.push(line);
             continue;
         }
@@ -225,23 +226,15 @@ pub fn clean_pdftotext(text: &str) -> String {
             || REF_RANGE_LABEL.is_match(trimmed)
         {
             if LAB_TEST_HEADER.is_match(trimmed) {
-                // Next 1-2 lines are patient name + NRIC (repeated on each page)
-                skip_next_nric = true;
+                skip_header_lines = 2;
             }
             continue;
         }
 
-        // Skip patient name/NRIC lines that follow "Lab Test Result"
-        if skip_next_nric {
-            // NRIC pattern or short uppercase name
-            if trimmed.len() < 40
-                && (trimmed.chars().all(|c| c.is_ascii_uppercase() || c.is_whitespace())
-                    || trimmed.chars().any(|c| c.is_ascii_digit())
-                        && trimmed.len() < 12)
-            {
-                continue;
-            }
-            skip_next_nric = false;
+        // Skip exactly 2 lines after "Lab Test Result" (patient name + NRIC)
+        if skip_header_lines > 0 {
+            skip_header_lines -= 1;
+            continue;
         }
 
         // Skip remarks section content (until next empty line)
@@ -947,6 +940,7 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
         conflicts,
         warnings,
         parser_name: "pdf-vision".to_string(),
+        lexical_rejections: 0,
     })
 }
 

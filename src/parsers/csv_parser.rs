@@ -234,5 +234,6 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         conflicts,
         warnings,
         parser_name: "csv".to_string(),
+        lexical_rejections: 0,
     })
 }
