@@ -116,7 +116,7 @@ component = "HOMA-IR"
 specimen = ""
 qualifier = "calculated"
 display_name = "HOMA-IR"
-aliases = ["homa ir", "homa-ir", "homeostatic model assessment", "insulin resistance index"]
+aliases = ["homa ir", "homa-ir", "homeostatic model assessment", "insulin resistance index", "homa-ir score", "homa ir score", "homa-ir (blood)"]
 allowed_units = ["ratio", ""]
 category = "metabolic"
 
@@ -260,7 +260,7 @@ component = "ApoB/ApoA1 Ratio"
 specimen = ""
 qualifier = "calculated"
 display_name = "ApoB/ApoA1 Ratio"
-aliases = ["apob/apoa1", "apob/apoa-i", "apo b/apo a1 ratio", "apob apoa1 ratio", "ratio apob/apoa", "ratio apob/apoa1"]
+aliases = ["apob/apoa1", "apob/apoa-i", "apo b/apo a1 ratio", "apob apoa1 ratio", "ratio apob/apoa", "ratio apob/apoa1", "apolipoprotein b/a1 ratio", "apolipoprotein b/apolipoprotein a1 ratio", "apo b/a1 ratio"]
 allowed_units = ["ratio", ""]
 category = "lipid"
 
@@ -522,73 +522,148 @@ loinc = "32623-1"
 category = "hematology"
 
 [[marker]]
-id = "neutrophils"
-component = "Neutrophils"
+id = "neutrophils_abs"
+component = "Neutrophils Absolute"
 specimen = "whole blood"
 qualifier = "absolute"
-display_name = "Neutrophils"
+display_name = "Neutrophils (Abs)"
 aliases = [
     "neutrophil count", "absolute neutrophil count", "anc",
-    "neutrophils (absolute)", "neutrofili",
+    "neutrophils (absolute)", "neutrofili", "neutrophils absolute",
+    "neutrophils abs",
 ]
-allowed_units = ["x10^9/L", "K/µL", "%"]
+allowed_units = ["x10^9/L", "K/µL"]
 loinc = "751-8"
 category = "hematology"
 
 [[marker]]
-id = "lymphocytes"
-component = "Lymphocytes"
+id = "neutrophils_pct"
+component = "Neutrophils Percent"
+specimen = "whole blood"
+qualifier = "percent"
+display_name = "Neutrophils (%)"
+aliases = [
+    "neutrophils %", "neutrophils percent", "neutrophil %",
+    "neutrophils relative", "neutrofili %",
+]
+allowed_units = ["%"]
+loinc = "770-8"
+category = "hematology"
+
+[[marker]]
+id = "lymphocytes_abs"
+component = "Lymphocytes Absolute"
 specimen = "whole blood"
 qualifier = "absolute"
-display_name = "Lymphocytes"
+display_name = "Lymphocytes (Abs)"
 aliases = [
     "lymphocyte count", "absolute lymphocyte count", "alc",
-    "lymphocytes (absolute)", "linfociti",
+    "lymphocytes (absolute)", "linfociti", "lymphocytes absolute",
+    "lymphocytes abs",
 ]
-allowed_units = ["x10^9/L", "K/µL", "%"]
+allowed_units = ["x10^9/L", "K/µL"]
 loinc = "731-0"
 category = "hematology"
 
 [[marker]]
-id = "monocytes"
-component = "Monocytes"
+id = "lymphocytes_pct"
+component = "Lymphocytes Percent"
+specimen = "whole blood"
+qualifier = "percent"
+display_name = "Lymphocytes (%)"
+aliases = [
+    "lymphocytes %", "lymphocytes percent", "lymphocyte %",
+    "lymphocytes relative", "linfociti %",
+]
+allowed_units = ["%"]
+loinc = "736-9"
+category = "hematology"
+
+[[marker]]
+id = "monocytes_abs"
+component = "Monocytes Absolute"
 specimen = "whole blood"
 qualifier = "absolute"
-display_name = "Monocytes"
+display_name = "Monocytes (Abs)"
 aliases = [
     "monocyte count", "absolute monocyte count",
-    "monocytes (absolute)", "monociti",
+    "monocytes (absolute)", "monociti", "monocytes absolute",
+    "monocytes abs",
 ]
-allowed_units = ["x10^9/L", "K/µL", "%"]
+allowed_units = ["x10^9/L", "K/µL"]
 loinc = "742-7"
 category = "hematology"
 
 [[marker]]
-id = "eosinophils"
-component = "Eosinophils"
+id = "monocytes_pct"
+component = "Monocytes Percent"
+specimen = "whole blood"
+qualifier = "percent"
+display_name = "Monocytes (%)"
+aliases = [
+    "monocytes %", "monocytes percent", "monocyte %",
+    "monocytes relative",
+]
+allowed_units = ["%"]
+loinc = "5905-5"
+category = "hematology"
+
+[[marker]]
+id = "eosinophils_abs"
+component = "Eosinophils Absolute"
 specimen = "whole blood"
 qualifier = "absolute"
-display_name = "Eosinophils"
+display_name = "Eosinophils (Abs)"
 aliases = [
     "eosinophil count", "absolute eosinophil count",
-    "eosinophils (absolute)", "eosinofili",
+    "eosinophils (absolute)", "eosinofili", "eosinophils absolute",
+    "eosinophils abs",
 ]
-allowed_units = ["x10^9/L", "K/µL", "%"]
+allowed_units = ["x10^9/L", "K/µL"]
 loinc = "711-2"
 category = "hematology"
 
 [[marker]]
-id = "basophils"
-component = "Basophils"
+id = "eosinophils_pct"
+component = "Eosinophils Percent"
+specimen = "whole blood"
+qualifier = "percent"
+display_name = "Eosinophils (%)"
+aliases = [
+    "eosinophils %", "eosinophils percent", "eosinophil %",
+    "eosinophils relative",
+]
+allowed_units = ["%"]
+loinc = "713-8"
+category = "hematology"
+
+[[marker]]
+id = "basophils_abs"
+component = "Basophils Absolute"
 specimen = "whole blood"
 qualifier = "absolute"
-display_name = "Basophils"
+display_name = "Basophils (Abs)"
 aliases = [
     "basophil count", "absolute basophil count",
-    "basophils (absolute)", "basofili",
+    "basophils (absolute)", "basofili", "basophils absolute",
+    "basophils abs",
 ]
-allowed_units = ["x10^9/L", "K/µL", "%"]
+allowed_units = ["x10^9/L", "K/µL"]
 loinc = "704-7"
+category = "hematology"
+
+[[marker]]
+id = "basophils_pct"
+component = "Basophils Percent"
+specimen = "whole blood"
+qualifier = "percent"
+display_name = "Basophils (%)"
+aliases = [
+    "basophils %", "basophils percent", "basophil %",
+    "basophils relative",
+]
+allowed_units = ["%"]
+loinc = "706-2"
 category = "hematology"
 
 [[marker]]
@@ -704,6 +779,20 @@ aliases = [
 ]
 allowed_units = ["mg/dL", "µmol/L"]
 loinc = "2160-0"
+category = "kidney"
+
+[[marker]]
+id = "urine_creatinine"
+component = "Urine Creatinine"
+specimen = "urine"
+qualifier = "random"
+display_name = "Urine Creatinine"
+aliases = [
+    "urine creatinine", "urine creatinine random", "creatinine urine",
+    "creatinine, urine", "urine creat", "urinary creatinine",
+]
+allowed_units = ["mg/dL", "mmol/L", "g/L"]
+loinc = "2161-8"
 category = "kidney"
 
 [[marker]]

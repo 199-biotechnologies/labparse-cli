@@ -353,6 +353,14 @@ pub struct ParsedBiomarker {
     pub flagged: bool,
     /// Unit provenance: Observed (from source), Inferred (from catalog), or Missing
     pub unit_status: UnitStatus,
+    /// Page number from source PDF (None for text/CSV)
+    pub page: Option<usize>,
+    /// Raw value text from source (e.g. "4.10", "<0.15", "5,8")
+    pub raw_value_text: Option<String>,
+    /// Raw unit text from source before normalization (e.g. "x10^9 /L")
+    pub raw_unit: Option<String>,
+    /// Source line/snippet this marker was extracted from
+    pub source_text: Option<String>,
 }
 
 /// Attempt to normalize a raw biomarker name using the structured catalog.
@@ -385,10 +393,14 @@ pub fn normalize_unit(raw: &str) -> String {
     let lower = trimmed.to_lowercase();
 
     // Strip common prefixes/suffixes that don't change the unit semantics
-    let cleaned = lower
+    // Also collapse internal whitespace for spaced forms like "x10^9 /L"
+    let cleaned: String = lower
         .replace("×", "x")
         .replace("*", "x")
-        .replace("^", "");
+        .replace("^", "")
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect();
 
     match cleaned.as_str() {
         // === MASS CONCENTRATIONS ===

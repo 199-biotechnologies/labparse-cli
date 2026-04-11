@@ -177,6 +177,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
                     (norm_unit, UnitStatus::Observed)
                 };
 
+                let raw_unit_clone = raw_unit.to_string();
                 biomarkers.push(ParsedBiomarker {
                     name: raw_name.to_string(),
                     standardized_name: std_name,
@@ -191,6 +192,10 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
                     reference_range: None,
                     flagged: false,
                     unit_status,
+                    page: None,
+                    raw_value_text: Some(raw_value.to_string()),
+                    raw_unit: if raw_unit_clone.is_empty() { None } else { Some(raw_unit_clone) },
+                    source_text: None,
                 });
             }
             None => {

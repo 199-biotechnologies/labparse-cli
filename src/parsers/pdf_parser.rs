@@ -610,6 +610,12 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                     (norm_unit, UnitStatus::Observed)
                 };
 
+                let raw_value_str = match &raw.value {
+                    serde_json::Value::Number(n) => Some(n.to_string()),
+                    serde_json::Value::String(s) => Some(s.clone()),
+                    _ => None,
+                };
+                let raw_unit_clone = raw.unit.clone();
                 biomarkers.push(ParsedBiomarker {
                     name: raw.name.clone(),
                     standardized_name: std_name,
@@ -624,6 +630,10 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                     reference_range: raw.reference_range.clone(),
                     flagged: raw.flagged.unwrap_or(false),
                     unit_status,
+                    page: raw.page,
+                    raw_value_text: raw_value_str,
+                    raw_unit: if raw_unit_clone.is_empty() { None } else { Some(raw_unit_clone) },
+                    source_text: raw.source_text.clone(),
                 });
             }
             None => {

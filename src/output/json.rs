@@ -61,6 +61,18 @@ pub struct JsonBiomarker {
     /// Unit provenance: "Inferred" or "Missing" - omitted when "Observed" (from source)
     #[serde(skip_serializing_if = "is_observed_unit")]
     pub unit_status: Option<UnitStatus>,
+    /// Page number from source PDF
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub page: Option<usize>,
+    /// Raw value text before normalization
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raw_value_text: Option<String>,
+    /// Raw unit text before normalization
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raw_unit: Option<String>,
+    /// Source text snippet
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_text: Option<String>,
 }
 
 /// Unresolved markers — structured passthrough (not raw text in standardized_name)
@@ -163,6 +175,10 @@ impl From<&ParsedBiomarker> for JsonBiomarker {
             reference_range: bm.reference_range.clone(),
             flagged: bm.flagged,
             unit_status,
+            page: bm.page,
+            raw_value_text: bm.raw_value_text.clone(),
+            raw_unit: bm.raw_unit.clone(),
+            source_text: bm.source_text.clone(),
         }
     }
 }

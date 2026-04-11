@@ -48,7 +48,7 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
 static HEALTHHUB_PATTERN: Lazy<Regex> = Lazy::new(|| {
     Regex::new(
         r"(?xm)
-        ^[ \t]*(?P<name>[A-Za-z][A-Za-z0-9\-\(\)/,\.\ \t]*[A-Za-z0-9\)])
+        ^[ \t]*(?P<name>[A-Za-z][A-Za-z0-9\-\(\)/,\.%\ \t]*[A-Za-z0-9\)%])
         [ \t]*\n
         [ \t]*Results:\s*
         (?P<cmp><=|>=|[<>]|\*)?
@@ -235,5 +235,9 @@ fn try_extract(
         reference_range: None,
         flagged: false,
         unit_status,
+        page: None,
+        raw_value_text: Some(raw_value.to_string()),
+        raw_unit: if raw_unit.is_empty() { None } else { Some(raw_unit.to_string()) },
+        source_text: Some(cap.get(0).map(|m| m.as_str().to_string()).unwrap_or_default()),
     })
 }
