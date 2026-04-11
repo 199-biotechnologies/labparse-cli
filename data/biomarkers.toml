@@ -34,6 +34,7 @@ aliases = [
     "glicemia a digiuno", "nuchtern glukose",
     "glucose (fasting)", "glucose fasting", "glucose, fasting",
     "glucose, serum, fasting", "glucose serum fasting",
+    "blutzucker, plasma", "glucose (plasma) after 2 hours", "glucose, plasma"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "1558-6"
@@ -49,6 +50,7 @@ aliases = [
     "hemoglobin a1c", "hb a1c", "a1c", "glycated hemoglobin", "glycosylated hemoglobin",
     "glycated haemoglobin", "glycosylated haemoglobin", "hemoglobin a1c (hplc)",
     "emoglobina glicata", "hba1c (ifcc)", "hba1c (ngsp)", "hb a1c (dcct)",
+    "glycated hemoglobin (hba1c)", "hba 1c", "hemoglobin (hb) a1c", "hgb a1c", "hgba1c"
 ]
 allowed_units = ["%", "mmol/mol"]
 loinc = "4548-4"
@@ -63,6 +65,7 @@ display_name = "Fasting Insulin"
 aliases = [
     "fasting insulin", "serum insulin", "insulin level", "insulina",
     "insuline", "insulin (fasting)", "insulin",
+    "insulin, blood", "insulin, serum", "s_inzulin"
 ]
 allowed_units = ["µU/mL", "mIU/L", "pmol/L", "µIU/mL", "mU/L"]
 loinc = "1668-3"
@@ -134,6 +137,7 @@ aliases = [
     "cholesterol", "tc", "total chol", "chol", "serum cholesterol", "fasting cholesterol",
     "colesterolo totale", "cholesterin", "cholesterol total", "cholesterol-total",
     "cholesterol, total",
+    "blood cholesterol", "blood cholesterol, total", "cholesterol tot", "cholesterol, serum", "s_cholesterol"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2093-3"
@@ -151,6 +155,7 @@ aliases = [
     "ldl-cholesterol", "colesterolo ldl", "ldl calc", "ldl direct",
     "cholesterol-ldl", "cholesterol ldl", "ldl chol", "ldl chol (calculated)",
     "cholesterol, ldl", "ldl measured",
+    "cholesterol in ldl", "cholesterol/ ldl", "cholesterol/ldl", "ldl (calculated)", "ldl calculated", "ldl calculated, nonfasting", "ldl chol calc (nih)", "ldl cholesterol cal", "ldl cholesterol calc", "ldl cholesterol calc (nih)", "ldl cholesterol calculated", "ldl-c (nih calc)", "low-density lipoprotein (ldl) cholesterol", "low-density lipoprotein cholesterol", "s_cholesterol ldl"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "13457-7"
@@ -166,6 +171,7 @@ aliases = [
     "hdl", "hdl-c", "hdl cholesterol", "high density lipoprotein",
     "hdl-cholesterol", "colesterolo hdl", "cholesterol-hdl", "cholesterol hdl",
     "cholesterol, hdl",
+    "cholesterol in hdl", "cholesterol/ hdl", "cholesterol/hdl", "hdl-c, serum or plasma", "hdl-cholesterin", "high-density lipoprotein (hdl) cholesterol", "high-density lipoprotein cholesterol", "s_cholesterol hdl"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2085-9"
@@ -180,6 +186,7 @@ display_name = "Triglycerides"
 aliases = [
     "trig", "trigs", "tg", "serum triglycerides", "fasting triglycerides",
     "trigliceridi", "triglyzeride",
+    "s_triacylglyceroly", "triacylglycerole", "triacylglycerols", "triglyceride", "triglyceride, nonfasting", "triglyzerides"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2571-8"
@@ -193,6 +200,7 @@ qualifier = ""
 display_name = "ApoB"
 aliases = [
     "apob", "apo b", "apolipoprotein b", "apo-b", "apolipoproteina b",
+    "apolipoprotein-b", "beta apolipoprotein", "s_apolipoprotein b"
 ]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "1884-6"
@@ -207,6 +215,7 @@ display_name = "ApoA1"
 aliases = [
     "apoa1", "apo a1", "apoa-i", "apo a-i", "apolipoprotein a1",
     "apolipoprotein a-i", "apolipoprotein a-1", "apolipoproteina a1",
+    "a-1 apolipoprotein", "alpha apolipoprotein", "alpha-apolipoprotein", "apo a-1", "s_apolipoprotein a1"
 ]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "1869-7"
@@ -221,6 +230,7 @@ display_name = "Lp(a)"
 aliases = [
     "lp(a)", "lpa", "lipoprotein a", "lipoprotein (a)", "lp-a",
     "lipoproteina a",
+    "lipoprotein-a", "s_lipoprotein lp(a)"
 ]
 allowed_units = ["nmol/L", "mg/dL", "mg/L"]
 loinc = "10835-7"
@@ -242,7 +252,9 @@ component = "VLDL Cholesterol"
 specimen = "serum"
 qualifier = ""
 display_name = "VLDL Cholesterol"
-aliases = ["vldl", "vldl-c", "vldl cholesterol", "very low density lipoprotein"]
+aliases = ["vldl", "vldl-c", "vldl cholesterol", "very low density lipoprotein",
+    "cholesterol vldl, calc", "very low-density lipoprotein (vldl) cholesterol", "very low-density lipoprotein cholesterol", "very low-density lipoprotein cholesterol (vldl-c)", "vldl cholesterol cal", "vldl cholesterol calc", "vldl cholesterol calculated", "vldl cholesterol, blood"
+]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "13458-5"
 category = "lipid"
@@ -253,7 +265,9 @@ component = "Non-HDL Cholesterol"
 specimen = "serum"
 qualifier = "calculated"
 display_name = "Non-HDL Cholesterol"
-aliases = ["non-hdl", "non hdl cholesterol", "non-hdl-c", "non hdl-c"]
+aliases = ["non-hdl", "non hdl cholesterol", "non-hdl-c", "non hdl-c",
+    "cholesterol/ non-hdl", "cholesterol/non-hdl", "non-high-density lipoprotein cholesterol"
+]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "43396-1"
 category = "lipid"
@@ -274,7 +288,9 @@ component = "Total Cholesterol/HDL Ratio"
 specimen = ""
 qualifier = "calculated"
 display_name = "TC/HDL Ratio"
-aliases = ["cholesterol/hdl ratio", "tc/hdl", "chol/hdl ratio", "total cholesterol/hdl"]
+aliases = ["cholesterol/hdl ratio", "tc/hdl", "chol/hdl ratio", "total cholesterol/hdl",
+    "chol/hdlc ratio", "cholesterol total/ hdl cholesterol ratio", "cholesterol.total/ cholesterol in hdl", "t. chol/hdl ratio"
+]
 allowed_units = ["ratio", ""]
 category = "lipid"
 
@@ -314,6 +330,7 @@ aliases = [
     "proteina c reattiva ad alta sensibilita",
     "high-sensitive c-reactive protein", "hs c-reactive protein",
     "high sensitive c-reactive protein", "high sensitive crp",
+    "c reactive protein", "c-reactive protein (cardiac)", "c-reactive protein (hs)", "c-reactive protein, cardiac", "cardiac c-reactive protein", "cardiac c-reactive protein (crp)", "crp (cardiac)", "crp sensitiv", "crp, cardiac", "high sensitivity c-reactive protein", "high sensitivity c-reactive protein (hs-crp)", "high-sensitivity crp", "hs crp"
 ]
 allowed_units = ["mg/L", "mg/dL", "nmol/L"]
 loinc = "30522-7"
@@ -328,6 +345,7 @@ display_name = "CRP (Standard)"
 aliases = [
     "c-reactive protein (standard)", "standard crp",
     "proteina c reattiva",
+    "c reactive protein, quantitative", "c-reactive protein (crp), quantitative", "c-reactive protein (q)", "c-reactive protein, quantitative", "quantitative c-reactive protein", "quantitative c-reactive protein (crp)", "quantitative crp"
 ]
 allowed_units = ["mg/L", "mg/dL"]
 loinc = "1988-5"
@@ -342,6 +360,7 @@ display_name = "ESR"
 aliases = [
     "sed rate", "sedimentation rate", "erythrocyte sedimentation rate",
     "ves", "velocita di eritrosedimentazione",
+    "b_esr - sedimentace kineticky", "bks", "blutkörperchensenkungsgeschwindigkeit", "erythrocyte sedimentation rate (esr)", "sed rate by modified westergren", "sedimentation rate, modified westergren", "sedimentation rate, westergren", "sedimentation rate-westergren", "westergren sedimentation rate"
 ]
 allowed_units = ["mm/hr", "mm/h"]
 loinc = "4537-7"
@@ -353,7 +372,9 @@ component = "Ferritin"
 specimen = "serum"
 qualifier = ""
 display_name = "Ferritin"
-aliases = ["serum ferritin", "ferritina"]
+aliases = ["serum ferritin", "ferritina",
+    "ferritin, serum", "s_ferritin"
+]
 allowed_units = ["ng/mL", "µg/L", "pmol/L"]
 loinc = "2276-4"
 category = "inflammation"
@@ -364,7 +385,9 @@ component = "Fibrinogen"
 specimen = "plasma"
 qualifier = ""
 display_name = "Fibrinogen"
-aliases = ["plasma fibrinogen", "fibrinogeno"]
+aliases = ["plasma fibrinogen", "fibrinogeno",
+    "clottable fibrinogen", "factor i activity", "fibrinogen activity", "gerinnungsfaktor 1"
+]
 allowed_units = ["mg/dL", "g/L", "µmol/L"]
 loinc = "3255-7"
 category = "inflammation"
@@ -375,7 +398,9 @@ component = "Homocysteine"
 specimen = "plasma"
 qualifier = ""
 display_name = "Homocysteine"
-aliases = ["hcy", "plasma homocysteine", "total homocysteine", "omocisteina"]
+aliases = ["hcy", "plasma homocysteine", "total homocysteine", "omocisteina",
+    "homo cysteine", "homo cystine", "homocyst(e)ine", "homocystein", "homocystine", "p_homocystein"
+]
 allowed_units = ["µmol/L", "mg/L"]
 loinc = "13965-9"
 category = "inflammation"
@@ -386,7 +411,9 @@ component = "Interleukin-6"
 specimen = "serum"
 qualifier = ""
 display_name = "IL-6"
-aliases = ["interleukin 6", "il-6", "il6", "interleuchina 6"]
+aliases = ["interleukin 6", "il-6", "il6", "interleuchina 6",
+    "interleukein-6 (il-6)", "interleukin 6, serum", "interleukin-6, serum"
+]
 allowed_units = ["pg/mL", "ng/L"]
 loinc = "26881-3"
 category = "inflammation"
@@ -397,7 +424,9 @@ component = "Tumor Necrosis Factor Alpha"
 specimen = "serum"
 qualifier = ""
 display_name = "TNF-α"
-aliases = ["tnf-alpha", "tnf alpha", "tnf-a", "tnfa", "tumor necrosis factor"]
+aliases = ["tnf-alpha", "tnf alpha", "tnf-a", "tnfa", "tumor necrosis factor",
+    "cachectin", "kachektin", "tumor necrosis factor-alpha", "tumor necrosis factor.alpha", "tumornekrosefaktor-alpha"
+]
 allowed_units = ["pg/mL", "ng/L"]
 loinc = "3167-4"
 category = "inflammation"
@@ -413,6 +442,7 @@ qualifier = ""
 display_name = "Hemoglobin"
 aliases = [
     "hgb", "hb", "haemoglobin", "emoglobina",
+    "b_hemoglobin", "b_hemoglobin [hgb]", "hämoglobin"
 ]
 allowed_units = ["g/dL", "g/L", "mmol/L"]
 loinc = "718-7"
@@ -426,6 +456,7 @@ qualifier = ""
 display_name = "Hematocrit"
 aliases = [
     "hct", "haematocrit", "packed cell volume", "pcv", "ematocrito",
+    "b_hematokrit [hct]", "hematocrit (%)", "hematocrit (hct)", "hämatokrit"
 ]
 allowed_units = ["%", "L/L", "ratio"]
 loinc = "4544-3"
@@ -440,6 +471,7 @@ display_name = "RBC"
 aliases = [
     "rbc", "red blood cells", "red blood cell count", "erythrocytes",
     "red cell count", "eritrociti",
+    "b_erytrocyty [rbc]", "erythrocytes (rbc)", "erythrocytes (rbc) count", "erythrocytes count", "erythrozyten", "red blood cells (rbc)"
 ]
 allowed_units = ["x10^12/L", "M/µL", "10^6/µL"]
 loinc = "789-8"
@@ -455,6 +487,7 @@ aliases = [
     "wbc", "white blood cells", "white blood cell count", "leukocytes",
     "leucocytes", "white cell count", "total white cell count",
     "total white blood cell count", "leucociti",
+    "b_leukocyty [wbc]", "leukocytes (wbc)", "leukocytes (wbc) count", "leukocytes count", "leukozyten", "white blood cells (wbc)"
 ]
 allowed_units = ["x10^9/L", "K/µL", "10^3/µL"]
 loinc = "6690-2"
@@ -468,6 +501,7 @@ qualifier = ""
 display_name = "Platelets"
 aliases = [
     "plt", "platelet count", "thrombocytes", "piastrine",
+    "b_trombocyty [plt]", "platelet", "platelets (plt)", "platelets count", "thrombocytes count", "thrombozyten"
 ]
 allowed_units = ["x10^9/L", "K/µL", "10^3/µL"]
 loinc = "777-3"
@@ -479,7 +513,9 @@ component = "Mean Corpuscular Volume"
 specimen = "whole blood"
 qualifier = ""
 display_name = "MCV"
-aliases = ["mean corpuscular volume", "mean cell volume"]
+aliases = ["mean corpuscular volume", "mean cell volume",
+    "mean cell volume (mcv)", "mean corpuscular volume (mcv)"
+]
 allowed_units = ["fL"]
 loinc = "787-2"
 category = "hematology"
@@ -490,7 +526,9 @@ component = "Mean Corpuscular Hemoglobin"
 specimen = "whole blood"
 qualifier = ""
 display_name = "MCH"
-aliases = ["mean corpuscular hemoglobin", "mean corpuscular haemoglobin", "mean cell hemoglobin"]
+aliases = ["mean corpuscular hemoglobin", "mean corpuscular haemoglobin", "mean cell hemoglobin",
+    "b_barvivo erytr. [mch]", "mch (pg)", "mean cell hemoglobin (mch)", "mean corpuscular hemoglobin (mch)", "mean hemoglobin content (mch)"
+]
 allowed_units = ["pg"]
 loinc = "785-6"
 category = "hematology"
@@ -501,7 +539,9 @@ component = "Mean Corpuscular Hemoglobin Concentration"
 specimen = "whole blood"
 qualifier = ""
 display_name = "MCHC"
-aliases = ["mean corpuscular hemoglobin concentration", "mean corpuscular haemoglobin concentration", "mean cell haemoglobin concentration", "mean cell hemoglobin concentration"]
+aliases = ["mean corpuscular hemoglobin concentration", "mean corpuscular haemoglobin concentration", "mean cell haemoglobin concentration", "mean cell hemoglobin concentration",
+    "mean corpuscular hemoglobin concentration (mchc)"
+]
 allowed_units = ["g/dL", "g/L"]
 loinc = "786-4"
 category = "hematology"
@@ -512,7 +552,9 @@ component = "Red Cell Distribution Width"
 specimen = "whole blood"
 qualifier = ""
 display_name = "RDW"
-aliases = ["red cell distribution width", "red blood cell distribution width", "rdw-cv", "rdw cv"]
+aliases = ["red cell distribution width", "red blood cell distribution width", "rdw-cv", "rdw cv",
+    "b_rdw-cv", "erythrocyte distribution width", "erythrocyte distribution width (rdw-cv)", "erythrocyte distribution width [ratio]", "rdw - cv (%)", "red cell dist width (rdw)", "red cell dist width (rdw-cv)", "red cell distribution width (rdw)", "width of erythrocyte distribution (rdw-cv)"
+]
 allowed_units = ["%", "fL"]
 loinc = "788-0"
 category = "hematology"
@@ -523,7 +565,9 @@ component = "Mean Platelet Volume"
 specimen = "whole blood"
 qualifier = ""
 display_name = "MPV"
-aliases = ["mean platelet volume"]
+aliases = ["mean platelet volume",
+    "mean platelet volume (mpv)", "mpv (mean platelet volume) (fl)", "platelet mean volume", "platelet mean volume [entitic volume] in blood by rees-ecker", "platelet mean volume, blood"
+]
 allowed_units = ["fL"]
 loinc = "32623-1"
 category = "hematology"
@@ -538,6 +582,7 @@ aliases = [
     "neutrophil count", "absolute neutrophil count", "anc",
     "neutrophils (absolute)", "neutrofili", "neutrophils absolute",
     "neutrophils abs",
+    "absolute neutrophils", "immature cells, neutrophils (abs)", "neutrophils [#/volume]", "total neutrophils (segmented and banded) (neu) absolute", "total neutrophils abs", "total neutrophils absolute", "total neutrophils absolute count"
 ]
 allowed_units = ["x10^9/L", "K/µL"]
 loinc = "751-8"
@@ -552,6 +597,7 @@ display_name = "Neutrophils (%)"
 aliases = [
     "neutrophils", "neutrophils %", "neutrophils percent", "neutrophil %",
     "neutrophils relative", "neutrofili %",
+    "neutrophil (%)", "neutrophils/100 leukocytes", "total neutrophils", "total neutrophils (segmented and banded) (neu)", "total neutrophils relative"
 ]
 allowed_units = ["%"]
 loinc = "770-8"
@@ -567,6 +613,7 @@ aliases = [
     "lymphocyte count", "absolute lymphocyte count", "alc",
     "lymphocytes (absolute)", "linfociti", "lymphocytes absolute",
     "lymphocytes abs",
+    "absolute lymphocytes", "lymphocytes (absolute count)", "lymphs (absolute)"
 ]
 allowed_units = ["x10^9/L", "K/µL"]
 loinc = "731-0"
@@ -581,6 +628,7 @@ display_name = "Lymphocytes (%)"
 aliases = [
     "lymphocytes", "lymphocytes %", "lymphocytes percent", "lymphocyte %",
     "lymphocytes relative", "linfociti %",
+    "lymphocyte", "lymphocyte (lymphs)", "lymphocytes/100 leukocytes", "lymphs", "lymphs (%)"
 ]
 allowed_units = ["%"]
 loinc = "736-9"
@@ -596,6 +644,7 @@ aliases = [
     "monocyte count", "absolute monocyte count",
     "monocytes (absolute)", "monociti", "monocytes absolute",
     "monocytes abs",
+    "absolute monocytes", "monocytes (mon) abs", "monocytes (mon) absolute", "monocytes (mon) count", "monocytes(absolute)"
 ]
 allowed_units = ["x10^9/L", "K/µL"]
 loinc = "742-7"
@@ -610,6 +659,7 @@ display_name = "Monocytes (%)"
 aliases = [
     "monocytes", "monocytes %", "monocytes percent", "monocyte %",
     "monocytes relative",
+    "monocytes (mon)", "monocytes/100 leukocytes"
 ]
 allowed_units = ["%"]
 loinc = "5905-5"
@@ -625,6 +675,7 @@ aliases = [
     "eosinophil count", "absolute eosinophil count",
     "eosinophils (absolute)", "eosinofili", "eosinophils absolute",
     "eosinophils abs",
+    "absolute eosinophils", "eos (absolute)", "eosinophils (eos) abs", "eosinophils (eos) absolute"
 ]
 allowed_units = ["x10^9/L", "K/µL"]
 loinc = "711-2"
@@ -639,6 +690,7 @@ display_name = "Eosinophils (%)"
 aliases = [
     "eosinophils", "eosinophils %", "eosinophils percent", "eosinophil %",
     "eosinophils relative",
+    "eos", "eos (%)", "eosinophils (eos)", "eosinophils (eos) rel", "eosinophils (eos) relative", "eosinophils/100 leukocytes"
 ]
 allowed_units = ["%"]
 loinc = "713-8"
@@ -654,6 +706,7 @@ aliases = [
     "basophil count", "absolute basophil count",
     "basophils (absolute)", "basofili", "basophils absolute",
     "basophils abs",
+    "absolute basophils", "baso (absolute)", "basophils (bas) abs", "basophils (bas) absolute", "basophils (bas) count"
 ]
 allowed_units = ["x10^9/L", "K/µL"]
 loinc = "704-7"
@@ -668,6 +721,7 @@ display_name = "Basophils (%)"
 aliases = [
     "basophils", "basophils %", "basophils percent", "basophil %",
     "basophils relative",
+    "basophils (bas)", "basophils/100 leukocytes", "basos", "basos (%)"
 ]
 allowed_units = ["%"]
 loinc = "706-2"
@@ -679,7 +733,9 @@ component = "Reticulocyte Count"
 specimen = "whole blood"
 qualifier = ""
 display_name = "Reticulocytes"
-aliases = ["reticulocyte count", "retic count", "retic", "reticolociti"]
+aliases = ["reticulocyte count", "retic count", "retic", "reticolociti",
+    "reticulocyte", "reticulocyte (%)", "reticulocyte, percent"
+]
 allowed_units = ["%", "x10^9/L"]
 loinc = "17849-1"
 category = "hematology"
@@ -690,7 +746,9 @@ component = "Neutrophil-to-Lymphocyte Ratio"
 specimen = ""
 qualifier = "calculated"
 display_name = "NLR"
-aliases = ["nlr", "neutrophil lymphocyte ratio", "n/l ratio"]
+aliases = ["nlr", "neutrophil lymphocyte ratio", "n/l ratio",
+    "neurophil to lymphocyte ratio", "neut/lymph ratio", "neutrophil to lymphocyte ratio", "neutrophil/lymphocyte ratio", "neutrophils/lymphs ratio"
+]
 allowed_units = ["ratio", ""]
 category = "hematology"
 
@@ -705,6 +763,7 @@ qualifier = ""
 display_name = "Iron"
 aliases = [
     "serum iron", "fe", "ferro", "sideremia",
+    "blood iron", "eisen", "iron, blood", "iron, serum", "iron, total", "total iron"
 ]
 allowed_units = ["µg/dL", "µmol/L"]
 loinc = "2498-4"
@@ -720,6 +779,7 @@ aliases = [
     "total iron binding capacity", "iron binding capacity",
     "t.i.b.c", "t.i.b.c.", "tibc",
     "capacita totale di legame del ferro",
+    "iron bind.cap.(tibc)", "iron binding capacity, total", "iron binding capacity, total (tibc)", "iron binding, total capacity", "iron-binding capacity, serum", "s_tibc - celk.vaz.kapacita", "serum iron-binding capacity", "total iron-binding capacity (tibc)"
 ]
 allowed_units = ["µg/dL", "µmol/L"]
 loinc = "2500-7"
@@ -731,7 +791,9 @@ component = "Transferrin"
 specimen = "serum"
 qualifier = ""
 display_name = "Transferrin"
-aliases = ["serum transferrin", "transferrina"]
+aliases = ["serum transferrin", "transferrina",
+    "s_transferin", "transferrin, serum"
+]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "3034-6"
 category = "iron"
@@ -745,6 +807,7 @@ display_name = "Transferrin Saturation"
 aliases = [
     "tsat", "iron saturation", "transferrin sat", "fe saturation",
     "saturazione della transferrina",
+    "iron-saturation", "s_saturace trf"
 ]
 allowed_units = ["%"]
 loinc = "2502-3"
@@ -756,7 +819,9 @@ component = "Unsaturated Iron Binding Capacity"
 specimen = "serum"
 qualifier = ""
 display_name = "UIBC"
-aliases = ["unsaturated iron binding capacity", "latent iron binding capacity"]
+aliases = ["unsaturated iron binding capacity", "latent iron binding capacity",
+    "unsaturated iron-binding capacity (uibc)"
+]
 allowed_units = ["µg/dL", "µmol/L"]
 loinc = "2501-5"
 category = "iron"
@@ -767,7 +832,9 @@ component = "Soluble Transferrin Receptor"
 specimen = "serum"
 qualifier = ""
 display_name = "sTfR"
-aliases = ["stfr", "soluble transferrin receptor", "recettore solubile della transferrina"]
+aliases = ["stfr", "soluble transferrin receptor", "recettore solubile della transferrina",
+    "s_sol.transferin receptor"
+]
 allowed_units = ["mg/L", "nmol/L"]
 loinc = "30248-9"
 category = "iron"
@@ -783,6 +850,7 @@ qualifier = ""
 display_name = "Creatinine"
 aliases = [
     "serum creatinine", "creat", "creatinina",
+    "creatinin", "creatinine (enzymatic)", "creatinine (enzymatisch)", "creatinine, serum", "kreatinin", "s_kreatinin"
 ]
 allowed_units = ["mg/dL", "µmol/L"]
 loinc = "2160-0"
@@ -797,6 +865,7 @@ display_name = "Urine Creatinine"
 aliases = [
     "urine creatinine", "urine creatinine random", "creatinine urine",
     "creatinine, urine", "urine creat", "urinary creatinine",
+    "creatinine (urine)", "creatinine in urine", "creatinine(crt), u", "creatinine(crt), urine"
 ]
 allowed_units = ["mg/dL", "mmol/L", "g/L"]
 loinc = "2161-8"
@@ -811,6 +880,7 @@ display_name = "eGFR"
 aliases = [
     "estimated gfr", "glomerular filtration rate", "egfr (ckd-epi)",
     "egfr (ckd-epi 2021)", "gfr", "egfr (mdrd)",
+    "egfr creat-cyst c", "gfr (ckd-epi)", "gfr by ckd-epi", "gfr, nach ckd-epi", "gfr, predicted with ckd-epi formula", "glomerular filtration rate (chronic kidney disease epidemiology collaboration)", "glomerular filtration rate (ckd-epi)", "s_odhad gf dle ckd-epi"
 ]
 allowed_units = ["mL/min/1.73m²"]
 loinc = "98979-8"
@@ -824,6 +894,7 @@ qualifier = ""
 display_name = "Urea"
 aliases = [
     "bun", "blood urea nitrogen", "serum urea", "azotemia",
+    "harnstoff", "urea nitrogen", "urea nitrogen (bun)", "urea nitrogen, serum"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "3094-0"
@@ -837,6 +908,7 @@ qualifier = ""
 display_name = "Uric Acid"
 aliases = [
     "ua", "serum uric acid", "acido urico", "uric acid",
+    "harnsäure", "uric acid, serum", "uricacid"
 ]
 allowed_units = ["mg/dL", "µmol/L", "mmol/L"]
 loinc = "3084-1"
@@ -848,7 +920,9 @@ component = "Cystatin C"
 specimen = "serum"
 qualifier = ""
 display_name = "Cystatin C"
-aliases = ["cystatin-c", "cystatin", "cistatina c"]
+aliases = ["cystatin-c", "cystatin", "cistatina c",
+    "cystatin c [mass/volume] in serum or plasma", "cystatin c, serum", "s_cystatin c"
+]
 allowed_units = ["mg/L", "nmol/L"]
 loinc = "33863-5"
 category = "kidney"
@@ -859,7 +933,9 @@ component = "Microalbumin"
 specimen = "urine"
 qualifier = ""
 display_name = "Microalbumin"
-aliases = ["urine microalbumin", "urine albumin", "albumin urine", "microalbuminuria", "microalbumin random", "urine microalbumin random"]
+aliases = ["urine microalbumin", "urine albumin", "albumin urine", "microalbuminuria", "microalbumin random", "urine microalbumin random",
+    "albumin in 24 hour urine"
+]
 allowed_units = ["mg/L", "mg/dL", "µg/min"]
 loinc = "14957-5"
 category = "kidney"
@@ -891,6 +967,7 @@ display_name = "ALT"
 aliases = [
     "alanine aminotransferase", "alanine transferase", "sgpt", "gpt",
     "alanine transaminase", "transaminasi gpt", "alanine transaminase (alt)", "sgpt (alt)", "sgpt/alt",
+    "alt (sgpt)", "glutamat-pyruvat-transaminase", "s_alt"
 ]
 allowed_units = ["U/L"]
 loinc = "1742-6"
@@ -905,6 +982,7 @@ display_name = "AST"
 aliases = [
     "aspartate aminotransferase", "aspartate transferase", "sgot", "got",
     "aspartate transaminase", "transaminasi got", "aspartate transaminase (ast)", "sgot (ast)", "sgot/ast",
+    "as(a)t", "ast (sgot)", "glutamat-oxalacetat-transaminase", "s_ast"
 ]
 allowed_units = ["U/L"]
 loinc = "1920-8"
@@ -921,6 +999,7 @@ aliases = [
     "gamma glutamyl transferase", "gamma glutamyl transpeptidase",
     "gamma-glutamyl transpeptidase", "gamma-glutamyl transferase",
     "γ-glutamyltransferase",
+    "g-gt", "glutamyl transpeptidase", "s_ggt"
 ]
 allowed_units = ["U/L"]
 loinc = "2324-2"
@@ -934,6 +1013,7 @@ qualifier = ""
 display_name = "ALP"
 aliases = [
     "alkaline phosphatase", "alk phos", "fosfatasi alcalina", "alkaline phosphatase (alp)",
+    "alk. phosphatase", "alkaline phosphatase, serum", "alkalische phosphatase", "s_alp"
 ]
 allowed_units = ["U/L"]
 loinc = "6768-6"
@@ -948,6 +1028,7 @@ display_name = "Total Bilirubin"
 aliases = [
     "bilirubin", "bilirubin total", "bilirubina totale", "tbil", "bilirubin, total",
     "total bili",
+    "bilirubin gesamt", "total bilirubin (tbil)"
 ]
 allowed_units = ["mg/dL", "µmol/L"]
 loinc = "1975-2"
@@ -962,6 +1043,7 @@ display_name = "Direct Bilirubin"
 aliases = [
     "conjugated bilirubin", "bilirubin direct", "bilirubina diretta",
     "dbil", "direct bili",
+    "bilirubin direkt", "bilirubin, direct"
 ]
 allowed_units = ["mg/dL", "µmol/L"]
 loinc = "1968-7"
@@ -976,6 +1058,7 @@ display_name = "Indirect Bilirubin"
 aliases = [
     "unconjugated bilirubin", "bilirubin indirect", "bilirubina indiretta",
     "ibil", "indirect bili",
+    "bilirubin indirekt", "bilirubin, indirect", "bilirubin.indirect, blood", "indirect bilirubin (ibil)"
 ]
 allowed_units = ["mg/dL", "µmol/L"]
 category = "liver"
@@ -988,6 +1071,7 @@ qualifier = ""
 display_name = "Albumin"
 aliases = [
     "serum albumin", "alb", "albumina", "albumin serum", "albumin, serum",
+    "blood albumin", "s_albumin"
 ]
 allowed_units = ["g/L", "g/dL"]
 loinc = "1751-7"
@@ -1001,6 +1085,7 @@ qualifier = ""
 display_name = "Total Protein"
 aliases = [
     "protein total", "serum protein", "tp", "proteine totali",
+    "ges. eiweiß", "gesamt-eiweiß", "protein, total", "protein, total, serum"
 ]
 allowed_units = ["g/L", "g/dL"]
 loinc = "2885-2"
@@ -1012,7 +1097,9 @@ component = "Globulin"
 specimen = "serum"
 qualifier = "calculated"
 display_name = "Globulin"
-aliases = ["serum globulin", "total globulin"]
+aliases = ["serum globulin", "total globulin",
+    "globulin, total"
+]
 allowed_units = ["g/L", "g/dL"]
 category = "liver"
 
@@ -1022,7 +1109,9 @@ component = "Albumin/Globulin Ratio"
 specimen = ""
 qualifier = "calculated"
 display_name = "A/G Ratio"
-aliases = ["albumin globulin ratio", "a/g ratio", "ag ratio", "a:g ratio"]
+aliases = ["albumin globulin ratio", "a/g ratio", "ag ratio", "a:g ratio",
+    "albumin:globulin (a:g) ratio"
+]
 allowed_units = ["ratio", ""]
 loinc = "1759-0"
 category = "liver"
@@ -1033,7 +1122,9 @@ component = "Lactate Dehydrogenase"
 specimen = "serum"
 qualifier = ""
 display_name = "LDH"
-aliases = ["lactate dehydrogenase", "lactic dehydrogenase", "lattico deidrogenasi"]
+aliases = ["lactate dehydrogenase", "lactic dehydrogenase", "lattico deidrogenasi",
+    "lactate dehydrogenase (ld)", "laktatdehydrogenase", "ld isoenzymes", "ldh isoenzymes", "s_ld"
+]
 allowed_units = ["U/L"]
 loinc = "2532-0"
 category = "liver"
@@ -1044,7 +1135,9 @@ component = "Creatine Kinase"
 specimen = "serum"
 qualifier = ""
 display_name = "CK"
-aliases = ["creatine kinase", "creatine phosphokinase", "cpk", "ck total"]
+aliases = ["creatine kinase", "creatine phosphokinase", "cpk", "ck total",
+    "creatine kinase, total", "creatine kinase,total", "total creatine kinase"
+]
 allowed_units = ["U/L"]
 loinc = "2157-6"
 category = "liver"
@@ -1058,7 +1151,9 @@ component = "Sodium"
 specimen = "serum"
 qualifier = ""
 display_name = "Sodium"
-aliases = ["na", "na+", "serum sodium", "sodio"]
+aliases = ["na", "na+", "serum sodium", "sodio",
+    "blood serum", "natrium", "sodium, serum"
+]
 allowed_units = ["mmol/L", "mEq/L"]
 loinc = "2951-2"
 category = "electrolytes"
@@ -1069,7 +1164,9 @@ component = "Potassium"
 specimen = "serum"
 qualifier = ""
 display_name = "Potassium"
-aliases = ["k", "k+", "serum potassium", "potassio"]
+aliases = ["k", "k+", "serum potassium", "potassio",
+    "blood potassium", "kalium", "potassium, serum"
+]
 allowed_units = ["mmol/L", "mEq/L"]
 loinc = "2823-3"
 category = "electrolytes"
@@ -1080,7 +1177,9 @@ component = "Chloride"
 specimen = "serum"
 qualifier = ""
 display_name = "Chloride"
-aliases = ["cl", "cl-", "serum chloride", "cloro"]
+aliases = ["cl", "cl-", "serum chloride", "cloro",
+    "chloride, serum", "s_cl - chloridy"
+]
 allowed_units = ["mmol/L", "mEq/L"]
 loinc = "2075-0"
 category = "electrolytes"
@@ -1093,6 +1192,7 @@ qualifier = "total"
 display_name = "Calcium"
 aliases = [
     "serum calcium", "ca", "calcio", "total calcium",
+    "blood calcium", "calcium, serum", "kalzium"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "17861-6"
@@ -1107,6 +1207,7 @@ display_name = "Ionized Calcium"
 aliases = [
     "ionized calcium", "ionic calcium", "free calcium", "ca++", "ca2+",
     "calcio ionizzato",
+    "calcium filterable", "calcium unbound", "calcium, corrected", "calcium, ionized", "calcium, ionized, serum"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "1994-3"
@@ -1133,6 +1234,7 @@ qualifier = ""
 display_name = "Magnesium"
 aliases = [
     "mg", "serum magnesium", "magnesio",
+    "blood magnesium", "magnesium, serum"
 ]
 allowed_units = ["mg/dL", "mmol/L", "mEq/L"]
 loinc = "19123-9"
@@ -1147,6 +1249,7 @@ display_name = "Phosphate"
 aliases = [
     "phosphorus", "inorganic phosphate", "serum phosphate", "fosforo",
     "po4",
+    "blood phosphorus", "inorganic phosphate, blood", "phosphat", "phosphate (as phosphorus)", "phosphate (phosphorus)", "phosphorus, blood", "phosphorus, serum"
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2777-1"
@@ -1158,7 +1261,9 @@ component = "Bicarbonate"
 specimen = "serum"
 qualifier = ""
 display_name = "Bicarbonate"
-aliases = ["hco3", "hco3-", "co2", "total co2", "carbon dioxide"]
+aliases = ["hco3", "hco3-", "co2", "total co2", "carbon dioxide",
+    "carbon dioxide, total", "total carbon dioxide"
+]
 allowed_units = ["mmol/L", "mEq/L"]
 loinc = "1963-8"
 category = "electrolytes"
@@ -1185,6 +1290,7 @@ qualifier = ""
 display_name = "TSH"
 aliases = [
     "thyroid stimulating hormone", "thyrotropin", "tireotropina",
+    "s_tsh", "third-generation tsh", "thyreoidea-stimulierendes hormon", "thyroid-stimulating hormone", "thyroid-stimulating hormone (tsh)", "tsh basal"
 ]
 allowed_units = ["mIU/L", "µIU/mL", "mU/L"]
 loinc = "3016-3"
@@ -1198,6 +1304,7 @@ qualifier = ""
 display_name = "Free T4"
 aliases = [
     "ft4", "free thyroxine", "tiroxina libera", "free t4",
+    "free t4, direct, serum", "freies t4", "t4, free", "t4, free, direct, serum", "t4,free(direct)", "thyroxine (t4), free, direct"
 ]
 allowed_units = ["ng/dL", "pmol/L"]
 loinc = "3024-7"
@@ -1211,6 +1318,7 @@ qualifier = ""
 display_name = "Free T3"
 aliases = [
     "ft3", "free triiodothyronine", "free tri-iodothyronine", "triiodotironina libera", "free t3",
+    "freies t3", "t3, free", "triiodothyronine (t3), free", "triiodothyronine, free", "triiodothyronine, free, serum"
 ]
 allowed_units = ["pg/mL", "pmol/L"]
 loinc = "3051-0"
@@ -1222,7 +1330,9 @@ component = "Total Thyroxine"
 specimen = "serum"
 qualifier = ""
 display_name = "Total T4"
-aliases = ["t4", "thyroxine", "total thyroxine"]
+aliases = ["t4", "thyroxine", "total thyroxine",
+    "t4, serum", "t4, total", "t4, total, serum", "thyroxine (t4)"
+]
 allowed_units = ["µg/dL", "nmol/L"]
 loinc = "3026-2"
 category = "thyroid"
@@ -1233,7 +1343,9 @@ component = "Total Triiodothyronine"
 specimen = "serum"
 qualifier = ""
 display_name = "Total T3"
-aliases = ["t3", "triiodothyronine", "total triiodothyronine"]
+aliases = ["t3", "triiodothyronine", "total triiodothyronine",
+    "t3, total", "triiodothyronine (t3), total", "triiodthyronin, total"
+]
 allowed_units = ["ng/dL", "nmol/L"]
 loinc = "3053-6"
 category = "thyroid"
@@ -1244,7 +1356,9 @@ component = "Reverse T3"
 specimen = "serum"
 qualifier = ""
 display_name = "Reverse T3"
-aliases = ["rt3", "reverse triiodothyronine", "rt3"]
+aliases = ["rt3", "reverse triiodothyronine", "rt3",
+    "reverse t3, serum", "t3, reverse", "triiodthyronin, reverse"
+]
 allowed_units = ["ng/dL", "nmol/L"]
 loinc = "3052-8"
 category = "thyroid"
@@ -1269,6 +1383,7 @@ display_name = "Anti-TPO"
 aliases = [
     "tpo antibodies", "thyroid peroxidase antibodies", "anti-thyroid peroxidase antibody", "anti-tpo antibodies",
     "tpo ab", "anti tpo", "anticorpi anti-tpo",
+    "anti-thyroid gland microsome antibodies", "s_atpo", "thyroid antibodies", "thyroid microsomal antibodies", "thyroid peroxidase", "thyroperoxidase ab", "tpo antibody, blood"
 ]
 allowed_units = ["kU/L", "IU/mL", "U/mL"]
 loinc = "8099-4"
@@ -1284,6 +1399,7 @@ aliases = [
     "thyroglobulin antibodies", "thyroglobulin antibodies (tg abs)",
     "tg antibodies", "tg abs", "anti-thyroglobulin", "atg",
     "anti tg", "anti-thyroglobulin antibody", "anticorpi anti-tireoglobulina",
+    "antithyroglobulin antibody", "s_atg", "thyroglobulin antibody"
 ]
 allowed_units = ["IU/mL", "kU/L", "U/mL"]
 loinc = "8098-6"
@@ -1312,6 +1428,7 @@ qualifier = "total"
 display_name = "Testosterone (Total)"
 aliases = [
     "total testosterone", "testosterone totale",
+    "s_testosteron", "testosteron ges.", "testosteron gesamt", "testosterone, serum", "testosterone, total", "testosterone, total, lc/ms", "testosterone, total, lc/ms/ms", "testosterone, total, males (adult), ia"
 ]
 allowed_units = ["ng/dL", "nmol/L"]
 loinc = "2986-8"
@@ -1325,6 +1442,7 @@ qualifier = ""
 display_name = "Free Testosterone"
 aliases = [
     "free testo", "testosterone free", "testosterone libero",
+    "free testosterone (direct)", "free testosterone(direct)", "free testosterone, direct", "testost., free, calc", "testosteron frei", "testosterone, free", "testosterone, free calculation", "testosterone, free, direct"
 ]
 allowed_units = ["pg/mL", "pmol/L", "ng/dL"]
 loinc = "2991-8"
@@ -1336,7 +1454,9 @@ component = "Bioavailable Testosterone"
 specimen = "serum"
 qualifier = ""
 display_name = "Bioavailable Testosterone"
-aliases = ["bio-available testosterone", "bat"]
+aliases = ["bio-available testosterone", "bat",
+    "testosterone, bioavailable", "testosterone,bioavailable"
+]
 allowed_units = ["ng/dL", "nmol/L"]
 category = "hormone"
 
@@ -1348,6 +1468,7 @@ qualifier = ""
 display_name = "Estradiol"
 aliases = [
     "e2", "estradiol (e2)", "estradiolo", "oestradiol", "17-beta estradiol",
+    "s_estradiol", "östradiol", "östrogen"
 ]
 allowed_units = ["pg/mL", "pmol/L"]
 loinc = "2243-4"
@@ -1359,7 +1480,9 @@ component = "Progesterone"
 specimen = "serum"
 qualifier = ""
 display_name = "Progesterone"
-aliases = ["p4", "serum progesterone", "progesterone"]
+aliases = ["p4", "serum progesterone", "progesterone",
+    "progesteron", "s_progesteron", "s_progesteron [ng/ml]"
+]
 allowed_units = ["ng/mL", "nmol/L"]
 loinc = "2839-9"
 category = "hormone"
@@ -1373,6 +1496,7 @@ display_name = "DHEA-S"
 aliases = [
     "dhea-s", "dhea sulfate", "dehydroepiandrosterone sulfate",
     "dheas", "dhea-so4",
+    "dehydroepiandrosterone (dhea) sulfate", "dehydroepiandrosterone sulfate (dhea-s)", "dhea-sulfat", "s_dheas"
 ]
 allowed_units = ["µg/dL", "µmol/L"]
 loinc = "2191-5"
@@ -1386,6 +1510,7 @@ qualifier = ""
 display_name = "SHBG"
 aliases = [
     "sex hormone binding globulin", "sex hormone-binding globulin",
+    "s_shbg", "sex horm binding glob, serum", "sexualhormon-bindendes-globulin", "testosterone-binding globulin"
 ]
 allowed_units = ["nmol/L"]
 loinc = "13967-5"
@@ -1399,6 +1524,7 @@ qualifier = ""
 display_name = "FSH"
 aliases = [
     "follicle stimulating hormone", "follitropine",
+    "follicle stimulating hormone (fsh)", "follicle-stimulating hormone", "follicle-stimulating hormone (fsh)", "follikel stimulierendes hormon", "follitropin", "follitropin [units/volume] in serum or plasma", "s_fsh"
 ]
 allowed_units = ["mIU/mL", "mIU/L", "IU/L"]
 loinc = "15067-2"
@@ -1412,6 +1538,7 @@ qualifier = ""
 display_name = "LH"
 aliases = [
     "luteinizing hormone", "luteinising hormone",
+    "luteinizing hormone (lh)", "luteotropes hormon", "lutropin", "s_lh"
 ]
 allowed_units = ["mIU/mL", "mIU/L", "IU/L"]
 loinc = "10501-5"
@@ -1423,7 +1550,9 @@ component = "Prolactin"
 specimen = "serum"
 qualifier = ""
 display_name = "Prolactin"
-aliases = ["prl", "prolattina", "serum prolactin", "prolactin level", "prolactin recovery post-peg", "prolactin post-peg"]
+aliases = ["prl", "prolattina", "serum prolactin", "prolactin level", "prolactin recovery post-peg", "prolactin post-peg",
+    "s_prolaktin"
+]
 allowed_units = ["ng/mL", "mIU/L", "µg/L"]
 loinc = "2842-3"
 category = "hormone"
@@ -1437,6 +1566,7 @@ display_name = "Cortisol (AM)"
 aliases = [
     "cortisol", "am cortisol", "morning cortisol", "serum cortisol",
     "cortisolo", "cortisol (morning)",
+    "compound f", "cortisol (in serum)", "cortisol - am", "cortisol - pm", "cortisol, serum", "hydrocortisone", "s_kortizol"
 ]
 allowed_units = ["µg/dL", "nmol/L"]
 loinc = "2143-6"
@@ -1462,6 +1592,7 @@ display_name = "PTH"
 aliases = [
     "parathyroid hormone", "intact pth", "parathormone", "pth intact",
     "paratormone",
+    "parathormon", "parathyrin", "parathyrin intact (ipth)", "pth, intact"
 ]
 allowed_units = ["pg/mL", "pmol/L"]
 loinc = "2731-8"
@@ -1476,6 +1607,7 @@ display_name = "IGF-1"
 aliases = [
     "igf-1", "igf1", "insulin-like growth factor 1",
     "insulin like growth factor 1", "somatomedin c",
+    "insulin-like growth factor 1 (igf-1)", "insulin-like growth factor i", "s_igf-i", "sm-c/igf-1"
 ]
 allowed_units = ["ng/mL", "nmol/L"]
 loinc = "2484-4"
@@ -1498,7 +1630,9 @@ component = "Free Androgen Index"
 specimen = ""
 qualifier = "calculated"
 display_name = "FAI"
-aliases = ["free androgen index"]
+aliases = ["free androgen index",
+    "androgen free index", "androgen free index in serum or plasma", "free androgen index (fai)", "testosterone/shbg ratio", "testosterone:shbg ratio", "total testosterone/shgb ratio"
+]
 allowed_units = ["%", "ratio"]
 category = "hormone"
 
@@ -1508,7 +1642,9 @@ component = "Beta-HCG"
 specimen = "serum"
 qualifier = ""
 display_name = "β-HCG"
-aliases = ["bhcg", "beta hcg", "b-hcg", "human chorionic gonadotropin"]
+aliases = ["bhcg", "beta hcg", "b-hcg", "human chorionic gonadotropin",
+    "choriogonadotropin", "choriogonadotropin (pregnancy test)", "hcg", "hcg quantitative", "human choriogonadotropin", "human chorionic gonadotropin (hcg), beta subunit, quantitative", "s_hcg"
+]
 allowed_units = ["mIU/mL", "IU/L"]
 loinc = "21198-7"
 category = "hormone"
@@ -1537,6 +1673,7 @@ aliases = [
     "vitamin d", "25-oh vitamin d", "25(oh)d", "25-hydroxyvitamin d", "vitamin d 25(oh)", "vitamin d 25-oh",
     "vit d", "vitamina d", "cholecalciferol",
     "25-hydroxy vitamin d", "calcifediol", "vitamin d total",
+    "25-hydroxycalciferol", "25-oh-d", "b_vitamin d total (25-oh)", "cholecalciferol metabolite", "vitamin d (25-hydroxy)", "vitamin d (25-oh)", "vitamin d, 25-hydroxy", "vitamin d, 25-oh, total", "vitamin d, 25-oh, total, ia", "vitamin d3 metabolite"
 ]
 allowed_units = ["ng/mL", "nmol/L"]
 loinc = "1989-3"
@@ -1550,6 +1687,7 @@ qualifier = ""
 display_name = "Vitamin B12"
 aliases = [
     "b12", "cobalamin", "cyanocobalamin", "vitamina b12",
+    "cobalamin, true", "cobalamine", "cyanocobalamin (vitamin b12)", "s_vitamin b12", "vitamin b12, serum", "vitamin-b12", "vitaminb12"
 ]
 allowed_units = ["pg/mL", "pmol/L"]
 loinc = "2132-9"
@@ -1574,6 +1712,7 @@ qualifier = ""
 display_name = "Folate"
 aliases = [
     "folate", "folic acid", "serum folate", "vitamin b9", "acido folico",
+    "folate (folic acid)", "folate (folic acid), serum", "folsäure", "total folic acid", "vitamin b9, serum"
 ]
 allowed_units = ["ng/mL", "nmol/L"]
 loinc = "2284-8"
@@ -1596,7 +1735,9 @@ component = "Vitamin A"
 specimen = "serum"
 qualifier = ""
 display_name = "Vitamin A"
-aliases = ["retinol", "serum retinol", "vitamina a"]
+aliases = ["retinol", "serum retinol", "vitamina a",
+    "retinol, serum", "vitamin a, serum", "vitamin-a"
+]
 allowed_units = ["µg/dL", "µmol/L"]
 loinc = "2923-1"
 category = "nutritional"
@@ -1618,7 +1759,9 @@ component = "Vitamin B1"
 specimen = "whole blood"
 qualifier = ""
 display_name = "Vitamin B1"
-aliases = ["thiamine", "thiamin", "vitamina b1"]
+aliases = ["thiamine", "thiamin", "vitamina b1",
+    "vit. b1, whole blood", "vitamin b1 (thiamine)", "vitamin b1 (thiamine), blood", "vitamin b1, serum", "vitamin-b1", "vitaminb1"
+]
 allowed_units = ["nmol/L", "µg/dL"]
 category = "nutritional"
 
@@ -1628,7 +1771,9 @@ component = "Vitamin B6"
 specimen = "plasma"
 qualifier = ""
 display_name = "Vitamin B6"
-aliases = ["pyridoxine", "pyridoxal phosphate", "plp", "vitamina b6"]
+aliases = ["pyridoxine", "pyridoxal phosphate", "plp", "vitamina b6",
+    "b6, vitamin", "pyridoxin", "vitamin b6, plasma", "vitamin-b6", "vitaminb6"
+]
 allowed_units = ["nmol/L", "µg/L"]
 loinc = "2838-1"
 category = "nutritional"
@@ -1661,7 +1806,9 @@ component = "Selenium"
 specimen = "serum"
 qualifier = ""
 display_name = "Selenium"
-aliases = ["serum selenium", "se", "selenio"]
+aliases = ["serum selenium", "se", "selenio",
+    "selen", "selen, serum/plasma", "selenium, serum or plasma", "selenium, serum/plasma"
+]
 allowed_units = ["µg/L", "µmol/L", "ng/mL"]
 loinc = "2822-5"
 category = "nutritional"
@@ -1672,7 +1819,9 @@ component = "Omega-3 Index"
 specimen = "whole blood"
 qualifier = ""
 display_name = "Omega-3 Index"
-aliases = ["omega 3 index", "o3 index", "epa+dha index"]
+aliases = ["omega 3 index", "o3 index", "epa+dha index",
+    "omega-3 (epa+dha) index", "omega-3 (epa+dha) index in serum or plasma"
+]
 allowed_units = ["%"]
 category = "nutritional"
 
@@ -1723,7 +1872,9 @@ component = "B-type Natriuretic Peptide"
 specimen = "plasma"
 qualifier = ""
 display_name = "BNP"
-aliases = ["b-type natriuretic peptide", "brain natriuretic peptide"]
+aliases = ["b-type natriuretic peptide", "brain natriuretic peptide",
+    "b-type natriuretic peptide (bnp)", "natriuretic peptide b"
+]
 allowed_units = ["pg/mL", "ng/L"]
 loinc = "30934-4"
 category = "cardiac"
@@ -1751,6 +1902,7 @@ display_name = "PSA (Total)"
 aliases = [
     "psa", "prostate specific antigen", "total psa",
     "antigene prostatico specifico",
+    "prostate specific ag", "prostate specific ag, serum", "prostate specific ag.total", "prostate-specific ag", "prostate-specific antigen (psa)", "prostate-specific antigen (psa), total", "psa, serum", "psa, serum or plasma", "s_psa celkové", "total prostate-specific antigen"
 ]
 allowed_units = ["ng/mL", "µg/L"]
 loinc = "2857-1"
@@ -1762,7 +1914,9 @@ component = "Free PSA"
 specimen = "serum"
 qualifier = ""
 display_name = "Free PSA"
-aliases = ["free psa", "psa free"]
+aliases = ["free psa", "psa free",
+    "prostate specific ag free", "psa, free", "s_psa volné [f-psa]"
+]
 allowed_units = ["ng/mL", "%"]
 loinc = "10886-0"
 category = "cancer_marker"
@@ -1773,7 +1927,9 @@ component = "Carcinoembryonic Antigen"
 specimen = "serum"
 qualifier = ""
 display_name = "CEA"
-aliases = ["carcinoembryonic antigen"]
+aliases = ["carcinoembryonic antigen",
+    "carcinoembryonales antigen", "carcinoembryonic antigen (cea)", "s_cea"
+]
 allowed_units = ["ng/mL", "µg/L"]
 loinc = "2039-6"
 category = "cancer_marker"
@@ -1784,7 +1940,9 @@ component = "CA-125"
 specimen = "serum"
 qualifier = ""
 display_name = "CA 125"
-aliases = ["ca-125", "cancer antigen 125"]
+aliases = ["ca-125", "cancer antigen 125",
+    "ca-125, second generation assay", "cancer antigen (ca) 125"
+]
 allowed_units = ["U/mL", "kU/L"]
 loinc = "10334-1"
 category = "cancer_marker"
@@ -1795,7 +1953,9 @@ component = "CA 15-3"
 specimen = "serum"
 qualifier = ""
 display_name = "CA 15-3"
-aliases = ["ca-15-3", "cancer antigen 15-3", "ca 15.3"]
+aliases = ["ca-15-3", "cancer antigen 15-3", "ca 15.3",
+    "cancer antigen (ca) 15-3", "cancer-antigen 15-3", "s_ca 15-3"
+]
 allowed_units = ["U/mL", "kU/L"]
 loinc = "6875-9"
 category = "cancer_marker"
@@ -1806,7 +1966,9 @@ component = "CA 19-9"
 specimen = "serum"
 qualifier = ""
 display_name = "CA 19-9"
-aliases = ["ca-19-9", "cancer antigen 19-9", "ca 19.9"]
+aliases = ["ca-19-9", "cancer antigen 19-9", "ca 19.9",
+    "cancer antigen (ca) 19-9", "cancer-antigen 19-9", "carbohydrate antigen (ca) 19-9", "s_ca 19-9"
+]
 allowed_units = ["U/mL", "kU/L"]
 loinc = "24108-3"
 category = "cancer_marker"
@@ -1817,7 +1979,9 @@ component = "Alpha-Fetoprotein"
 specimen = "serum"
 qualifier = ""
 display_name = "AFP"
-aliases = ["alpha-fetoprotein", "alpha fetoprotein", "alfa-fetoproteina"]
+aliases = ["alpha-fetoprotein", "alpha fetoprotein", "alfa-fetoproteina",
+    "afp, serum", "afp, serum, tumor marker", "alpha-fetoprotein (afp), serum, tumor marker", "s_afp"
+]
 allowed_units = ["ng/mL", "IU/mL", "kU/L"]
 loinc = "1834-1"
 category = "cancer_marker"
@@ -1831,7 +1995,9 @@ component = "Immunoglobulin A"
 specimen = "serum"
 qualifier = ""
 display_name = "IgA"
-aliases = ["immunoglobulin a", "immunoglobulina a"]
+aliases = ["immunoglobulin a", "immunoglobulina a",
+    "immunoglobulin a, quant, serum", "immunoglobulin a, quantitative", "immunoglobulin a, total", "s_iga"
+]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "2458-8"
 category = "immunology"
@@ -1842,7 +2008,9 @@ component = "Immunoglobulin G"
 specimen = "serum"
 qualifier = ""
 display_name = "IgG"
-aliases = ["immunoglobulin g", "immunoglobulina g"]
+aliases = ["immunoglobulin g", "immunoglobulina g",
+    "immunoglobulin g, quant, serum", "immunoglobulin g, quantitative", "immunoglobulin g, total", "s_igg"
+]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "2465-3"
 category = "immunology"
@@ -1853,7 +2021,9 @@ component = "Immunoglobulin M"
 specimen = "serum"
 qualifier = ""
 display_name = "IgM"
-aliases = ["immunoglobulin m", "immunoglobulina m"]
+aliases = ["immunoglobulin m", "immunoglobulina m",
+    "immunoglobulin m, qn, serum", "immunoglobulin m, total", "quantitative igm, serum", "rf-igm quant.", "s_igm"
+]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "2472-9"
 category = "immunology"
@@ -1864,7 +2034,9 @@ component = "Immunoglobulin E"
 specimen = "serum"
 qualifier = ""
 display_name = "IgE"
-aliases = ["immunoglobulin e", "total ige", "immunoglobulina e"]
+aliases = ["immunoglobulin e", "total ige", "immunoglobulina e",
+    "ige, total", "immunoglobulin e, total"
+]
 allowed_units = ["IU/mL", "kU/L"]
 loinc = "2458-8"
 category = "immunology"
@@ -1875,7 +2047,9 @@ component = "Complement C3"
 specimen = "serum"
 qualifier = ""
 display_name = "Complement C3"
-aliases = ["c3", "c3 complement"]
+aliases = ["c3", "c3 complement",
+    "complement c3, serum"
+]
 allowed_units = ["mg/dL", "g/L"]
 loinc = "4485-9"
 category = "immunology"
@@ -1908,7 +2082,9 @@ component = "Rheumatoid Factor"
 specimen = "serum"
 qualifier = ""
 display_name = "RF"
-aliases = ["rheumatoid factor", "fattore reumatoide"]
+aliases = ["rheumatoid factor", "fattore reumatoide",
+    "rheumafaktor", "rheumatoid factor (rf)", "rheumatoid factor, blood"
+]
 allowed_units = ["IU/mL", "U/mL"]
 loinc = "11572-5"
 category = "immunology"
@@ -1919,7 +2095,9 @@ component = "Antistreptolysin O"
 specimen = "serum"
 qualifier = ""
 display_name = "ASO"
-aliases = ["antistreptolysin o", "aso titer", "tas"]
+aliases = ["antistreptolysin o", "aso titer", "tas",
+    "antistreptolysin", "antistreptolysin o (aslo)", "antistreptolysin o (aso) antibodies", "antistreptolysin o ab", "aslo", "streptokokken-antikörper"
+]
 allowed_units = ["IU/mL"]
 loinc = "1930-7"
 category = "immunology"
@@ -1965,7 +2143,9 @@ component = "Lp-PLA2"
 specimen = "serum"
 qualifier = ""
 display_name = "Lp-PLA2"
-aliases = ["lp-pla2", "lipoprotein-associated phospholipase a2", "plac test"]
+aliases = ["lp-pla2", "lipoprotein-associated phospholipase a2", "plac test",
+    "lipoprotein associated phospholipase a2"
+]
 allowed_units = ["ng/mL", "nmol/min/mL"]
 loinc = "47060-0"
 category = "cardiovascular"
@@ -1976,7 +2156,9 @@ component = "Myeloperoxidase"
 specimen = "plasma"
 qualifier = ""
 display_name = "MPO"
-aliases = ["mpo", "myeloperoxidase"]
+aliases = ["mpo", "myeloperoxidase",
+    "myeloperoxidase (mpo)"
+]
 allowed_units = ["pmol/L", "ng/mL"]
 loinc = "53386-4"
 category = "cardiovascular"
@@ -2058,7 +2240,9 @@ component = "Prothrombin Time"
 specimen = "plasma"
 qualifier = ""
 display_name = "PT"
-aliases = ["prothrombin time"]
+aliases = ["prothrombin time",
+    "prothrombin time (pt)", "prothrombin time test"
+]
 allowed_units = ["seconds", "s"]
 loinc = "5902-2"
 category = "coagulation"
@@ -2069,7 +2253,9 @@ component = "International Normalized Ratio"
 specimen = "plasma"
 qualifier = ""
 display_name = "INR"
-aliases = ["international normalised ratio", "international normalized ratio"]
+aliases = ["international normalised ratio", "international normalized ratio",
+    "inr coag (bld) [relative time]", "inr in blood by coagulation assay", "inr, blood", "international normalized ratio (inr)", "prothrombin time (pt) inr"
+]
 allowed_units = ["ratio", ""]
 loinc = "6301-6"
 category = "coagulation"
@@ -2105,7 +2291,9 @@ component = "Urine pH"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine pH"
-aliases = ["urine ph", "urinary ph"]
+aliases = ["urine ph", "urinary ph",
+    "ph (urine)", "ph test strip (u)", "ph, urine", "u_ph"
+]
 allowed_units = ["pH", ""]
 loinc = "2756-5"
 category = "urinalysis"
@@ -2116,7 +2304,9 @@ component = "Urine Specific Gravity"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine Specific Gravity"
-aliases = ["specific gravity", "urine sg", "sg"]
+aliases = ["specific gravity", "urine sg", "sg",
+    "specific gravity (urine)", "specific gravity of urine (test strip)", "specific gravity, urine"
+]
 allowed_units = ["ratio", ""]
 loinc = "2965-2"
 category = "urinalysis"
@@ -2127,7 +2317,9 @@ component = "Urine Protein"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine Protein"
-aliases = ["protein (urine)", "proteinuria"]
+aliases = ["protein (urine)", "proteinuria",
+    "protein (u)", "protein in urine", "protein, urine"
+]
 allowed_units = ["mg/dL", "mg/L", "g/L"]
 loinc = "2888-6"
 category = "urinalysis"
@@ -2138,7 +2330,9 @@ component = "Urine Glucose"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine Glucose"
-aliases = ["glucose (urine)", "glucosuria"]
+aliases = ["glucose (urine)", "glucosuria",
+    "glucose in urine", "glucose test strip (u)", "glucose, urine"
+]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2350-7"
 category = "urinalysis"
@@ -2149,7 +2343,9 @@ component = "Urine Ketones"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine Ketones"
-aliases = ["ketones (urine)", "ketonuria"]
+aliases = ["ketones (urine)", "ketonuria",
+    "ketones in urine", "ketones test strip (u)", "ketones, urine", "u_ketony"
+]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2514-8"
 category = "urinalysis"
@@ -2160,7 +2356,9 @@ component = "Urine Bilirubin"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine Bilirubin"
-aliases = ["bilirubin (urine)"]
+aliases = ["bilirubin (urine)",
+    "bilirubin in urine", "bilirubin, urine", "bilirubin.total [presence] in urine by test strip", "u_bilirubin"
+]
 allowed_units = ["mg/dL"]
 category = "urinalysis"
 
@@ -2170,7 +2368,9 @@ component = "Urine Urobilinogen"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine Urobilinogen"
-aliases = ["urobilinogen", "urobilinogen (urine)"]
+aliases = ["urobilinogen", "urobilinogen (urine)",
+    "u_urobilinogen", "urobilinogen in urine", "urobilinogen test strip (u)", "urobilinogen, semi-qn, urine", "urobilinogen, urine"
+]
 allowed_units = ["mg/dL", "µmol/L"]
 category = "urinalysis"
 
@@ -2180,7 +2380,9 @@ component = "Urine Red Blood Cells"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine RBC"
-aliases = ["rbc (urine)", "erythrocytes (urine)", "urine red blood cells"]
+aliases = ["rbc (urine)", "erythrocytes (urine)", "urine red blood cells",
+    "blood in urine", "erythrocytes in urine", "erythrocytes, urine", "u_krev"
+]
 allowed_units = ["/HPF", "cells/µL"]
 category = "urinalysis"
 
@@ -2190,7 +2392,9 @@ component = "Urine White Blood Cells"
 specimen = "urine"
 qualifier = ""
 display_name = "Urine WBC"
-aliases = ["wbc (urine)", "leukocytes (urine)", "urine white blood cells"]
+aliases = ["wbc (urine)", "leukocytes (urine)", "urine white blood cells",
+    "leukocytes in urine", "leukocytes, urine", "white blood cell (wbc) count, urine"
+]
 allowed_units = ["/HPF", "cells/µL"]
 category = "urinalysis"
 
@@ -2567,6 +2771,7 @@ display_name = "Mercury"
 aliases = [
     "blood mercury", "hg", "mercury level", "total mercury",
     "mercurio", "mercury blood", "whole blood mercury",
+    "mercury, blood", "mercury, whole blood", "quecksilber"
 ]
 allowed_units = ["µg/L", "nmol/L", "µg/dL", "ng/mL"]
 loinc = "5688-7"
@@ -2581,6 +2786,7 @@ display_name = "Blood Lead"
 aliases = [
     "blood lead", "lead level", "pb", "lead blood",
     "blood lead level", "bll", "piombo", "lead whole blood",
+    "blei", "lead, blood", "lead, blood (adult)"
 ]
 allowed_units = ["µg/dL", "µmol/L", "µg/L"]
 loinc = "5671-3"
@@ -2759,6 +2965,7 @@ display_name = "IL-8"
 aliases = [
     "il-8", "interleukin 8", "interleukin-8", "il8",
     "cxcl8",
+    "interleukein-8 (il-8)", "interleukin 8, serum", "interleukin-8, serum"
 ]
 allowed_units = ["pg/mL", "ng/L"]
 loinc = "49771-9"
@@ -2816,6 +3023,7 @@ display_name = "VEGF"
 aliases = [
     "vegf", "vegf-a", "vascular endothelial growth factor",
     "vegf level",
+    "hemoglobin (urine)", "hemoglobin, urine"
 ]
 allowed_units = ["pg/mL", "ng/L"]
 loinc = "49137-3"
@@ -3060,6 +3268,7 @@ aliases = [
     "beta-2 microglobulin", "b2m", "β2-microglobulin",
     "beta 2 microglobulin", "b2-microglobulin",
     "beta2 microglobulin", "β2m",
+    "beta-2 microglobulin, serum", "beta-2-microglobulin", "beta-2-microglobulin, blood", "s_beta-2 mikroglobulin"
 ]
 allowed_units = ["mg/L", "µg/mL", "nmol/L"]
 loinc = "1952-1"
@@ -3090,6 +3299,7 @@ qualifier = ""
 display_name = "Lipase"
 aliases = [
     "lipase", "serum lipase", "lipasi", "pancreatic lipase",
+    "lipase, blood", "lipase, serum", "triacylglycerol lipase", "triglycerol lipase"
 ]
 allowed_units = ["U/L", "IU/L"]
 loinc = "3040-3"
@@ -3264,7 +3474,7 @@ aliases = [
     "apolipoprotein e level", "apo-e",
 ]
 allowed_units = ["mg/L", "mg/dL"]
-loinc = "1884-6"
+loinc = "1869-7"
 category = "lipid"
 
 
@@ -3278,7 +3488,7 @@ qualifier = ""
 display_name = "TBG"
 aliases = [
     "tbg", "thyroid-binding globulin", "thyroid binding globulin",
-    "thyroxine-binding globulin", "thyroxine binding globulin",
+    "thyroxine-binding globulin", "thyroxine binding globulin"
 ]
 allowed_units = ["µg/mL", "mg/L", "nmol/L"]
 loinc = "3034-6"
@@ -3322,7 +3532,7 @@ specimen = "serum"
 qualifier = ""
 display_name = "TAS"
 aliases = [
-    "total antioxidant status", "tas", "total antioxidant capacity",
+    "total antioxidant status", "total antioxidant capacity",
     "tac", "orac", "antioxidant status",
 ]
 allowed_units = ["mmol/L", "µmol/L"]
