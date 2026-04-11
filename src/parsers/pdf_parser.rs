@@ -293,19 +293,63 @@ pub fn verify_against_source(
             }
         };
 
-        // Check if value appears in source text
-        if source_text.contains(&value_str) {
+        // Tighter verification: value AND marker name (or first significant word)
+        // must both appear within PROXIMITY_CHARS of each other in source.
+        // This catches hallucinations that borrow values from dates/ranges/other rows.
+        const PROXIMITY_CHARS: usize = 200;
+
+        // Build alternate value formats for matching (4.10 == 4.1)
+        let mut value_variants: Vec<String> = vec![value_str.clone()];
+        if value_str.contains('.') {
+            let trimmed = value_str.trim_end_matches('0').trim_end_matches('.').to_string();
+            if trimmed != value_str && !trimmed.is_empty() {
+                value_variants.push(trimmed);
+            }
+        } else if !value_str.is_empty() {
+            value_variants.push(format!("{}.0", value_str));
+        }
+
+        // Get the most specific name token for proximity check
+        // Use the longest alphabetic word (likely the analyte name like "Insulin", "Hemoglobin")
+        let name_lower = marker.name.to_lowercase();
+        let name_token: String = name_lower
+            .split(|c: char| !c.is_alphabetic())
+            .filter(|w| w.len() >= 4)
+            .max_by_key(|w| w.len())
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| name_lower.clone());
+
+        // Check proximity: find all positions of value, then verify name_token is nearby
+        let mut found_in_proximity = false;
+        for variant in &value_variants {
+            let mut search_from = 0;
+            while let Some(pos) = source_text[search_from..].find(variant.as_str()) {
+                let abs_pos = search_from + pos;
+                let window_start = abs_pos.saturating_sub(PROXIMITY_CHARS);
+                let window_end = (abs_pos + variant.len() + PROXIMITY_CHARS).min(source_text.len());
+                let window = &source_lower[window_start..window_end];
+                if window.contains(&name_token) {
+                    found_in_proximity = true;
+                    break;
+                }
+                search_from = abs_pos + variant.len();
+            }
+            if found_in_proximity {
+                break;
+            }
+        }
+
+        if found_in_proximity {
             verified.push(marker);
         } else {
-            // Try alternative formats (0.72 vs .72, 4.10 vs 4.1)
-            let alt_value = if value_str.contains('.') {
-                value_str.trim_end_matches('0').trim_end_matches('.').to_string()
-            } else {
-                format!("{}.0", value_str)
-            };
-
-            if source_text.contains(&alt_value) || source_lower.contains(&value_str) {
-                verified.push(marker);
+            // Fall back to loose check (value exists but proximity failed)
+            // Still reject — this is the anti-hallucination gate
+            let value_present = value_variants.iter().any(|v| source_text.contains(v));
+            if value_present {
+                warnings.push(format!(
+                    "Rejected '{}' (value {}): value present but not near marker name '{}' (possible cross-row borrowing)",
+                    marker.name, value_str, name_token
+                ));
             } else {
                 warnings.push(format!(
                     "Rejected '{}' (value {}): not found in source text (possible hallucination)",
@@ -552,9 +596,11 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
                 seen_names.insert(std_name.clone());
 
                 let (unit, unit_status) = if norm_unit.is_empty() {
-                    // Only infer unit when marker has exactly 1 allowed unit
-                    // Multi-unit markers (e.g. insulin: 5 units) stay blank → NeedsReview
                     match catalog::get_marker(&std_name) {
+                        Some(m) if m.allowed_units.iter().any(|u| u.is_empty()) => {
+                            // Marker allows blank units (e.g. ratios)
+                            (String::new(), UnitStatus::Observed)
+                        }
                         Some(m) if m.allowed_units.len() == 1 => {
                             (m.allowed_units[0].clone(), UnitStatus::Inferred)
                         }

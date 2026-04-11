@@ -26,7 +26,7 @@ static BIOMARKER_PATTERN: Lazy<Regex> = Lazy::new(|| {
         # Optional comparator (<, >, <=, >=)
         (?P<cmp><=|>=|[<>])?
         # Numeric value (with optional decimal point or comma)
-        (?P<value>\d+(?:[.,]\d+)?)
+        (?P<value>\d{1,3}(?:[,.]\d{3})*(?:[,.]\d+)?|\d+(?:[.,]\d+)?)
         # Optional whitespace
         \s*
         # Unit (optional, various patterns)
@@ -53,7 +53,7 @@ static HEALTHHUB_PATTERN: Lazy<Regex> = Lazy::new(|| {
         [ \t]*Results:\s*
         (?P<cmp><=|>=|[<>]|\*)?
         \s*
-        (?P<value>\d+(?:[.,]\d+)?)
+        (?P<value>\d{1,3}(?:[,.]\d{3})*(?:[,.]\d+)?|\d+(?:[.,]\d+)?)
         \s*
         (?:\((?P<unit>[^)]+)\))?
         "
@@ -68,7 +68,7 @@ static COLON_PATTERN: Lazy<Regex> = Lazy::new(|| {
         (?P<name>[A-Za-z0-9\-\(\)/\s]{2,40})
         \s*:\s*
         (?P<cmp><=|>=|[<>])?
-        (?P<value>\d+(?:[.,]\d+)?)
+        (?P<value>\d{1,3}(?:[,.]\d{3})*(?:[,.]\d+)?|\d+(?:[.,]\d+)?)
         \s*
         (?P<unit>m[lL]/min/1\.73m[2²]|[a-zA-Zµ°/%²³]+(?:/[a-zA-Zµ°²³\d.]+)*)?
         "
@@ -130,6 +130,9 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         }
     }
 
+    // Detect conflicts: same standardized_name with different values
+    let (biomarkers, conflicts) = crate::parsers::detect_conflicts(biomarkers, &mut warnings);
+
     // Compute document status based on extraction quality
     let has_missing_units = biomarkers.iter().any(|b| b.unit_status == UnitStatus::Missing);
     let has_ambiguous = biomarkers.iter().any(|b| b.confidence == "ambiguous");
@@ -138,6 +141,8 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
         DocumentStatus::NeedsReview
     } else if has_missing_units || has_ambiguous {
+        DocumentStatus::NeedsReview
+    } else if !conflicts.is_empty() {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete
@@ -148,7 +153,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         page_statuses: vec![],
         biomarkers,
         unresolved,
-        conflicts: vec![],
+        conflicts,
         warnings,
         parser_name: "text".to_string(),
     })
@@ -197,15 +202,16 @@ fn try_extract(
             }
         };
 
-    // Skip duplicates
-    if !seen_names.insert(std_name.clone()) {
-        warnings.push(format!("Duplicate result for {} skipped: '{}'", std_name, raw_name));
-        return None;
-    }
+    // Note: duplicate detection is now done at parse() level via standardized_name grouping
+    // for proper conflict handling instead of silently keeping first
+    let _ = seen_names;
 
     let (unit, unit_status) = if norm_unit.is_empty() {
-        // Only infer unit when marker has exactly 1 allowed unit
         match catalog::get_marker(&std_name) {
+            Some(m) if m.allowed_units.iter().any(|u| u.is_empty()) => {
+                // Marker explicitly allows blank units (e.g. ratios, scores)
+                (String::new(), UnitStatus::Observed)
+            }
             Some(m) if m.allowed_units.len() == 1 => {
                 (m.allowed_units[0].clone(), UnitStatus::Inferred)
             }

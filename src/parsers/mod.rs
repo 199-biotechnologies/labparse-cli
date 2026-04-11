@@ -120,3 +120,70 @@ pub fn auto_parse(content: &str, source: &str) -> Result<ParseResult, LabParseEr
         text_parser::parse(content, source)
     }
 }
+
+/// Detect duplicate biomarkers with different values and emit them as conflicts.
+/// Same standardized_name with same value+unit+comparator → keep first.
+/// Same standardized_name with different values → flag as conflict.
+/// Preserves original input order for determinism.
+pub fn detect_conflicts(
+    biomarkers: Vec<ParsedBiomarker>,
+    warnings: &mut Vec<String>,
+) -> (Vec<ParsedBiomarker>, Vec<ConflictMarker>) {
+    use std::collections::HashMap;
+
+    // Build groups but track first-seen order for determinism
+    let mut order: Vec<String> = Vec::new();
+    let mut groups: HashMap<String, Vec<ParsedBiomarker>> = HashMap::new();
+    for bm in biomarkers {
+        let key = bm.standardized_name.clone();
+        if !groups.contains_key(&key) {
+            order.push(key.clone());
+        }
+        groups.entry(key).or_default().push(bm);
+    }
+
+    let mut kept = Vec::new();
+    let mut conflicts = Vec::new();
+
+    for std_name in order {
+        let group = groups.remove(&std_name).unwrap();
+        if group.len() == 1 {
+            kept.push(group.into_iter().next().unwrap());
+            continue;
+        }
+
+        let first = &group[0];
+        let all_match = group.iter().all(|b| {
+            (b.value - first.value).abs() < 0.0001
+                && b.unit == first.unit
+                && b.comparator == first.comparator
+        });
+
+        if all_match {
+            warnings.push(format!(
+                "Duplicate {} with same value ({} {}) — keeping first",
+                std_name, first.value, first.unit
+            ));
+            kept.push(group.into_iter().next().unwrap());
+        } else {
+            warnings.push(format!(
+                "Conflict: {} has {} different values — flagged for review",
+                std_name, group.len()
+            ));
+            let candidates: Vec<ConflictCandidate> = group.iter().map(|b| ConflictCandidate {
+                raw_name: b.name.clone(),
+                value: b.value,
+                unit: b.unit.clone(),
+                page: None,
+            }).collect();
+            conflicts.push(ConflictMarker {
+                standardized_name: std_name,
+                display_name: first.display_name.clone(),
+                category: first.category.clone(),
+                candidates,
+            });
+        }
+    }
+
+    (kept, conflicts)
+}

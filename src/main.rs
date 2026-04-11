@@ -114,10 +114,12 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                 match parsers::pdf_parser::llm_structure_text(&text) {
                     Ok(raw_markers) if !raw_markers.is_empty() => {
                         // Verify LLM output against source text (anti-hallucination)
+                        let original_count = raw_markers.len();
                         let mut verify_warnings = Vec::new();
                         let verified = parsers::pdf_parser::verify_against_source(
                             raw_markers, &text, &mut verify_warnings,
                         );
+                        let rejected_count = original_count - verified.len();
                         for w in &verify_warnings {
                             eprintln!("info: {}", w);
                         }
@@ -125,6 +127,19 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                         let mut result = parsers::pdf_parser::resolve_results(page_results)?;
                         result.warnings.extend(verify_warnings);
                         result.parser_name = "pdf-llm".to_string();
+
+                        // If lexical verification rejected anything, force NeedsReview
+                        // (rejected markers indicate possible hallucination — must be reviewed)
+                        if rejected_count > 0 {
+                            result.warnings.push(format!(
+                                "Lexical verification rejected {} of {} markers — possible hallucination",
+                                rejected_count, original_count
+                            ));
+                            if result.document_status == parsers::DocumentStatus::Complete {
+                                result.document_status = parsers::DocumentStatus::NeedsReview;
+                            }
+                        }
+
                         let elapsed = start.elapsed().as_millis();
                         let source = format!("pdf:{}", path.display());
                         return Ok((result, source, elapsed));

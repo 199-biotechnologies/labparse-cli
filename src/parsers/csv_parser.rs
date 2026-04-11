@@ -126,7 +126,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     let mut biomarkers = Vec::new();
     let mut unresolved = Vec::new();
     let mut warnings = Vec::new();
-    let mut seen_names = std::collections::HashSet::new();
+    let mut seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
 
     for record in rdr.records() {
         let record = record?;
@@ -160,14 +160,14 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
 
         match normalize_name(raw_name, Some(value), Some(&norm_unit)) {
             Some((std_name, display_name, category, confidence, resolution_method)) => {
-                if !seen_names.insert(std_name.clone()) {
-                    warnings.push(format!("Duplicate result for {} skipped: '{}'", std_name, raw_name));
-                    continue;
-                }
+                // Don't skip duplicates here — let detect_conflicts handle them later
+                let _ = seen_names;
 
                 let (unit, unit_status) = if norm_unit.is_empty() {
-                    // Only infer unit when marker has exactly 1 allowed unit
                     match catalog::get_marker(&std_name) {
+                        Some(m) if m.allowed_units.iter().any(|u| u.is_empty()) => {
+                            (String::new(), UnitStatus::Observed)
+                        }
                         Some(m) if m.allowed_units.len() == 1 => {
                             (m.allowed_units[0].clone(), UnitStatus::Inferred)
                         }
@@ -205,6 +205,9 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         }
     }
 
+    // Detect conflicts: same standardized_name with different values
+    let (biomarkers, conflicts) = crate::parsers::detect_conflicts(biomarkers, &mut warnings);
+
     let has_missing_units = biomarkers.iter().any(|b| b.unit_status == UnitStatus::Missing);
     let has_ambiguous = biomarkers.iter().any(|b| b.confidence == "ambiguous");
     let document_status = if biomarkers.is_empty() && !unresolved.is_empty() {
@@ -212,6 +215,8 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
     } else if !biomarkers.is_empty() && unresolved.len() > biomarkers.len() * 3 {
         DocumentStatus::NeedsReview
     } else if has_missing_units || has_ambiguous {
+        DocumentStatus::NeedsReview
+    } else if !conflicts.is_empty() {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete
@@ -222,7 +227,7 @@ pub fn parse(content: &str, _source: &str) -> Result<ParseResult, LabParseError>
         page_statuses: vec![],
         biomarkers,
         unresolved,
-        conflicts: vec![],
+        conflicts,
         warnings,
         parser_name: "csv".to_string(),
     })
