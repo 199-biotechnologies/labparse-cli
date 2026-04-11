@@ -32,7 +32,8 @@ aliases = [
     "glucose", "blood glucose", "blood sugar", "fg", "fasting blood glucose",
     "fasting blood sugar", "fbs", "fbg", "serum glucose", "plasma glucose",
     "glicemia a digiuno", "nuchtern glukose",
-    "glucose (fasting)", "glucose fasting",
+    "glucose (fasting)", "glucose fasting", "glucose, fasting",
+    "glucose, serum, fasting", "glucose serum fasting",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "1558-6"
@@ -132,6 +133,7 @@ display_name = "Total Cholesterol"
 aliases = [
     "cholesterol", "tc", "total chol", "chol", "serum cholesterol", "fasting cholesterol",
     "colesterolo totale", "cholesterin", "cholesterol total", "cholesterol-total",
+    "cholesterol, total",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2093-3"
@@ -148,6 +150,7 @@ aliases = [
     "ldl cholesterol (calculated)", "ldl cholesterol (direct)",
     "ldl-cholesterol", "colesterolo ldl", "ldl calc", "ldl direct",
     "cholesterol-ldl", "cholesterol ldl", "ldl chol", "ldl chol (calculated)",
+    "cholesterol, ldl", "ldl measured",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "13457-7"
@@ -162,6 +165,7 @@ display_name = "HDL Cholesterol"
 aliases = [
     "hdl", "hdl-c", "hdl cholesterol", "high density lipoprotein",
     "hdl-cholesterol", "colesterolo hdl", "cholesterol-hdl", "cholesterol hdl",
+    "cholesterol, hdl",
 ]
 allowed_units = ["mg/dL", "mmol/L"]
 loinc = "2085-9"
@@ -308,6 +312,8 @@ aliases = [
     "high-sensitivity c-reactive protein", "us-crp", "ultra-sensitive crp",
     "crp - high sensitivity", "crp (high sensitivity)", "crp high sensitivity",
     "proteina c reattiva ad alta sensibilita",
+    "high-sensitive c-reactive protein", "hs c-reactive protein",
+    "high sensitive c-reactive protein", "high sensitive crp",
 ]
 allowed_units = ["mg/L", "mg/dL", "nmol/L"]
 loinc = "30522-7"
@@ -912,6 +918,7 @@ display_name = "GGT"
 aliases = [
     "gamma-glutamyltransferase", "gamma gt", "gamma-gt", "γ-gt",
     "gamma glutamyl transferase", "gamma glutamyl transpeptidase",
+    "gamma-glutamyl transpeptidase", "gamma-glutamyl transferase",
     "γ-glutamyltransferase",
 ]
 allowed_units = ["U/L"]
