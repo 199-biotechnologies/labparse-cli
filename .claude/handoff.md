@@ -1,210 +1,151 @@
-# labparse Reliability Hardening — Session Handoff
+# Session Handoff
 
-**Date:** 2026-04-11
-**Branch:** `worktree-labparse-p0-reliability` (worktree)
-**Working dir:** `/Users/biobook/Code/longevity/labparse/.claude/worktrees/labparse-p0-reliability`
-**Current state:** Sprints A, B, C complete. Clippy clean. 16/16 tests passing. All commits pushed to `main`.
+**Date:** 2026-04-12
+**Session:** labparse Sprint D reliability hardening — status honesty, dead VLM gate, pdftotext cleanup, catalog triage, 613-alias import from private dataset
+**Context usage at handoff:** ~60%
 
-## What this branch is for
+---
 
-Implementing GPT Pro's 12-step roadmap to make labparse safe for unattended clinical ingestion. The pipeline previously had silent corruption, fail-open status, and no validation. After A/B/C, the pipeline is materially safer but still missing multi-model intelligence (Sprint D).
+## Active Plan
 
-## What's been done (in order)
+There is no formal plan file. The work is driven by a GPT Pro benchmark analysis (Q1-Q8) that produced an ordered 8-step Sprint D roadmap. The full analysis was provided by the user in conversation and is summarized below.
 
-### Pre-existing P0 fixes (already on main before this session)
-- Comparators preserved (<, >, <=, >=)
-- Locale-aware number parser exists (`parse_number`)
-- Scale-changing unit mappings removed
-- International qualifier injection removed (no more `glucosio` → `fasting glucose`)
-- Unit provenance tracking via `UnitStatus` enum
-- pdftotext + LLM (gpt-5.4-mini) pipeline added
+**Revised Sprint D roadmap (from GPT Pro benchmark analysis):**
 
-### Sprint A — `d0e28e4` — Codex remaining importants
-| ID | What | Where |
-|----|------|-------|
-| A1 | Thousands separator regex `\d{1,3}(?:[,.]\d{3})*(?:[,.]\d+)?\|...` | text_parser.rs:29,56,71 |
-| A2 | Shared `detect_conflicts()` for text/csv (no more silent dropping) | parsers/mod.rs:124 |
-| A3 | Lexical rejection → NeedsReview status | main.rs:149 |
-| A4 | Row-proximity check (200 chars between value and marker name) | pdf_parser.rs:296 |
-| A5 | Allow blank unit when catalog explicitly lists `""` | text/csv/pdf parsers |
+1. ~~D1 — Shared `assess_document_status()` across all parsers~~ **DONE**
+2. ~~D2 — Kill dead local VLM hang (`--experimental-vlm` gate)~~ **DONE**
+3. ~~D3 — Deterministic pdftotext cleanup (`clean_pdftotext()`)~~ **DONE**
+4. ~~D4a — Catalog triage (aliases, disambiguation, specimen suffix)~~ **DONE**
+5. ~~D4a+ — Private dataset alias import (613 aliases, Codex-reviewed)~~ **DONE**
+6. **D4b — Completeness accounting** (block splitting, truncation warnings, `PageExtractStatus::Partial`) — **NEXT**
+7. **D5 — Row-grounded extraction contract** (LLM returns exact `value_text`/`unit_text`/`source_text`, parsed locally) — **NEXT**
+8. D6 — Per-page text escalation (regex → mini → full, page-level)
+9. D7 — OpenRouter vision path (Qwen primary, GLM fallback)
+10. D8 — Selective second-model verification (Gemini Flash Lite for flagged rows)
 
-### Sprint B — `2426667` — Catalog model + provenance
-| ID | What | Where |
-|----|------|-------|
-| B1 | CBC differential split: `_pct` and `_abs` for neutrophils/lymph/mono/eos/baso (10 markers total) | data/biomarkers.toml:525-655 |
-| B2 | Added `urine_creatinine`, HOMA-IR/ApoB-A1 aliases | data/biomarkers.toml |
-| B3 | Spaced unit normalization (`x10^9 /L` → `x10^9/L`) | normalize.rs:391 |
-| B4 | Added `page`, `raw_value_text`, `raw_unit`, `source_text` to `ParsedBiomarker` | normalize.rs:357 |
-| B5 | Serialize new provenance fields in JSON output | output/json.rs |
+**Plan status:** D1-D4a+ complete. D4b and D5 are next (independent, no external deps). D6-D8 require OpenRouter integration.
 
-**Result:** FBC report 10→20 markers (all 5 percentage CBC differentials now resolve)
+## What Was Accomplished This Session
 
-### Sprint C — `115b3b2` — Validation + safety
-| ID | What | Where |
-|----|------|-------|
-| C1 | Page-level LLM chunking on form feeds | pdf_parser.rs:`split_into_pages`, `llm_structure_text_paged` |
-| C2 | Validator stack v1 (NEW FILE: `src/validate.rs`) | validate.rs |
-| C3 | PHI sanitization before remote API calls | pdf_parser.rs:`sanitize_for_remote` |
-| C4 | Multi-patient detection (refuses to merge mixed patient docs) | pdf_parser.rs:`extract_patient_id`, `verify_single_patient` |
+### Sprint D1 — Status honesty (`be289c2`)
+- Added `ExtractionAudit` struct and `assess_document_status()` to `src/validate.rs`
+- Catches false-success: zero resolved, unresolved dominates, ambiguous, inferred units, truncated pages, lexical rejections, conflicts
+- Runs as final gate in `validate()` after all sub-validators
+- 6 new unit tests for status assessment
 
-**Validators in `src/validate.rs`:**
-- Plausibility bands for 25+ biomarkers (HbA1c 99.9% → IMPOSSIBLE → partial_failure)
-- CBC differential sum check (~100% ± 5)
-- Friedewald equation (TC ≈ LDL + HDL + TG/5)
-- TC/HDL ratio cross-check
-- Reference range consistency (value outside range but not flagged → flag + warn)
+### Sprint D2 — Dead VLM gate (`be289c2`)
+- Added `--experimental-vlm` CLI flag to `src/cli.rs`
+- Scanned PDFs (no text layer) and direct image input fail fast with clear error message
+- Previously hung 10-22s on broken local Qwen3.5-9B VLM
 
-### Cleanup — `8ff190b` — Clippy clean
-- 0 clippy warnings
-- All 16 tests passing
-- Replaced manual `strip_prefix` with `.strip_prefix()`
-- Simplified status logic
-- Added `#[allow(dead_code)]` for public API kept for future use
+### Sprint D3 — Pdftotext cleanup (`be289c2`)
+- Added `clean_pdftotext()` to `src/parsers/pdf_parser.rs`
+- Strips: page counters, generated timestamps, "computer generated" footers, "Lab Test Result" headers (+ 2 lines: name + NRIC), facility lines, date lines, "Ref. Range:" labels, "Serum Indices", haemolysis/lipaemia lines, remarks sections
+- Wired into main.rs before regex parsing
+- Result: Liver 14→0 unresolved, FBC 54→0, Lipid now uses fast `pdf-text` path
 
-## Current behavior on Patient B.K. test files
+### Sprint D4a — Catalog triage (`6f75695`)
+- Added aliases: "zinc serum", "microalbumin random", "total white cell count"
+- Added CBC differential disambiguation (bare "neutrophils" → unit-based _pct/_abs routing)
+- Added spaceless specimen suffix stripping (" serum", " plasma", " whole blood")
+- Result: Comprehensive panel 55→75 resolved markers
 
-| Report | Markers | Parser | Status |
-|--------|---------|--------|--------|
-| Lipid Panel (3p) | 5/5 | pdf-llm | needs_review (3 markers outside ref range, LLM didn't flag — V5 catches) |
-| Full Blood Count (4p) | 20/20 | pdf-text | success (10 abs + 10 pct CBC differentials) |
-| Liver Panel (2p) | 5/5 | pdf-text | needs_review (regex noise unresolved) |
-| Comprehensive (10p) | 47 resolved + 4 unresolved | pdf-llm | needs_review |
+### D4a+ — Private dataset alias import (`0897030`, `fc60cd7`)
+- Cross-referenced 1,370 lab variables from private clinical dataset against our 262-marker catalog
+- Matched 144 markers by LOINC + name, imported 613 new synonym/alias mappings
+- International names: German, Czech, vendor-specific formats
+- Codex review caught and fixed:
+  - P0: TAS alias collision (ASO vs Antioxidant Status)
+  - P1: 3 wrong LOINC codes (ApoE→1886-1, TBG→3021-3, IgE→19113-0)
+  - P1: 3 clinically wrong aliases (2hr glucose under fasting, cortisol PM under AM, urine hemoglobin under VEGF)
+  - P1: Removed " random" from spaceless suffix stripping (Glucose Random → fasting_glucose)
+  - P2: 5 unit-bearing aliases removed
+- Final: 0 alias collisions, all tests pass
 
-## Next steps — Sprint D + E
+### Codex review fixes (`5004478`)
+- Bounded `skip_header_lines` counter (was open-ended `skip_next_nric`)
+- Wired `lexical_rejections` from main.rs into ParseResult for shared status gate
+- Empty extraction (resolved=0, unresolved=0) → NeedsReview instead of Complete
 
-### Sprint D — Multi-model intelligence (architectural)
+## Key Decisions Made
 
-**D1. Progressive escalation router** (`src/main.rs`, `src/parsers/pdf_parser.rs`)
-- Per-page model escalation: regex → `gpt-5-nano` ($0.05/M) → `gpt-5.4-mini` ($0.75/M) → `gpt-5.4` ($2.50/M)
-- Only escalate pages where validation failed
-- Add `escalation_history` to PageStatus
-- Models available via OpenRouter (see `~/.claude/projects/-Users-biobook-Code-longevity/memory/reference_openrouter_models.md`)
+1. **Safety before models.** The GPT Pro analysis reordered Sprint D: fix status honesty, kill dead paths, clean noise, then add models. This was the right call — D3 alone eliminated 54 unresolved on FBC without touching the LLM.
 
-**D2. OpenRouter vision path for scanned PDFs** (`src/parsers/pdf_parser.rs`)
-- Currently broken: local Qwen3.5-9B VLM outputs reasoning text instead of JSON
-- Add `call_openrouter_vision()` function
-- Models: `z-ai/glm-5.1` ($1.26/M) or `openai/gpt-5-nano` ($0.05/M, has vision)
-- Same schema, same validators as text path
-- Convert PDF page to PNG via existing `pdf_to_images()`, base64 encode, send
+2. **`clean_pdftotext()` uses bounded header skipping.** After "Lab Test Result", skip exactly 2 lines (patient name + NRIC). The original open-ended `skip_next_nric` flag could eat real analyte rows (Codex caught this).
 
-**D3. Selective second-model verification** (`src/validate.rs`)
-- Trigger on review predicates: comparator-bearing, missing/inferred unit, low-confidence resolution, validator failure, abnormal flag
-- Run different provider (e.g. if OpenAI was primary, verify with `google/gemini-3.1-flash-lite-preview` $0.25/M)
-- Compare results, flag disagreements as conflicts
+3. **CBC differential disambiguation uses unit, not context.** Bare "Neutrophils" with % → `_pct`, with `x10^9/L` → `_abs`. This is the safest approach since the resolver has no page/section context.
 
-**D4. Apple Vision OCR baseline** (was P0 in GPT Pro round 1, never added)
-- Add as `pdftotext` alternative for image-only PDFs
-- Use `swift` or `osascript` to call `Vision.framework` `RecognizeDocumentsRequest`
-- Free, no API call, on-device
+4. **Qualitative/OOS markers stay unresolved by design.** Bare urinalysis names ("pH", "Nitrite", "Blood"), hepatitis serology, bare "White Blood Cells"/"Red Blood Cells" are NOT added as aliases because they're ambiguous without specimen context.
 
-### Sprint E — Polish + completeness
+5. **Private dataset alias import requires collision scanning.** The import script matched by LOINC code, but several LOINC codes in the labparse catalog were wrong, causing cross-contamination (ApoE got ApoB aliases, TBG got Transferrin aliases, IgE got IgA aliases). Always run the collision scanner after any bulk alias import.
 
-**E1. Real `--verify` flag** (cli.rs, main.rs)
-- Was removed for being fake, never re-added
-- Should run dual extraction and require agreement
+6. **Removed " random" from spaceless suffix stripping.** "Random" is a specimen collection qualifier, not a specimen type. Stripping it caused "Glucose Random" to resolve to fasting_glucose.
 
-**E2. JSON v3 schema with audit_id** (output/json.rs, errors.rs)
-- Add `audit_id: "sha256:..."` (hash of source document)
-- Per GPT Pro round 1 schema design
+## Current State
 
-**E3. Vendor fingerprinting** (catalog.rs or new vendor.rs)
-- Detect known vendor formats (Singapore HealthHub, NUH, InnoQuest, Novi Health) by fingerprint
-- Route deterministically to template parser instead of LLM
+- **Branch:** `worktree-labparse-p0-reliability` (worktree) — fully merged to `main`
+- **Last commit:** `fc60cd7` — fix: address Codex review — LOINC codes, wrong aliases, TAS collision
+- **Uncommitted changes:** None
+- **Tests passing:** Yes — 40 unit + 16 integration tests
+- **Clippy:** 0 warnings
+- **Build:** Clean release build
 
-**E4. Unresolved feedback loop** (new file)
-- Cluster unresolved markers by raw_name + unit pattern
-- Promote stable patterns into catalog aliases
-- Manual review queue
+### Test results on Patient B.K. files:
 
-## Critical context
+| Report | Markers | Unresolved | Status | Parser |
+|--------|---------|------------|--------|--------|
+| Liver Panel (2p) | 5 | 0 | success | pdf-text |
+| Full Blood Count (4p) | 20 | 0 | success | pdf-text |
+| Lipid Panel (3p) | 5 | 0 | success | pdf-text |
+| Comprehensive (10p) | 71 | 5 | needs_review | pdf-llm |
 
-### Models (April 2026)
-- **Banned per CLAUDE.md:** `o4-mini`, `o3`, `o4`, `gemini-2.5-pro`, `gemini-2.0-flash`, `gemini-1.5-pro`
-- **Outdated, do NOT use:** `gpt-4.1-mini`, `gpt-4.1`, `gpt-4o` (previous gen)
-- **Current:** `openai/gpt-5.4-mini` (primary text), `z-ai/glm-5.1` (vision), `google/gemini-3.1-flash-lite-preview` (verification), `openai/gpt-5.4` (escalation)
-- See `~/.claude/projects/-Users-biobook-Code-longevity/memory/reference_openrouter_models.md`
-- See `~/.claude/projects/-Users-biobook-Code-longevity/memory/feedback_model_selection.md`
+Remaining 5 unresolved on comprehensive are genuinely OOS: Hepatitis Bs Antigen/Antibody, Anti-HAV Total, pH, bare urinalysis WBC/RBC.
 
-### Codex review (gpt-5.4 xhigh)
-The user wants Codex to review each sprint. Earlier review for Sprint A got stuck on stdin. To re-run:
-```bash
-codex exec -m gpt-5.4 --skip-git-repo-check --full-auto -c model_reasoning_effort="xhigh" "<prompt>" < /dev/null
-```
-Always use `< /dev/null` to prevent stdin hang.
+## What to Do Next
 
-Codex review prompts should be concise and specific. Don't ask Codex to "do" things — only review and report.
+1. Read this handoff document
+2. Read the GPT Pro benchmark analysis context from memory: `~/.claude/projects/-Users-biobook-Code-longevity/memory/project_labparse_pipeline_review_2.md`
+3. Read model reference: `~/.claude/projects/-Users-biobook-Code-longevity/memory/reference_openrouter_models.md`
 
-### GPT Pro reviews (saved in memory)
-- Round 1: `~/.claude/projects/-Users-biobook-Code-longevity/memory/project_labparse_reliability_review.md`
-- Round 2 (12-step roadmap): `~/.claude/projects/-Users-biobook-Code-longevity/memory/project_labparse_pipeline_review_2.md`
-- Architecture review: `~/.claude/projects/-Users-biobook-Code-longevity/memory/project_labparse_extraction_architecture.md`
+### D4b — Completeness accounting
+4. Add `split_dense_page()` to `src/parsers/pdf_parser.rs` — split pages exceeding 30k chars on double newlines, section headers ("Remarks", "Interpretation"), and repeated "Results:" anchors
+5. Replace silent 30k char truncation in `llm_structure_page()` with block-level extraction + `PageExtractStatus::Partial` warning
+6. Wire `Partial` status into `assess_document_status()` (already handled — `truncated_pages > 0` → NeedsReview)
 
-### Test data
-- Real patient PDFs at `/Users/biobook/Health/Patient B.K./` (sanitized in code as `<PATIENT>` / `<ID>`)
-- Best test files:
-  - `2024-Apr-12 Lipid Panel.pdf` — 3 pages, HealthHub format
-  - `2024-Mar-18 Full Blood Count.pdf` — 4 pages, full CBC with differentials
-  - `2024-Mar-18 Liver Panel - Alb, ALT, ALP, AST, TBil.pdf` — 2 pages
-  - `2024-Dec-02 HOMA-IR, Lipid, Liver, kidney, etc..pdf` — 10 pages, comprehensive panel
+### D5 — Row-grounded extraction contract
+7. Change LLM prompt in `pdf_parser.rs` to require exact `value_text`, `unit_text`, `source_text` fields (not parsed numeric `value`)
+8. Add local parsing of `value_text` → numeric value after extraction (comparator detection, locale-aware number parsing)
+9. Strengthen `verify_against_source()` to require row-level match (name + value + unit from same source line), not just 200-char proximity
 
-### Build / test commands
-```bash
-cd /Users/biobook/Code/longevity/labparse/.claude/worktrees/labparse-p0-reliability
-cargo build --release 2>&1 | tail -3
-cargo test 2>&1 | tail -5
-cargo clippy --release 2>&1 | tail -3   # should show 0 warnings
+### D6-D8 — OpenRouter integration (requires API key)
+10. Add `call_openrouter()` HTTP client to `pdf_parser.rs` (uses `OPENROUTER_API_KEY` env var)
+11. Implement per-page escalation policy (`PageSignal` → `EscalationAction`)
+12. Add OpenRouter vision path for scanned PDFs (Qwen3-VL primary, GLM-5.1 fallback)
+13. Add selective verification with Gemini Flash Lite for flagged rows
 
-# Test on real PDFs
-./target/release/labparse "/Users/biobook/Health/Patient B.K./2024-Mar-18 Full Blood Count.pdf" --json 2>/dev/null | jq '{status, m: .data.biomarkers | length, doc_status: .metadata.document_status}'
+### Codex review after each step
+14. After each D-step, run: `codex exec -m gpt-5.4 --skip-git-repo-check --full-auto -c model_reasoning_effort="xhigh" "<review prompt>" < /dev/null`
+15. Fix all P0/P1 findings before proceeding
 
-# Test validators
-./target/release/labparse --text "HbA1c 99.9%" --json   # should be partial_failure
-./target/release/labparse --text "Total Cholesterol 200 mg/dL, LDL 50 mg/dL, HDL 30 mg/dL, Triglycerides 100 mg/dL" --json   # Friedewald failure
-```
+## Files to Review First
 
-## Known issues / not yet fixed
+1. `src/validate.rs` — shared `ExtractionAudit`, `assess_document_status()`, all validators
+2. `src/main.rs` — routing logic (regex → LLM → VLM), status propagation, `--experimental-vlm` gate
+3. `src/parsers/pdf_parser.rs` — `clean_pdftotext()`, `llm_structure_text_paged()`, `verify_against_source()`, LLM prompts, 30k truncation
+4. `src/catalog.rs` — `normalize_pipeline()`, specimen suffix stripping, disambiguation resolution
+5. `data/biomarkers.toml` — 262 markers, 613 imported aliases, disambiguation table
 
-### From Codex review (still open)
-1. **Lexical verification proximity bypass** — A hallucinated marker can still pass if its name token also appears nearby. Mitigation idea: require exact substring match with the source line.
-2. **Conflict equality ignores comparator** in PDF parser path (`pdf_parser.rs:485`) — `5.8` and `<5.8` should be a conflict. Text parser already handles this via `detect_conflicts`.
-3. **Page accounting** — temp files keyed only by PID, no unique dir, no completeness check across page count.
-4. **Prompt injection** — report text concatenated as instructions. PHI sanitization helps but not full mitigation.
+## Gotchas & Warnings
 
-### From GPT Pro round 2 (steps 9-12 not yet started)
-- Step 9: Progressive escalation
-- Step 10: Vision via OpenRouter
-- Step 11: Selective verification
-- Step 12: Vendor fingerprinting + unresolved feedback loop
-
-## How to resume
-
-1. Read `~/.claude/projects/-Users-biobook-Code-longevity/memory/MEMORY.md` for project context
-2. Read GPT Pro round 2 review for full context: `memory/project_labparse_pipeline_review_2.md`
-3. Read this handoff
-4. Pick Sprint D first (D1 → D2 → D3 → D4) for the architectural completion
-5. Then Sprint E for polish
-
-User's directive from the previous session: **"do the sprint A and then the sprint B and then the sprint C and then a sprint D sequentially and autonomously, and at the end of each sprint get Codex to review it and to fix the things that were not done."**
-
-So: continue with Sprint D autonomously. After each sub-step, run codex review with `< /dev/null` to avoid stdin hang. Fix critical findings before moving on.
-
-## Files modified this session
-
-| File | Changes |
-|------|---------|
-| `src/parsers/pdf_parser.rs` | pdftotext, LLM structuring, page chunking, verification, sanitization, multi-patient |
-| `src/parsers/text_parser.rs` | Locale parser wired in, conflict-friendly extract, blank unit support |
-| `src/parsers/csv_parser.rs` | Locale parser wired in, conflict detection, Unicode-safe |
-| `src/parsers/mod.rs` | Shared `detect_conflicts()`, NeedsReview/Failed enum variants |
-| `src/normalize.rs` | UnitStatus enum, ParsedBiomarker provenance fields, spaced unit handling |
-| `src/output/json.rs` | DocumentStatus serialization, page_statuses, provenance fields |
-| `src/main.rs` | Multi-stage routing, validate.rs integration, status propagation |
-| `src/validate.rs` | NEW — validation stack v1 |
-| `src/catalog.rs` | dead_code allows for future use |
-| `data/biomarkers.toml` | CBC split, urine_creatinine, aliases |
-
-## Final note
-
-The user is frustrated by silent failures. They keep asking "are we missing anything from the previous review?" — always cross-check against the GPT Pro round 2 12-step roadmap before declaring done.
-
-Don't add more models until validation can tell you when extraction is wrong. The validator stack (Sprint C) is now in place; Sprint D can safely add escalation because validation can drive it.
+- **Codex needs `< /dev/null`** — without it, codex exec hangs waiting on stdin
+- **No CI/CD** — all tests are local-only. Run `cargo test` in the worktree before pushing.
+- **The worktree is at** `/Users/biobook/Code/longevity/labparse/.claude/worktrees/labparse-p0-reliability` — NOT the main labparse dir
+- **Main labparse dir** at `/Users/biobook/Code/longevity/labparse` has `main` checked out and is fully merged
+- **`llm_structure_page()` still silently truncates at 30k chars** — this is D4b's target
+- **LLM prompt asks for numeric `value` not `value_text`** — this is D5's target, the root cause of weak hallucination grounding
+- **`verify_against_source()` only checks 200-char proximity** — too weak, accepts cross-row borrowing on dense pages
+- **Models (April 2026):** `openai/gpt-5.4-mini` (primary text), `z-ai/glm-5.1` (vision), `google/gemini-3.1-flash-lite-preview` (verification), `openai/gpt-5.4` (escalation). Banned: o4-mini, o3, o4, gemini-2.5-pro, gemini-2.0-flash, gemini-1.5-pro
+- **Private dataset alias import can introduce LOINC cross-contamination** — always run collision scanner after bulk imports
+- **"Random" is NOT a specimen type** — don't strip it from marker names (Glucose Random ≠ Fasting Glucose)
+- **Test PDFs at** `/Users/biobook/Health/Patient B.K./` — these are real patient data, always sanitize before sending to remote APIs
+- **The user does NOT want OpenCures mentioned** in commits or public-facing text. Use "private dataset" or "private lab variable dataset".
