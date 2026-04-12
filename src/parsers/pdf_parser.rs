@@ -225,6 +225,28 @@ pub fn split_dense_page(page_text: &str, max_chars: usize) -> Vec<String> {
     let mut current = String::new();
 
     for line in page_text.lines() {
+        // Handle oversized individual lines (rare but possible with malformed text)
+        if line.len() > max_chars {
+            // Flush current block first
+            if !current.trim().is_empty() {
+                blocks.push(std::mem::take(&mut current));
+            }
+            // Chunk the oversized line at char boundaries
+            let mut start = 0;
+            while start < line.len() {
+                let end = std::cmp::min(start + max_chars, line.len());
+                // Find a valid char boundary (UTF-8 safe)
+                let end = if end < line.len() {
+                    line[..end].rfind(char::is_whitespace).unwrap_or(end)
+                        .max(start + 1) // ensure progress
+                } else {
+                    end
+                };
+                blocks.push(line[start..end].to_string());
+                start = end;
+            }
+            continue;
+        }
         // If adding this line would exceed the limit, flush current block
         if !current.is_empty() && current.len() + line.len() + 1 > max_chars {
             blocks.push(std::mem::take(&mut current));
@@ -778,18 +800,19 @@ pub fn make_page_result(page: usize, markers: Vec<VisionBiomarker>) -> PageResul
     }
 }
 
-/// Create a PageResult preserving an existing error from upstream
+/// Create a PageResult preserving an existing error and split status from upstream
 pub fn make_page_result_with_error(
     page: usize,
     markers: Vec<VisionBiomarker>,
     error: Option<String>,
+    was_split: bool,
 ) -> PageResult {
     PageResult {
         page,
         markers,
         elapsed_s: 0.0,
         error,
-        was_split: false,
+        was_split,
     }
 }
 
@@ -837,6 +860,7 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
     let mut warnings = Vec::new();
     let mut page_statuses = Vec::new();
     let mut has_failures = false;
+    let mut has_partial = false;
 
     // Build page statuses and collect markers
     for pr in &page_results {
@@ -848,6 +872,7 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
             } else {
                 "page split into blocks due to size".to_string()
             };
+            has_partial = true;
             if pr.markers.is_empty() && pr.error.is_some() {
                 has_failures = true;
             }
@@ -1102,10 +1127,10 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
     // Remove biomarkers that were converted to conflicts (marked with resolved=false)
     biomarkers.retain(|b| b.resolved);
 
-    // Determine document status based on page failures and conflicts
+    // Determine document status based on page failures, splits, and conflicts
     let document_status = if has_failures {
         DocumentStatus::PartialFailure
-    } else if !conflicts.is_empty() {
+    } else if has_partial || !conflicts.is_empty() {
         DocumentStatus::NeedsReview
     } else {
         DocumentStatus::Complete
@@ -1430,5 +1455,43 @@ mod tests {
         assert_eq!(blocks[0], "aaa");
         assert_eq!(blocks[1], "bbb");
         assert_eq!(blocks[2], "ccc\nddd");
+    }
+
+    #[test]
+    fn test_split_dense_page_oversized_single_line() {
+        // A single line longer than max_chars should be chunked, not left as-is
+        let line = "x".repeat(500);
+        let blocks = split_dense_page(&line, 200);
+        assert!(blocks.len() >= 2, "Expected oversized line to be chunked, got {} blocks", blocks.len());
+        for block in &blocks {
+            assert!(block.len() <= 200, "Block exceeds limit: {} chars", block.len());
+        }
+    }
+
+    #[test]
+    fn test_split_at_offsets_header_at_start() {
+        // Section header at offset 0 — should not produce empty first block
+        let text = "Results:\nMarker1 5.0\nMarker2 6.0";
+        let blocks = split_at_offsets(text, &[0]);
+        assert!(!blocks.is_empty());
+        assert!(!blocks[0].is_empty(), "First block should not be empty");
+    }
+
+    #[test]
+    fn test_split_at_offsets_consecutive() {
+        // Consecutive offsets should not produce empty blocks
+        let text = "aaa\n\nbbb\n\nccc";
+        let blocks = split_at_offsets(text, &[3, 4, 8, 9]);
+        for block in &blocks {
+            assert!(!block.is_empty(), "Got empty block from consecutive offsets");
+        }
+    }
+
+    #[test]
+    fn test_page_result_was_split_defaults_false() {
+        // Verify serde(default) works — JSON without was_split should deserialize to false
+        let json = r#"{"page": 1, "markers": [], "elapsed_s": 0.0}"#;
+        let pr: PageResult = serde_json::from_str(json).unwrap();
+        assert!(!pr.was_split);
     }
 }

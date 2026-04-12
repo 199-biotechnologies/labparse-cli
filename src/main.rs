@@ -148,7 +148,7 @@ fn run(cli: &Cli) -> Result<(parsers::ParseResult, String, u128), LabParseError>
                             total_rejected += original_count - verified.len();
                             all_verify_warnings.extend(verify_warnings);
                             verified_pages.push(parsers::pdf_parser::make_page_result_with_error(
-                                pr.page, verified, pr.error,
+                                pr.page, verified, pr.error, pr.was_split,
                             ));
                         }
 
