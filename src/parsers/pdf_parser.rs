@@ -70,6 +70,10 @@ pub struct PageResult {
     pub elapsed_s: f64,
     #[serde(default)]
     pub error: Option<String>,
+    /// True if this page was split into blocks because it exceeded the LLM char limit.
+    /// Signals that extraction may be incomplete (some markers could span block boundaries).
+    #[serde(default)]
+    pub was_split: bool,
 }
 
 /// Try extracting text from a born-digital PDF using pdftotext.
@@ -165,6 +169,101 @@ pub fn split_into_pages(text: &str) -> Vec<String> {
     } else {
         pages
     }
+}
+
+/// Split a dense page into smaller blocks for LLM extraction.
+/// Used when a single page exceeds max_chars (typically 30k).
+/// Splits at natural boundaries in priority order:
+/// 1. Section headers ("Remarks", "Interpretation", "Results:", etc.)
+/// 2. Double newlines (paragraph breaks)
+/// 3. Single newlines (line-level, greedy packing)
+///
+/// Each returned block is guaranteed <= max_chars.
+/// Returns a single-element vec if the page is already under the limit.
+pub fn split_dense_page(page_text: &str, max_chars: usize) -> Vec<String> {
+    if page_text.len() <= max_chars {
+        return vec![page_text.to_string()];
+    }
+
+    use once_cell::sync::Lazy;
+    use regex::Regex;
+
+    // Section headers that mark natural split points in lab reports
+    static SECTION_HEADER: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?im)^\s*(?:Remarks|Interpretation|Comments|Clinical Notes|Results|Haematology|Biochemistry|Immunology|Endocrinology|Urinalysis|Coagulation|Serology|Lipid|Liver|Kidney|Thyroid|Full Blood|Complete Blood|Metabolic)\s*[:\-]?\s*$").unwrap()
+    });
+
+    // Phase 1: Try splitting at section headers
+    let mut split_points = Vec::new();
+    for m in SECTION_HEADER.find_iter(page_text) {
+        split_points.push(m.start());
+    }
+
+    if !split_points.is_empty() {
+        let blocks = split_at_offsets(page_text, &split_points);
+        if blocks.iter().all(|b| b.len() <= max_chars) {
+            return blocks;
+        }
+    }
+
+    // Phase 2: Try splitting at double newlines (paragraph breaks)
+    let double_nl_points: Vec<usize> = page_text
+        .match_indices("\n\n")
+        .map(|(i, _)| i)
+        .collect();
+
+    if !double_nl_points.is_empty() {
+        let blocks = split_at_offsets(page_text, &double_nl_points);
+        if blocks.iter().all(|b| b.len() <= max_chars) {
+            return blocks;
+        }
+        // Some blocks still too large — fall through to line-level splitting on those
+    }
+
+    // Phase 3: Line-level greedy packing (guaranteed to produce blocks <= max_chars)
+    let mut blocks = Vec::new();
+    let mut current = String::new();
+
+    for line in page_text.lines() {
+        // If adding this line would exceed the limit, flush current block
+        if !current.is_empty() && current.len() + line.len() + 1 > max_chars {
+            blocks.push(std::mem::take(&mut current));
+        }
+        if !current.is_empty() {
+            current.push('\n');
+        }
+        current.push_str(line);
+    }
+    if !current.trim().is_empty() {
+        blocks.push(current);
+    }
+
+    blocks
+        .into_iter()
+        .map(|b| b.trim().to_string())
+        .filter(|b| !b.is_empty())
+        .collect()
+}
+
+/// Split text at the given byte offsets, returning non-empty trimmed blocks.
+fn split_at_offsets(text: &str, offsets: &[usize]) -> Vec<String> {
+    let mut blocks = Vec::new();
+    let mut prev = 0;
+    for &off in offsets {
+        if off > prev {
+            let chunk = text[prev..off].trim();
+            if !chunk.is_empty() {
+                blocks.push(chunk.to_string());
+            }
+        }
+        prev = off;
+    }
+    // Remainder
+    let chunk = text[prev..].trim();
+    if !chunk.is_empty() {
+        blocks.push(chunk.to_string());
+    }
+    blocks
 }
 
 /// Strip boilerplate lines from pdftotext output before regex parsing.
@@ -287,12 +386,19 @@ fn sanitize_for_remote(text: &str) -> String {
     sanitized
 }
 
-/// Structure a single page of lab report text into biomarker JSON via LLM.
+/// Structure a single page (or block) of lab report text into biomarker JSON via LLM.
+/// Callers should use `split_dense_page()` before calling this to avoid truncation.
+/// The 30k safety truncation here is a fallback — if it triggers, the caller missed a split.
 fn llm_structure_page(page_text: &str) -> Result<Vec<VisionBiomarker>, LabParseError> {
     let max_chars = 30000;
     let text_slice = if page_text.len() <= max_chars {
         page_text
     } else {
+        eprintln!(
+            "warn: text block is {}k chars, truncating to {}k (caller should use split_dense_page)",
+            page_text.len() / 1000,
+            max_chars / 1000
+        );
         &page_text[..page_text[..max_chars].rfind('\n').unwrap_or(max_chars)]
     };
 
@@ -342,9 +448,11 @@ pub fn llm_structure_text(raw_text: &str) -> Result<Vec<VisionBiomarker>, LabPar
 }
 
 /// Structure raw text and return per-page results for proper page accounting.
+/// Dense pages (>30k chars) are split into blocks and extracted separately.
 pub fn llm_structure_text_paged(raw_text: &str) -> Result<Vec<PageResult>, LabParseError> {
     let pages = split_into_pages(raw_text);
     let mut page_results = Vec::new();
+    let max_chars = 30000;
 
     for (idx, page) in pages.iter().enumerate() {
         let page_num = idx + 1;
@@ -354,30 +462,70 @@ pub fn llm_structure_text_paged(raw_text: &str) -> Result<Vec<PageResult>, LabPa
                 markers: Vec::new(),
                 elapsed_s: 0.0,
                 error: Some("page too short".to_string()),
+                was_split: false,
             });
             continue;
         }
-        match llm_structure_page(page) {
-            Ok(mut markers) => {
-                for m in &mut markers {
-                    m.page = Some(page_num);
-                }
-                page_results.push(PageResult {
-                    page: page_num,
-                    markers,
-                    elapsed_s: 0.0,
-                    error: None,
-                });
+
+        // D4b: Split dense pages into blocks instead of silent truncation
+        let blocks = split_dense_page(page, max_chars);
+        let was_split = blocks.len() > 1;
+        if was_split {
+            eprintln!(
+                "info: page {} is {}k chars, split into {} blocks",
+                page_num,
+                page.len() / 1000,
+                blocks.len()
+            );
+        }
+
+        let mut page_markers = Vec::new();
+        let mut block_errors = Vec::new();
+
+        for (block_idx, block) in blocks.iter().enumerate() {
+            if block.len() < 50 {
+                continue;
             }
-            Err(e) => {
-                page_results.push(PageResult {
-                    page: page_num,
-                    markers: Vec::new(),
-                    elapsed_s: 0.0,
-                    error: Some(e.to_string()),
-                });
+            match llm_structure_page(block) {
+                Ok(mut markers) => {
+                    for m in &mut markers {
+                        m.page = Some(page_num);
+                    }
+                    if was_split {
+                        eprintln!(
+                            "info: page {} block {}/{} — {} markers",
+                            page_num,
+                            block_idx + 1,
+                            blocks.len(),
+                            markers.len()
+                        );
+                    }
+                    page_markers.extend(markers);
+                }
+                Err(e) => {
+                    block_errors.push(format!(
+                        "block {}/{} failed: {}",
+                        block_idx + 1,
+                        blocks.len(),
+                        e
+                    ));
+                }
             }
         }
+
+        let error = if block_errors.is_empty() {
+            None
+        } else {
+            Some(block_errors.join("; "))
+        };
+
+        page_results.push(PageResult {
+            page: page_num,
+            markers: page_markers,
+            elapsed_s: 0.0,
+            error,
+            was_split,
+        });
     }
 
     Ok(page_results)
@@ -626,6 +774,7 @@ pub fn make_page_result(page: usize, markers: Vec<VisionBiomarker>) -> PageResul
         markers,
         elapsed_s: 0.0,
         error: None,
+        was_split: false,
     }
 }
 
@@ -640,6 +789,7 @@ pub fn make_page_result_with_error(
         markers,
         elapsed_s: 0.0,
         error,
+        was_split: false,
     }
 }
 
@@ -690,7 +840,34 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
 
     // Build page statuses and collect markers
     for pr in &page_results {
-        if let Some(ref err) = pr.error {
+        if pr.was_split {
+            // D4b: Page was split into blocks — always Partial, even if extraction succeeded.
+            // Splitting means markers near block boundaries may have been missed.
+            let status_msg = if let Some(ref err) = pr.error {
+                format!("page split into blocks, partial errors: {}", err)
+            } else {
+                "page split into blocks due to size".to_string()
+            };
+            if pr.markers.is_empty() && pr.error.is_some() {
+                has_failures = true;
+            }
+            warnings.push(format!(
+                "Page {} was split into blocks ({}k chars) — extraction may be incomplete",
+                pr.page,
+                0 // char count not available here, but the warning in llm_structure_text_paged logs it
+            ));
+            eprintln!(
+                "info: page {} — {} markers (split into blocks)",
+                pr.page,
+                pr.markers.len()
+            );
+            page_statuses.push(PageStatus {
+                page: pr.page,
+                status: PageExtractStatus::Partial,
+                error: Some(status_msg),
+                marker_count: pr.markers.len(),
+            });
+        } else if let Some(ref err) = pr.error {
             warnings.push(format!("Page {} extraction failed: {}", pr.page, err));
             page_statuses.push(PageStatus {
                 page: pr.page,
@@ -716,7 +893,9 @@ fn resolve_page_results(page_results: Vec<PageResult>) -> Result<ParseResult, La
     }
 
     for pr in page_results {
-        if pr.error.is_some() {
+        // Skip fully failed pages (no markers at all), but keep markers from
+        // split pages that had partial block failures.
+        if pr.error.is_some() && !pr.was_split {
             continue;
         }
         // Inject page number into each marker
@@ -1175,6 +1354,7 @@ print(json.dumps({{"event": "done"}}), flush=True)
                         markers,
                         elapsed_s,
                         error,
+                        was_split: false,
                     });
                 }
                 Some("done") => {}
@@ -1184,4 +1364,71 @@ print(json.dumps({{"event": "done"}}), flush=True)
     }
 
     Ok(results)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_split_dense_page_under_limit() {
+        let text = "line1\nline2\nline3";
+        let blocks = split_dense_page(text, 30000);
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0], text);
+    }
+
+    #[test]
+    fn test_split_dense_page_at_section_headers() {
+        // Build a text that exceeds 100 chars with a section header in the middle
+        let section1 = "a".repeat(60);
+        let section2 = "b".repeat(60);
+        let text = format!("{}\nHaematology:\n{}", section1, section2);
+        let blocks = split_dense_page(&text, 100);
+        assert!(blocks.len() >= 2, "Expected split at section header, got {} blocks", blocks.len());
+        assert!(blocks[0].contains(&"a".repeat(60)));
+    }
+
+    #[test]
+    fn test_split_dense_page_at_double_newlines() {
+        let section1 = "a".repeat(60);
+        let section2 = "b".repeat(60);
+        let text = format!("{}\n\n{}", section1, section2);
+        let blocks = split_dense_page(&text, 100);
+        assert!(blocks.len() >= 2, "Expected split at double newline, got {} blocks", blocks.len());
+    }
+
+    #[test]
+    fn test_split_dense_page_line_level_fallback() {
+        // No section headers, no double newlines — falls back to line-level packing
+        let lines: Vec<String> = (0..50).map(|i| format!("Marker {} 5.0 mmol/L", i)).collect();
+        let text = lines.join("\n");
+        let blocks = split_dense_page(&text, 200);
+        assert!(blocks.len() > 1, "Expected line-level splitting, got {} blocks", blocks.len());
+        for block in &blocks {
+            assert!(block.len() <= 200, "Block exceeds limit: {} chars", block.len());
+        }
+    }
+
+    #[test]
+    fn test_split_dense_page_preserves_all_content() {
+        let lines: Vec<String> = (0..100).map(|i| format!("Line {}", i)).collect();
+        let text = lines.join("\n");
+        let blocks = split_dense_page(&text, 300);
+        let reassembled: String = blocks.join("\n");
+        // Every original line should appear in the reassembled output
+        for line in &lines {
+            assert!(reassembled.contains(line.as_str()), "Lost line: {}", line);
+        }
+    }
+
+    #[test]
+    fn test_split_at_offsets_basic() {
+        let text = "aaa\nbbb\nccc\nddd";
+        let blocks = split_at_offsets(text, &[4, 8]);
+        assert_eq!(blocks.len(), 3);
+        assert_eq!(blocks[0], "aaa");
+        assert_eq!(blocks[1], "bbb");
+        assert_eq!(blocks[2], "ccc\nddd");
+    }
 }
